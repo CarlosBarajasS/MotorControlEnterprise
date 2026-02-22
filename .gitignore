@@ -27,3 +27,7 @@ mosquitto/log/
 # OS
 .DS_Store
 Thumbs.db
+
+# AI tools (local only)
+.claude/
+.kilocode/
