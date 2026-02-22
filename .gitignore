@@ -1,15 +1,17 @@
 # Secrets — nunca subir al repo
 .env
+.env.*
+!.env.example
 
-# .NET
+# .NET build output
 bin/
 obj/
 *.user
 *.suo
 .vs/
-*.DS_Store
 
 # Angular / Node
+node_modules/
 frontend/node_modules/
 frontend/dist/
 frontend/.angular/
@@ -21,3 +23,7 @@ build.log
 # Docker volumes
 mosquitto/data/
 mosquitto/log/
+
+# OS
+.DS_Store
+Thumbs.db
