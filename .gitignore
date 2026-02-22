@@ -1,0 +1,23 @@
+# Secrets — nunca subir al repo
+.env
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.DS_Store
+
+# Angular / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Logs
+build.log
+*.log
+
+# Docker volumes
+mosquitto/data/
+mosquitto/log/

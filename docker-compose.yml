@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: mce-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-motor_ent}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB:       ${POSTGRES_DB:-MotorControlEnterprise}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-motor_ent}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mce-net
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mce-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1886:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    networks:
+      - mce-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: mce-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=${POSTGRES_DB:-MotorControlEnterprise};Username=${POSTGRES_USER:-motor_ent};Password=${POSTGRES_PASSWORD:-postgres}"
+      Jwt__Key: ${JWT_SECRET_KEY:-CHANGE_THIS_IN_PRODUCTION_min32chars_secret}
+      Jwt__Issuer: MotorControlEnterprise
+      Jwt__Audience: MotorControlClients
+      Mqtt__Host: mosquitto
+      Mqtt__Port: "1883"
+    ports:
+      - "${BACKEND_PORT:-8090}:8080"
+    networks:
+      - mce-net
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: mce-frontend
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - backend
+  #   ports:
+  #     - "8181:80"
+  #   networks:
+  #     - mce-net
+
+networks:
+  mce-net:
+    driver: bridge
+
+volumes:
+  postgres-data:

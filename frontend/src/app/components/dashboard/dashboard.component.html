@@ -1,0 +1,88 @@
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <svg xmlns="http://www.w3.org/0000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                <rect x="9" y="9" width="6" height="6"></rect>
+                <line x1="9" y1="1" x2="9" y2="4"></line>
+                <line x1="15" y1="1" x2="15" y2="4"></line>
+                <line x1="9" y1="20" x2="9" y2="23"></line>
+                <line x1="15" y1="20" x2="15" y2="23"></line>
+            </svg>
+            <h2>MCE Edge</h2>
+        </div>
+
+        <nav>
+            <a class="active">Overview</a>
+            <a>Gateways</a>
+            <a>Cámaras IP</a>
+            <a>Configuración</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn" (click)="logout()">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+        <header>
+            <div class="header-titles">
+                <h1>Dashboard Central</h1>
+                <p>Monitoreo en tiempo real de nodos Edge IoT</p>
+            </div>
+            <div class="stats">
+                <div class="stat-card">
+                    <span>Gateways Activos</span>
+                    <strong>2 / 3</strong>
+                </div>
+                <div class="stat-card">
+                    <span>Cámaras Online</span>
+                    <strong>14</strong>
+                </div>
+            </div>
+        </header>
+
+        <div class="gateways-grid">
+            <div class="gateway-card" *ngFor="let gw of gateways">
+                <div class="gw-header">
+                    <h3>{{ gw.name }}</h3>
+                    <span class="status-badge" [class.online]="gw.status === 'online'"
+                        [class.offline]="gw.status === 'offline'">
+                        {{ gw.status | uppercase }}
+                    </span>
+                </div>
+
+                <div class="gw-body">
+                    <p class="subtitle">ID: {{ gw.id }}</p>
+                    <p class="last-seen">Último Heartbeat: {{ gw.lastSeen }}</p>
+
+                    <div class="camera-list" *ngIf="gw.status === 'online'">
+                        <h4>Cámaras IP (RTSP Relay)</h4>
+                        <button class="cam-btn" (click)="viewCamera('http://localhost:8888/cam-principal')">
+                            🎥 Entrada Principal
+                        </button>
+                        <button class="cam-btn" (click)="viewCamera('http://localhost:8888/cam-patio')">
+                            🎥 Patio Trasero
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal Visor de Cámara -->
+<div class="camera-modal-overlay" *ngIf="selectedCameraStream" (click)="closeCamera()">
+    <div class="camera-modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Visualización en Vivo (MediaMTX Stream)</h3>
+            <button class="close-btn" (click)="closeCamera()">✕</button>
+        </div>
+        <div class="modal-body">
+            <app-camera-viewer [streamUrl]="selectedCameraStream"></app-camera-viewer>
+        </div>
+    </div>
+</div>
