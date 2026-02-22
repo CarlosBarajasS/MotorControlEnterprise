@@ -1,0 +1,202 @@
+.layout-container {
+  padding: 30px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  color: #1e293b;
+
+  .header-section {
+    margin-bottom: 24px;
+    
+    .back-link {
+      color: #3b82f6;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 12px;
+      &:hover { text-decoration: underline; color: #1d4ed8; }
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    p {
+      margin: 8px 0 0 0;
+      color: #64748b;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ef4444;
+      margin-right: 8px;
+      &.online { background: #10b981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.4); }
+    }
+    
+    .meta-separator { margin: 0 10px; color: #cbd5e1; }
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .video-card {
+    background: #0f172a; // Darker logic for video
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+
+    .video-wrapper {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      position: relative;
+      
+      .video-player {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+    }
+
+    .video-footer {
+      padding: 12px 18px;
+      background: #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #cbd5e1;
+      
+      .source-url {
+        margin: 0;
+        font-family: monospace;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 80%;
+      }
+
+      .hls-badge {
+        background: #3b82f6;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+    }
+  }
+
+  .controls-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel-card {
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+
+    h3 {
+      font-size: 1.15rem;
+      margin: 0 0 16px 0;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      .icon { margin-right: 8px; font-size: 1.3rem; }
+    }
+  }
+
+  .ptz-panel {
+    .help-text {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: -8px;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .joystick-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      grid-template-rows: repeat(3, 60px);
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+      
+      .ptz-btn {
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        font-size: 1.5rem;
+        color: #475569;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.1s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+        &:hover { background: #e2e8f0; transform: translateY(-2px); }
+        &:active { background: #cbd5e1; transform: translateY(0); box-shadow: none; }
+        
+        &.stop { background: #fee2e2; border-color: #fca5a5; font-size: 1.2rem; }
+        &.stop:hover { background: #fecaca; }
+      }
+    }
+
+    .zoom-controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      
+      .zoom {
+        flex: 1;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 12px;
+      }
+    }
+  }
+
+  .info-panel {
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      
+      li {
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        
+        strong { color: #475569; }
+        
+        &:last-child { border-bottom: none; padding-bottom: 0; }
+        .mono { font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; display: inline-block; width: fit-content; }
+      }
+    }
+  }
+}

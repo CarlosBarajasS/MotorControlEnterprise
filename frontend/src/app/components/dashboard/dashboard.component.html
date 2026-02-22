@@ -15,9 +15,9 @@
         </div>
 
         <nav>
-            <a class="active">Overview</a>
-            <a>Gateways</a>
-            <a>Cámaras IP</a>
+            <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Overview</a>
+            <a routerLink="/clients" routerLinkActive="active">Gateways (Clientes)</a>
+            <a routerLink="/cameras" routerLinkActive="active">Cámaras IP</a>
             <a>Configuración</a>
         </nav>
 

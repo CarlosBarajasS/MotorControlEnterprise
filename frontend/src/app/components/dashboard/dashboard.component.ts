@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
@@ -11,7 +12,7 @@ const API_URL = '/api';
 @Component({
     selector: 'app-dashboard',
     standalone: true,
-    imports: [CommonModule, CameraViewerComponent, TelemetryDashboardComponent, MotorControlComponent],
+    imports: [CommonModule, RouterModule, CameraViewerComponent, TelemetryDashboardComponent, MotorControlComponent],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.scss'
 })

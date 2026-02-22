@@ -1,0 +1,31 @@
+@import '../clients/clients.component.scss';
+
+// Reusing identical global structural styles from Clients SCSS, adding specifics:
+.url-truncate {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.stream-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+        text-decoration: underline;
+        color: #1d4ed8;
+    }
+}
+
+.action-btn.view {
+    color: #10b981;
+
+    &:hover {
+        color: #059669;
+        text-decoration: underline;
+    }
+}

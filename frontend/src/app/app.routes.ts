@@ -3,6 +3,9 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { ClientsComponent } from './components/clients/clients.component';
+import { CamerasComponent } from './components/cameras/cameras.component';
+import { CameraDetailComponent } from './components/cameras/camera-detail.component';
 
 const authGuard = () => {
     const token = localStorage.getItem('motor_control_token');
@@ -15,5 +18,8 @@ export const routes: Routes = [
     { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     { path: 'login', component: LoginComponent },
     { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
+    { path: 'clients', component: ClientsComponent, canActivate: [authGuard] },
+    { path: 'cameras', component: CamerasComponent, canActivate: [authGuard] },
+    { path: 'cameras/:id', component: CameraDetailComponent, canActivate: [authGuard] },
     { path: '**', redirectTo: 'login' }
 ];

@@ -1,0 +1,63 @@
+<div class="layout-container" *ngIf="camera()">
+  <div class="header-section">
+    <div>
+      <a routerLink="/cameras" class="back-link">← Volver a Cámaras</a>
+      <h1>{{ camera().name || 'Cámara' }}</h1>
+      <p>
+        <span class="status-indicator" [class.online]="camStatus().isOnline"></span>
+        {{ camStatus().isOnline ? 'Online (En Vivo)' : 'Fuera de Línea / Sin Señal' }}
+        <span class="meta-separator">|</span> Ubicación: {{ camera().location || 'Desconocida' }}
+      </p>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <!-- Video Player Column -->
+    <div class="video-card">
+      <div class="video-wrapper">
+        <video #videoElement controls autoplay muted playsinline class="video-player"></video>
+      </div>
+      <div class="video-footer">
+        <p class="source-url" title="Stream URL">{{ camera().rtspUrl }}</p>
+        <span class="badge hls-badge">HLS Stream Edge</span>
+      </div>
+    </div>
+
+    <!-- Controls Column -->
+    <div class="controls-column">
+      <div class="panel-card ptz-panel">
+        <h3><span class="icon">🕹️</span> Control PTZ</h3>
+        <p class="help-text">Mantén presionado para mover la cámara si soporta protocolo ONVIF/PTZ.</p>
+        
+        <div class="joystick-grid">
+          <div></div>
+          <button class="ptz-btn" (mousedown)="ptzMove(0, 100, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">⬆️</button>
+          <div></div>
+          
+          <button class="ptz-btn" (mousedown)="ptzMove(-100, 0, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">⬅️</button>
+          <button class="ptz-btn stop" (click)="ptzStop()">⏹️</button>
+          <button class="ptz-btn" (mousedown)="ptzMove(100, 0, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">➡️</button>
+          
+          <div></div>
+          <button class="ptz-btn" (mousedown)="ptzMove(0, -100, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">⬇️</button>
+          <div></div>
+        </div>
+
+        <div class="zoom-controls">
+          <button class="ptz-btn zoom" (mousedown)="ptzMove(0, 0, 100)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">➕ Zoom In</button>
+          <button class="ptz-btn zoom" (mousedown)="ptzMove(0, 0, -100)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">➖ Zoom Out</button>
+        </div>
+      </div>
+
+      <div class="panel-card info-panel">
+        <h3>Información Técnica</h3>
+        <ul>
+          <li><strong>ID:</strong> <span class="mono">{{ camera().id }}</span></li>
+          <li><strong>Gateway / Nodo:</strong> <span class="mono">{{ camera().clientId || 'Independiente' }}</span></li>
+          <li><strong>Creado:</strong> {{ camera().createdAt | date:'medium' }}</li>
+          <li><strong>Visto por última vez:</strong> {{ camStatus().lastSeen | date:'mediumTime' || 'N/A' }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

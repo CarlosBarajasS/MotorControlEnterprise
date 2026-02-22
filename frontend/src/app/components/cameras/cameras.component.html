@@ -1,0 +1,89 @@
+<div class="layout-container">
+    <div class="header-section">
+        <div>
+            <h1>Gestión de Cámaras IP</h1>
+            <p>Administra los feeds de video RTSP e integra nodos al sistema HLS en el Edge.</p>
+        </div>
+        <div class="actions">
+            <button class="btn-primary" (click)="openCreate()">+ Nueva Cámara</button>
+            <button class="btn-secondary" (click)="loadData()">🔄 Actualizar</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Ubicación</th>
+                    <th>RTSP URL</th>
+                    <th>Gateway Asignado</th>
+                    <th>Añadido</th>
+                    <th class="text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngIf="cameras().length === 0">
+                    <td colspan="6" class="text-center empty-state">No hay cámaras registradas. Añade una para comenzar
+                        el streaming.</td>
+                </tr>
+                <tr *ngFor="let cam of cameras()">
+                    <td class="font-medium">
+                        <a [routerLink]="['/cameras', cam.id]" class="stream-link" title="Ver Streaming en Vivo">{{
+                            cam.name }}</a>
+                    </td>
+                    <td>{{ cam.location || 'N/A' }}</td>
+                    <td class="mono-text url-truncate" [title]="cam.rtspUrl">{{ cam.rtspUrl }}</td>
+                    <td>{{ cam.clientId ? 'Asignado' : 'Sin asignar' }}</td>
+                    <td class="text-muted">{{ cam.createdAt | date:'shortDate' }}</td>
+                    <td class="actions-cell">
+                        <button class="action-btn view" (click)="viewStream(cam.id)">Ver HLS</button>
+                        <button class="action-btn edit" (click)="openEdit(cam)">Editar</button>
+                        <button class="action-btn delete" (click)="deleteCamera(cam.id)">Borrar</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Formulario -->
+<div class="modal-overlay" *ngIf="showModal()">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>{{ modalMode() === 'create' ? 'Añadir Cámara IP' : 'Editar Cámara IP' }}</h2>
+            <button class="close-btn" (click)="showModal.set(false)">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Alias / Nombre</label>
+                    <input type="text" [(ngModel)]="currentCamera().name" class="form-control"
+                        placeholder="Camara Frontal">
+                </div>
+                <div class="form-group">
+                    <label>Ubicación Física</label>
+                    <input type="text" [(ngModel)]="currentCamera().location" class="form-control"
+                        placeholder="Pasillo A">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>URL RTSP</label>
+                <input type="text" [(ngModel)]="currentCamera().rtspUrl" class="form-control"
+                    placeholder="rtsp://admin:pass@192.168.1.100:554/stream1">
+            </div>
+            <div class="form-group">
+                <label>Asignar a Cliente / Gateway Edge</label>
+                <select [(ngModel)]="currentCamera().clientId" class="form-control">
+                    <option value="">-- Sin Asignar (Nube Autónoma) --</option>
+                    <option *ngFor="let client of clients()" [value]="client.id">{{ client.name }} ({{ client.gatewayId
+                        }})</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" (click)="showModal.set(false)">Cancelar</button>
+            <button class="btn-primary" (click)="saveCamera()">Guardar Cámara</button>
+        </div>
+    </div>
+</div>
