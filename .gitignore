@@ -31,3 +31,5 @@ Thumbs.db
 # AI tools (local only)
 .claude/
 .kilocode/
+AI_RULES.md
+TODO.md
