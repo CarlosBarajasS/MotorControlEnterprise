@@ -79,20 +79,30 @@ services:
     networks:
       - mce-net
 
-  # ─── Nginx ───────────────────────────────────────────────────
+  # ─── Frontend Angular ────────────────────────────────────────
+  # Imagen multi-stage: node compila Angular → nginx sirve dist/
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mce-frontend
+    restart: unless-stopped
+    networks:
+      - mce-net
+
+  # ─── Nginx (reverse proxy) ───────────────────────────────────
   nginx:
     image: nginx:alpine
     container_name: mce-nginx
     restart: unless-stopped
     depends_on:
       - backend
+      - frontend
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # Frontend Angular (cuando esté compilado)
-      # - ./frontend/dist/browser:/usr/share/nginx/html:ro
     networks:
       - mce-net
 
