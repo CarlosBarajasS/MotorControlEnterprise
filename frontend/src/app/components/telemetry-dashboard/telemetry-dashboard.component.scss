@@ -1,0 +1,109 @@
+$card-bg: rgba(30, 41, 59, 0.5);
+$primary: #0a84ff;
+$success: #10b981;
+$danger: #ef4444;
+
+.telemetry-wrapper {
+    background: $card-bg;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 400px;
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+
+        .title-section {
+            h2 {
+                margin: 0 0 0.5rem;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                font-size: 1.25rem;
+
+                .badge {
+                    font-size: 0.7rem;
+                    padding: 0.25rem 0.6rem;
+                    border-radius: 1rem;
+                    background: rgba(255, 255, 255, 0.1);
+                    color: #fff;
+                    letter-spacing: 0.05em;
+
+                    &.running {
+                        background: rgba($success, 0.2);
+                        color: $success;
+                        border: 1px solid rgba($success, 0.3);
+                    }
+                }
+            }
+
+            .subtitle {
+                color: #94a3b8;
+                font-family: monospace;
+                margin: 0;
+                font-size: 0.85rem;
+            }
+        }
+
+        .kpi-panel {
+            display: flex;
+            gap: 1rem;
+
+            .kpi-box {
+                background: rgba(0, 0, 0, 0.3);
+                padding: 0.75rem 1rem;
+                border-radius: 0.5rem;
+                min-width: 100px;
+                border: 1px solid rgba(255, 255, 255, 0.02);
+
+                .label {
+                    display: block;
+                    font-size: 0.7rem;
+                    color: #94a3b8;
+                    margin-bottom: 0.25rem;
+                    font-weight: 600;
+                }
+
+                .value {
+                    display: block;
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    font-family: 'Courier New', Courier, monospace;
+
+                    small {
+                        font-size: 0.8rem;
+                        color: #64748b;
+                        font-weight: 400;
+                    }
+
+                    &.speed {
+                        color: $primary;
+                    }
+
+                    &.current {
+                        color: $danger;
+                    }
+
+                    &.voltage {
+                        color: $success;
+                    }
+                }
+            }
+        }
+    }
+
+    .chart-container {
+        flex: 1;
+        position: relative;
+        width: 100%;
+        min-height: 250px;
+    }
+}
