@@ -1,9 +1,12 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
 import { TelemetryDashboardComponent } from '../telemetry-dashboard/telemetry-dashboard.component';
 import { MotorControlComponent } from '../motor-control/motor-control.component';
+
+const API_URL = '/api';
 
 @Component({
     selector: 'app-dashboard',
@@ -14,18 +17,32 @@ import { MotorControlComponent } from '../motor-control/motor-control.component'
 })
 export class DashboardComponent implements OnInit {
     authService = inject(AuthService);
+    http = inject(HttpClient);
 
-    // Dummy data for migration demo
-    gateways = [
-        { id: 'edge-gateway-tienda-abc', name: 'Sucursal Norte', status: 'online', lastSeen: 'Hace 2 min' },
-        { id: 'edge-gateway-bodega-1', name: 'Bodega Principal', status: 'offline', lastSeen: 'Hace 3 horas' },
-        { id: 'edge-gateway-oficinas', name: 'Oficinas Corporativas', status: 'online', lastSeen: 'Hace 30 seg' }
-    ];
+    gateways = signal<any[]>([]);
+    stats = signal<{ active: number, total: number }>({ active: 0, total: 0 });
 
     selectedCameraStream: string | null = null;
 
     ngOnInit() {
-        // In a real scenario, fetch gateways from API
+        this.fetchClients();
+    }
+
+    fetchClients() {
+        this.http.get<any[]>(`${API_URL}/clients`).subscribe({
+            next: (data) => {
+                const clients = data || [];
+                this.gateways.set(clients);
+                const active = clients.filter(c => c.status === 'active' || c.status === 'online').length;
+                this.stats.set({ active, total: clients.length });
+            },
+            error: (err) => {
+                console.error('Error cargando gateways:', err);
+                if (err.status === 401) {
+                    this.logout();
+                }
+            }
+        });
     }
 
     logout() {

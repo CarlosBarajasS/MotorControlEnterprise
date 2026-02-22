@@ -36,31 +36,31 @@
             <div class="stats">
                 <div class="stat-card">
                     <span>Gateways Activos</span>
-                    <strong>2 / 3</strong>
+                    <strong>{{ stats().active }} / {{ stats().total }}</strong>
                 </div>
                 <div class="stat-card">
                     <span>Cámaras Online</span>
-                    <strong>14</strong>
+                    <strong>--</strong>
                 </div>
             </div>
         </header>
 
         <div class="gateways-grid">
-            <div class="gateway-card" *ngFor="let gw of gateways">
+            <div class="gateway-card" *ngFor="let gw of gateways()">
                 <div class="gw-header">
                     <h3>{{ gw.name }}</h3>
-                    <span class="status-badge" [class.online]="gw.status === 'online'"
-                        [class.offline]="gw.status === 'offline'">
+                    <span class="status-badge" [class.online]="gw.status === 'active'"
+                        [class.offline]="gw.status !== 'active'">
                         {{ gw.status | uppercase }}
                     </span>
                 </div>
 
                 <div class="gw-body">
-                    <p class="subtitle">ID: {{ gw.id }}</p>
-                    <p class="last-seen">Último Heartbeat: {{ gw.lastSeen }}</p>
+                    <p class="subtitle">Gateway ID: <strong>{{ gw.gatewayId }}</strong></p>
+                    <p class="last-seen">Creado: {{ gw.createdAt | date:'short' }}</p>
 
-                    <div class="camera-list" *ngIf="gw.status === 'online'">
-                        <h4>Cámaras IP (RTSP Relay)</h4>
+                    <div class="camera-list" *ngIf="gw.status === 'active'">
+                        <h4>Cámaras Activas</h4>
                         <button class="cam-btn" (click)="viewCamera('http://localhost:8888/cam-principal')">
                             🎥 Entrada Principal
                         </button>
