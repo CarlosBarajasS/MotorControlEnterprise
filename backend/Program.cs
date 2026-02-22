@@ -11,7 +11,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register background services
+// Seeder: crea el primer admin desde env vars (corre antes que MQTT)
+builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.AdminSeederService>();
+// MQTT: suscripción a topics de edge gateways
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.MqttIntegrationService>();
 
 // Configure Entity Framework
@@ -38,13 +40,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
+// Swagger disponible siempre en esta etapa de desarrollo
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // Use Cors, Auth & Controllers
 app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());

@@ -49,6 +49,9 @@ services:
       Jwt__Audience: MotorControlClients
       Mqtt__Host: mosquitto
       Mqtt__Port: "1883"
+      # Primer admin — eliminar del .env después del primer login
+      Seed__AdminEmail:    ${Seed__AdminEmail:-}
+      Seed__AdminPassword: ${Seed__AdminPassword:-}
     ports:
       - "${BACKEND_PORT:-8090}:8080"
     networks:
