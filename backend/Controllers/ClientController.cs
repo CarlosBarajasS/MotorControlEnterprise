@@ -125,6 +125,48 @@ namespace MotorControlEnterprise.Api.Controllers
             return NoContent();
         }
 
+        // PATCH api/clients/{id}/cloud-storage
+        [HttpPatch("{id:int}/cloud-storage")]
+        public async Task<IActionResult> ToggleCloudStorage(int id, [FromBody] CloudStorageRequest req)
+        {
+            var client = await _db.Clients.FindAsync(id);
+            if (client == null) return NotFound();
+
+            client.CloudStorageActive    = req.Active;
+            client.CloudStorageEnabledAt = req.Active ? DateTime.UtcNow : client.CloudStorageEnabledAt;
+            client.UpdatedAt             = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { client.Id, client.Name, client.CloudStorageActive, client.CloudStorageEnabledAt });
+        }
+
+        // GET api/clients/stats
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetStats()
+        {
+            var total     = await _db.Clients.CountAsync();
+            var active    = await _db.Clients.CountAsync(c => c.Status == "active");
+            var inactive  = await _db.Clients.CountAsync(c => c.Status == "inactive");
+            var suspended = await _db.Clients.CountAsync(c => c.Status == "suspended");
+            var withCloud = await _db.Clients.CountAsync(c => c.CloudStorageActive);
+            var totalCam  = await _db.Cameras.CountAsync();
+            var activeCam = await _db.Cameras.CountAsync(c => c.Status == "active");
+
+            var byType = await _db.Clients
+                .Where(c => c.BusinessType != null)
+                .GroupBy(c => c.BusinessType!)
+                .Select(g => new { businessType = g.Key, count = g.Count() })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                clients = new { total, active, inactive, suspended, withCloudStorage = withCloud },
+                cameras = new { total = totalCam, active = activeCam },
+                byBusinessType = byType
+            });
+        }
+
         public record StatusRequest(string Status);
+        public record CloudStorageRequest(bool Active);
     }
 }

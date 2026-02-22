@@ -19,6 +19,9 @@ builder.Services.AddHttpClient("mediamtx", client =>
 
 // Seeder: crea el primer admin desde env vars (corre antes que MQTT)
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.AdminSeederService>();
+// CameraEdgeService: request-response MQTT para PTZ, SD card y grabaciones locales
+builder.Services.AddSingleton<MotorControlEnterprise.Api.Services.ICameraEdgeService,
+                               MotorControlEnterprise.Api.Services.CameraEdgeService>();
 // MQTT Publisher: singleton inyectable en controllers para publicar comandos
 builder.Services.AddSingleton<MotorControlEnterprise.Api.Services.IMqttPublisherService,
                                MotorControlEnterprise.Api.Services.MqttPublisherService>();

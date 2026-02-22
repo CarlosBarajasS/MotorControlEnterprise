@@ -14,16 +14,19 @@ namespace MotorControlEnterprise.Api.Services
         private readonly ILogger<MqttIntegrationService> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly IConfiguration _config;
+        private readonly ICameraEdgeService _edgeService;
         private IMqttClient? _mqttClient;
 
         public MqttIntegrationService(
             ILogger<MqttIntegrationService> logger,
             IServiceProvider serviceProvider,
-            IConfiguration config)
+            IConfiguration config,
+            ICameraEdgeService edgeService)
         {
-            _logger = logger;
+            _logger       = logger;
             _serviceProvider = serviceProvider;
-            _config = config;
+            _config       = config;
+            _edgeService  = edgeService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -64,6 +67,7 @@ namespace MotorControlEnterprise.Api.Services
                 await _mqttClient.SubscribeAsync("camera/+/+/status",    cancellationToken: ct);
                 await _mqttClient.SubscribeAsync("camera/+/+/register",  cancellationToken: ct);
                 await _mqttClient.SubscribeAsync("motor/+/telemetry",    cancellationToken: ct);
+                await _mqttClient.SubscribeAsync("response/+/+",         cancellationToken: ct);
 
                 _logger.LogInformation("MQTT conectado a {Host}:{Port}.", host, port);
             }
@@ -79,6 +83,15 @@ namespace MotorControlEnterprise.Api.Services
             var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload.ToArray());
 
             _logger.LogDebug("MQTT recibido. Topic: {Topic}", topic);
+
+            // response/{gatewayId}/{requestId} — despachar al CameraEdgeService
+            if (topic.StartsWith("response/"))
+            {
+                var parts = topic.Split('/');
+                if (parts.Length == 3)
+                    _edgeService.HandleResponse(parts[2], payload);
+                return;
+            }
 
             try
             {

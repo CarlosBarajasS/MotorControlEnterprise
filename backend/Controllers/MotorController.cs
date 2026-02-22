@@ -147,14 +147,99 @@ namespace MotorControlEnterprise.Api.Controllers
                 data
             });
         }
+
+        // ─── POST /api/admin/motors/{deviceId}/arranque6p ────────────────────
+        /// <summary>Arranque 6 pasos. Body: { "values": [v1,v2,v3,v4,v5,v6] } (0-255)</summary>
+        [HttpPost("{deviceId}/arranque6p")]
+        public async Task<IActionResult> Arranque6P(string deviceId, [FromBody] Arranque6PRequest req)
+        {
+            if (req.Values == null || req.Values.Length != 6)
+                return BadRequest(new { error = "Se requieren exactamente 6 valores PWM." });
+            if (req.Values.Any(v => v < 0 || v > 255))
+                return BadRequest(new { error = "Cada valor PWM debe estar entre 0 y 255." });
+
+            var letters = new[] { 'a', 'b', 'c', 'd', 'e', 'f' };
+            var command = string.Join(",", req.Values.Select((v, i) => $"{v}{letters[i]}")) + ",";
+            var sent    = await _mqtt.PublishAsync($"motor/{deviceId}/command", command);
+
+            if (!sent) return StatusCode(503, new { error = "Broker MQTT no disponible." });
+
+            _logger.LogInformation("Arranque6P → {DeviceId}: {Cmd}", deviceId, command);
+            return Ok(new { success = true, command, topic = $"motor/{deviceId}/command" });
+        }
+
+        // ─── POST /api/admin/motors/{deviceId}/continuo ───────────────────────
+        [HttpPost("{deviceId}/continuo")]
+        public async Task<IActionResult> Continuo(string deviceId)
+        {
+            const string command = "0i,";
+            var sent = await _mqtt.PublishAsync($"motor/{deviceId}/command", command);
+            if (!sent) return StatusCode(503, new { error = "Broker MQTT no disponible." });
+            return Ok(new { success = true, command });
+        }
+
+        // ─── POST /api/admin/motors/{deviceId}/paro ───────────────────────────
+        [HttpPost("{deviceId}/paro")]
+        public async Task<IActionResult> Paro(string deviceId)
+        {
+            const string command = "0p,";
+            var sent = await _mqtt.PublishAsync($"motor/{deviceId}/command", command);
+            if (!sent) return StatusCode(503, new { error = "Broker MQTT no disponible." });
+            return Ok(new { success = true, command });
+        }
+
+        // ─── GET /api/admin/motors/mqtt/info ──────────────────────────────────
+        [HttpGet("mqtt/info")]
+        public IActionResult GetMqttInfo([FromServices] IConfiguration config)
+        {
+            return Ok(new
+            {
+                host      = config["Mqtt:Host"] ?? "mosquitto",
+                port      = config["Mqtt:Port"] ?? "1885",
+                connected = _mqtt.IsConnected,
+                topics = new[]
+                {
+                    "motor/{id}/command     ← comandos al ESP32",
+                    "motor/{id}/telemetry   → telemetría del ESP32",
+                    "gateway/{id}/heartbeat → heartbeat del gateway",
+                    "camera/{gw}/{cam}/register → auto-registro de cámaras",
+                    "cmd/{gw}/{ch}          ← comandos edge (PTZ/SD)",
+                    "response/{gw}/{reqId}  → respuestas del edge"
+                }
+            });
+        }
+
+        // ─── POST /api/admin/motors/mqtt/test ─────────────────────────────────
+        [HttpPost("mqtt/test")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> TestMqtt([FromBody] MqttTestRequest req)
+        {
+            if (string.IsNullOrWhiteSpace(req.Topic) || string.IsNullOrWhiteSpace(req.Message))
+                return BadRequest(new { error = "topic y message son requeridos." });
+            var sent = await _mqtt.PublishAsync(req.Topic, req.Message);
+            return sent
+                ? Ok(new { success = true, topic = req.Topic })
+                : StatusCode(503, new { error = "Broker MQTT no disponible." });
+        }
     }
 
     // ─── DTOs ─────────────────────────────────────────────────────────────────
     public class MotorCommandRequest
     {
         [Required]
-        public string Command { get; set; } = string.Empty;  // start | stop | set_speed | emergency_stop
+        public string Command { get; set; } = string.Empty;
+        public int? Speed { get; set; }
+    }
 
-        public int? Speed { get; set; }  // RPM, opcional según comando
+    public class Arranque6PRequest
+    {
+        [Required]
+        public int[] Values { get; set; } = Array.Empty<int>();
+    }
+
+    public class MqttTestRequest
+    {
+        public string Topic   { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
     }
 }
