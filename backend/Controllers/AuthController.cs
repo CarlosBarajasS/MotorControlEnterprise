@@ -52,7 +52,8 @@ namespace MotorControlEnterprise.Api.Controllers
             var id    = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
             var email = User.FindFirstValue(JwtRegisteredClaimNames.Email);
             var role  = User.FindFirstValue(ClaimTypes.Role);
-            return Ok(new { id, email, role });
+            var name  = User.FindFirstValue("name");
+            return Ok(new { id, email, name, role });
         }
 
         [HttpPost("users")]
@@ -101,6 +102,8 @@ namespace MotorControlEnterprise.Api.Controllers
                 new Claim(JwtRegisteredClaimNames.Sub,   user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Role,               user.Role),
+                new Claim("role",                        user.Role),
+                new Claim("name",                        user.Name ?? ""),
                 new Claim(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString())
             };
 
