@@ -17,7 +17,7 @@ RUN npm run build
 FROM nginx:alpine
 # Copiar la salida compilada de Angular a la carpeta publica de Nginx
 # Ajusta "frontend" si tu dist genera otra carpeta interna
-COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
+COPY --from=build /app/dist/frontend /usr/share/nginx/html
 
 # Copiar configuración customizada de Nginx para manejar el ruteo de Angular (SPA)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
