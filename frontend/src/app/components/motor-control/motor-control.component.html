@@ -1,0 +1,45 @@
+<div class="motor-control-panel card">
+    <div class="panel-header">
+        <h3><i class="icon-engine"></i> Panel de Control - {{ deviceId }}</h3>
+        <div class="status-indicator">
+            <span class="status-dot"></span> Listo para transmitir
+        </div>
+    </div>
+
+    <div class="panel-body">
+        <div class="speed-control">
+            <label for="speedInput">Ajuste de Velocidad (PWM / RPM)</label>
+            <div class="range-container">
+                <input type="range" id="speedInput" min="0" max="3000" step="10" [ngModel]="speed()"
+                    (ngModelChange)="speed.set($event)" [disabled]="isSending()">
+                <div class="speed-display">
+                    <span class="value">{{ speed() }}</span>
+                    <span class="unit">RPM</span>
+                </div>
+            </div>
+            <button class="btn btn-secondary set-speed-btn" (click)="sendCommand('set_speed')" [disabled]="isSending()">
+                Aplicar Velocidad
+            </button>
+        </div>
+
+        <div class="command-buttons">
+            <button class="btn btn-primary start-btn" (click)="sendCommand('start')" [disabled]="isSending()">
+                <span class="icon">▶</span> INICIAR (START)
+            </button>
+
+            <button class="btn btn-warning stop-btn" (click)="sendCommand('stop')" [disabled]="isSending()">
+                <span class="icon">■</span> DETENER (STOP)
+            </button>
+
+            <button class="btn btn-danger e-stop-btn" (click)="sendCommand('emergency_stop')" [disabled]="isSending()">
+                <span class="icon">⚠</span> PARO DE EMERGENCIA
+            </button>
+        </div>
+
+        <!-- Feedback UI -->
+        <div class="feedback-toast" *ngIf="lastCommandResult()"
+            [ngClass]="{'success': lastCommandResult()?.success, 'error': !lastCommandResult()?.success}">
+            {{ lastCommandResult()?.message }}
+        </div>
+    </div>
+</div>

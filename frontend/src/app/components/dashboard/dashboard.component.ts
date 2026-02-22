@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
 import { TelemetryDashboardComponent } from '../telemetry-dashboard/telemetry-dashboard.component';
+import { MotorControlComponent } from '../motor-control/motor-control.component';
 
 @Component({
     selector: 'app-dashboard',
     standalone: true,
-    imports: [CommonModule, CameraViewerComponent, TelemetryDashboardComponent],
+    imports: [CommonModule, CameraViewerComponent, TelemetryDashboardComponent, MotorControlComponent],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.scss'
 })

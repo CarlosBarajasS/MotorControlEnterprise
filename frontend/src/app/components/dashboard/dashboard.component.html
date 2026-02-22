@@ -77,7 +77,10 @@
                 <h2>Análisis de Telemetría HMI</h2>
                 <p>Métricas consolidadas de sensores (Voltaje, Corriente y RPM)</p>
             </div>
-            <app-telemetry-dashboard></app-telemetry-dashboard>
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+                <app-motor-control deviceId="device-01"></app-motor-control>
+                <app-telemetry-dashboard></app-telemetry-dashboard>
+            </div>
         </section>
     </main>
 </div>
