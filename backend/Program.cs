@@ -11,6 +11,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// HttpClient para proxying de streams HLS desde central-mediamtx
+builder.Services.AddHttpClient("mediamtx", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+
 // Seeder: crea el primer admin desde env vars (corre antes que MQTT)
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.AdminSeederService>();
 // MQTT: suscripción a topics de edge gateways

@@ -1,4 +1,5 @@
 services:
+  # ─── Base de datos ───────────────────────────────────────────
   postgres:
     image: postgres:15-alpine
     container_name: mce-postgres
@@ -19,17 +20,36 @@ services:
     networks:
       - mce-net
 
+  # ─── MQTT Broker ─────────────────────────────────────────────
+  # Puerto 1885 para ser compatible con edge devices existentes
   mosquitto:
     image: eclipse-mosquitto:2.0
     container_name: mce-mosquitto
     restart: unless-stopped
     ports:
-      - "1886:1883"
+      - "1885:1883"
+      - "9002:9001"
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     networks:
       - mce-net
+      - shared-edge-network
 
+  # ─── MediaMTX Central ────────────────────────────────────────
+  # Recibe RTSP de edge gateways y sirve HLS al API
+  central-mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: mce-central-mediamtx
+    restart: unless-stopped
+    volumes:
+      - ./mediamtx/central-mediamtx.yml:/mediamtx.yml:ro
+    ports:
+      - "8556:8554"   # RTSP (push desde edge)
+    networks:
+      - mce-net
+      - shared-edge-network
+
+  # ─── API .NET 8 ──────────────────────────────────────────────
   backend:
     build:
       context: .
@@ -41,38 +61,46 @@ services:
         condition: service_healthy
       mosquitto:
         condition: service_started
+      central-mediamtx:
+        condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: "Host=postgres;Database=${POSTGRES_DB:-MotorControlEnterprise};Username=${POSTGRES_USER:-motor_ent};Password=${POSTGRES_PASSWORD:-postgres}"
-      Jwt__Key: ${JWT_SECRET_KEY:-CHANGE_THIS_IN_PRODUCTION_min32chars_secret}
-      Jwt__Issuer: MotorControlEnterprise
+      Jwt__Key:      ${JWT_SECRET_KEY:-CHANGE_THIS_IN_PRODUCTION_min32chars_secret}
+      Jwt__Issuer:   MotorControlEnterprise
       Jwt__Audience: MotorControlClients
-      Mqtt__Host: mosquitto
-      Mqtt__Port: "1883"
+      Mqtt__Host:    mosquitto
+      Mqtt__Port:    "1883"
+      Mediamtx__HlsBaseUrl:    "http://central-mediamtx:8888"
+      Mediamtx__HlsPublicUrl:  ""
       # Primer admin — eliminar del .env después del primer login
       Seed__AdminEmail:    ${Seed__AdminEmail:-}
       Seed__AdminPassword: ${Seed__AdminPassword:-}
-    ports:
-      - "${BACKEND_PORT:-8090}:8080"
     networks:
       - mce-net
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: mce-frontend
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - backend
-  #   ports:
-  #     - "8181:80"
-  #   networks:
-  #     - mce-net
+  # ─── Nginx ───────────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: mce-nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Frontend Angular (cuando esté compilado)
+      # - ./frontend/dist/browser:/usr/share/nginx/html:ro
+    networks:
+      - mce-net
 
 networks:
   mce-net:
     driver: bridge
+  shared-edge-network:
+    external: true   # Red compartida con edge devices (debe existir)
 
 volumes:
   postgres-data:

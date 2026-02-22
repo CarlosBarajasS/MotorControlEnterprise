@@ -1,0 +1,33 @@
+###############################################
+# Central MediaMTX - Enterprise
+# Recibe push RTSP de edge gateways y sirve HLS al API proxy
+###############################################
+
+logLevel: info
+
+api: yes
+apiAddress: 0.0.0.0:9997
+
+# NOTA: %env:VAR% no funciona en authInternalUsers — credenciales hardcodeadas.
+# Si cambias MEDIAMTX_PUSH_PASS en .env, actualiza también este archivo.
+authInternalUsers:
+  - user: "edge"
+    pass: "edge123"
+    permissions:
+      - action: read
+      - action: api
+  - user: "edge-relay"
+    pass: "relay-secret-2026"
+    permissions:
+      - action: publish
+      - action: read
+
+rtspAddress: :8554
+hlsAddress:  :8888
+webrtcAddress: :8889
+
+pathDefaults:
+  record: no
+
+paths:
+  all_others: ~
