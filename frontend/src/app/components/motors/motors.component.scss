@@ -1,0 +1,231 @@
+@import '../clients/clients.component.scss';
+
+.layout-container {
+    padding: 30px;
+}
+
+.motors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.motor-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+
+    .card-header {
+        padding: 20px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .motor-name {
+            margin: 0;
+            font-size: 1.15rem;
+            color: #0f172a;
+        }
+
+        .status-pill {
+            font-size: 0.70rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #64748b;
+
+            &.running {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            &.stopped {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+        }
+    }
+
+    .card-body {
+        padding: 20px;
+        flex-grow: 1;
+
+        .meta {
+            margin: 0 0 8px 0;
+            font-size: 0.85rem;
+            color: #64748b;
+
+            strong {
+                color: #334155;
+            }
+        }
+
+        .metrics {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed #e2e8f0;
+
+            .metric {
+                display: flex;
+                flex-direction: column;
+
+                small {
+                    font-size: 0.75rem;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                }
+
+                span {
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    color: #0f172a;
+                }
+            }
+        }
+    }
+
+    .card-footer {
+        padding: 16px 20px;
+        background: #f8fafc;
+        border-radius: 0 0 12px 12px;
+        border-top: 1px solid #e2e8f0;
+    }
+}
+
+.full-width {
+    width: 100%;
+}
+
+.mqtt-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ef4444;
+        margin-right: 8px;
+    }
+
+    &.connected {
+        color: #0f172a;
+        border-color: #cbd5e1;
+
+        .dot {
+            background: #10b981;
+            box-shadow: 0 0 4px #10b981;
+        }
+    }
+}
+
+.modal-content.large {
+    max-width: 900px;
+}
+
+.control-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.extended-control-section {
+    h3 {
+        margin-top: 0;
+        font-size: 1.15rem;
+        color: #0f172a;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 12px;
+    }
+
+    .special-actions {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+
+        button {
+            flex: 1;
+            padding: 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+
+            &:hover {
+                background: #d97706;
+            }
+        }
+
+        .btn-danger {
+            background: #ef4444;
+
+            &:hover {
+                background: #dc2626;
+            }
+        }
+    }
+
+    .steps-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 20px;
+        border-radius: 12px;
+
+        h4 {
+            margin: 0 0 16px 0;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        .step-inputs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+
+            .step-field {
+                label {
+                    display: block;
+                    font-size: 0.75rem;
+                    color: #64748b;
+                    margin-bottom: 4px;
+                }
+
+                input {
+                    width: 100%;
+                    padding: 8px;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                    box-sizing: border-box;
+                }
+            }
+        }
+    }
+}
+
+.mt-3 {
+    margin-top: 16px;
+}

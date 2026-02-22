@@ -1,0 +1,83 @@
+<div class="layout-container">
+    <div class="header-section">
+        <div>
+            <h1>Control de Motores Industriales</h1>
+            <p>Supervisa el estado y controla los motores mediante infraestructura MQTT.</p>
+        </div>
+        <div class="actions">
+            <div class="mqtt-badge" [class.connected]="mqttStatus()?.connected"
+                [title]="'Broker: ' + (mqttStatus()?.broker || 'Desconectado')">
+                <span class="dot"></span> MQTT {{ mqttStatus()?.connected ? 'Online' : 'Offline' }}
+            </div>
+            <button class="btn-secondary" (click)="loadData()">🔄 Refrescar</button>
+        </div>
+    </div>
+
+    <div class="motors-grid">
+        <div *ngIf="motors().length === 0" class="empty-state">
+            <p>No se encontraron motores sincronizados en la base de datos.</p>
+        </div>
+
+        <div class="motor-card" *ngFor="let m of motors()">
+            <div class="card-header">
+                <h3 class="motor-name">{{ m.name || m.deviceId || 'Motor Desconocido' }}</h3>
+                <span class="status-pill" [class.running]="m.lastState === 'running'"
+                    [class.stopped]="m.lastState === 'stopped' || !m.lastState">
+                    {{ m.lastState | uppercase }}
+                </span>
+            </div>
+            <div class="card-body">
+                <p class="meta"><strong>ID:</strong> {{ m.id }}</p>
+                <p class="meta"><strong>Última Respuesta:</strong> {{ m.lastSeen ? (m.lastSeen | date:'short') : 'Nunca'
+                    }}</p>
+
+                <div class="metrics" *ngIf="m.lastTelemetry">
+                    <div class="metric"><small>RPM</small> <span>{{ m.lastTelemetry.speed || 0 }}</span></div>
+                    <div class="metric"><small>Corriente</small> <span>{{ m.lastTelemetry.current || 0 }} A</span></div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button class="btn-primary full-width" (click)="openMotorControl(m)">Abrir Panel de Control</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Control Avanzado de Motor -->
+<div class="modal-overlay" *ngIf="selectedMotor()">
+    <div class="modal-content large">
+        <div class="modal-header">
+            <h2>Control HMI: {{ selectedMotor()?.name || selectedMotor()?.deviceId }}</h2>
+            <button class="close-btn" (click)="closeMotorControl()">✕</button>
+        </div>
+        <div class="modal-body control-layout">
+
+            <!-- Componente Estándar (Start/Stop/Velocidad) -->
+            <div class="standard-control-section">
+                <app-motor-control [deviceId]="selectedMotor().id"></app-motor-control>
+            </div>
+
+            <!-- Controles Extendidos (6 Pasos, Continuo, Paro) -->
+            <div class="extended-control-section">
+                <h3>Funciones Especiales</h3>
+                <div class="special-actions">
+                    <button class="btn-warning" (click)="sendContinuo()">Avance Continuo</button>
+                    <button class="btn-danger" (click)="sendParo()">Paro de Emergencia</button>
+                </div>
+
+                <div class="steps-box">
+                    <h4>Arranque de 6 Pasos (0-255 PWM/Freq)</h4>
+                    <div class="step-inputs">
+                        <div class="step-field" *ngFor="let val of arranqueValues(); let i = index">
+                            <label>Paso {{ i + 1 }}</label>
+                            <input type="number" min="0" max="255" class="form-control" [ngModel]="arranqueValues()[i]"
+                                (ngModelChange)="arranqueValues()[i] = $event">
+                        </div>
+                    </div>
+                    <button class="btn-primary mt-3" (click)="sendArranque6P()">Ejecutar Ciclo de 6 Pasos</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
