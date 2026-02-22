@@ -63,6 +63,7 @@ namespace MotorControlEnterprise.Api.Services
                 await _mqttClient.SubscribeAsync("gateway/+/heartbeat",  cancellationToken: ct);
                 await _mqttClient.SubscribeAsync("camera/+/+/status",    cancellationToken: ct);
                 await _mqttClient.SubscribeAsync("camera/+/+/register",  cancellationToken: ct);
+                await _mqttClient.SubscribeAsync("motor/+/telemetry",    cancellationToken: ct);
 
                 _logger.LogInformation("MQTT conectado a {Host}:{Port}.", host, port);
             }
@@ -118,6 +119,35 @@ namespace MotorControlEnterprise.Api.Services
 
                             await db.SaveChangesAsync();
                         }
+                    }
+                }
+
+                // motor/{deviceId}/telemetry
+                else if (topic.StartsWith("motor/") && topic.EndsWith("/telemetry"))
+                {
+                    var deviceId = topic.Split('/')[1];
+                    try
+                    {
+                        var doc = JsonDocument.Parse(payload);
+                        var root = doc.RootElement;
+
+                        var telemetry = new MotorControlEnterprise.Api.Models.MotorTelemetry
+                        {
+                            DeviceId  = deviceId,
+                            Speed     = root.TryGetProperty("speed",   out var s) ? s.GetInt32()    : null,
+                            Current   = root.TryGetProperty("current", out var c) ? (float?)c.GetDouble() : null,
+                            Voltage   = root.TryGetProperty("voltage", out var v) ? (float?)v.GetDouble() : null,
+                            State     = root.TryGetProperty("state",   out var st) ? st.GetString() : "unknown",
+                            Timestamp = DateTime.UtcNow
+                        };
+
+                        db.MotorTelemetry.Add(telemetry);
+                        await db.SaveChangesAsync();
+                        _logger.LogDebug("Telemetría guardada para dispositivo {DeviceId}.", deviceId);
+                    }
+                    catch (JsonException)
+                    {
+                        _logger.LogWarning("Telemetría con payload JSON inválido para {DeviceId}.", deviceId);
                     }
                 }
 

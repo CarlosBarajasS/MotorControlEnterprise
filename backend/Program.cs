@@ -19,7 +19,13 @@ builder.Services.AddHttpClient("mediamtx", client =>
 
 // Seeder: crea el primer admin desde env vars (corre antes que MQTT)
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.AdminSeederService>();
-// MQTT: suscripción a topics de edge gateways
+// MQTT Publisher: singleton inyectable en controllers para publicar comandos
+builder.Services.AddSingleton<MotorControlEnterprise.Api.Services.IMqttPublisherService,
+                               MotorControlEnterprise.Api.Services.MqttPublisherService>();
+builder.Services.AddHostedService(sp =>
+    (MotorControlEnterprise.Api.Services.MqttPublisherService)
+    sp.GetRequiredService<MotorControlEnterprise.Api.Services.IMqttPublisherService>());
+// MQTT Integration: suscripción a topics de edge gateways
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.MqttIntegrationService>();
 
 // Configure Entity Framework
