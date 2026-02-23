@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotorControlEnterprise.Api.Data;
 using MotorControlEnterprise.Api.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace MotorControlEnterprise.Api.Controllers
 {
@@ -15,22 +18,57 @@ namespace MotorControlEnterprise.Api.Controllers
 
         public CameraController(ApplicationDbContext db) => _db = db;
 
-        // GET api/cameras
+        // DTO para crear/actualizar cámaras (lo que el frontend envía)
+        public record CameraUpsertDto(
+            string Name,
+            string? Location,
+            string? RtspUrl,
+            int? ClientId,
+            bool Ptz = false
+        );
+
+        // Extrae la URL RTSP del campo Streams (jsonb { "rtsp": "...", "hls": "..." })
+        private static string? ExtractRtspUrl(string? streams)
+        {
+            if (streams == null) return null;
+            try
+            {
+                var doc = JsonDocument.Parse(streams);
+                return doc.RootElement.TryGetProperty("rtsp", out var el) ? el.GetString() : null;
+            }
+            catch { return null; }
+        }
+
+        // Construye el JSON de Streams a partir de una URL RTSP
+        private static string BuildStreams(string rtspUrl)
+            => JsonSerializer.Serialize(new { rtsp = rtspUrl });
+
+        // GET api/cameras — admin ve todas, usuario solo las suyas
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var cameras = await _db.Cameras
-                .Include(c => c.Client)
-                .OrderByDescending(c => c.LastSeen)
-                .Select(c => new {
-                    c.Id, c.Name, c.Location, c.Status,
-                    c.CameraId, c.CameraKey, c.Ptz,
-                    c.LastSeen, c.Streams,
-                    Client = c.Client == null ? null : new { c.Client.Id, c.Client.Name, c.Client.GatewayId }
-                })
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var userIdStr = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            _ = int.TryParse(userIdStr, out var userId);
+
+            var query = _db.Cameras.Include(c => c.Client).AsQueryable();
+
+            // Si no es admin, filtrar por userId
+            if (role != "admin")
+                query = query.Where(c => c.UserId == userId);
+
+            var cameras = await query
+                .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
-            return Ok(cameras);
+            return Ok(cameras.Select(c => new
+            {
+                c.Id, c.Name, c.Location, c.Status,
+                c.CameraId, c.CameraKey, c.Ptz,
+                c.LastSeen, c.ClientId, c.Streams, c.CreatedAt,
+                RtspUrl = ExtractRtspUrl(c.Streams),
+                Client = c.Client == null ? null : new { c.Client.Id, c.Client.Name, c.Client.GatewayId }
+            }));
         }
 
         // GET api/cameras/{id}
@@ -42,7 +80,15 @@ namespace MotorControlEnterprise.Api.Controllers
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (camera == null) return NotFound();
-            return Ok(camera);
+
+            return Ok(new
+            {
+                camera.Id, camera.Name, camera.Location, camera.Status,
+                camera.CameraId, camera.CameraKey, camera.Ptz,
+                camera.LastSeen, camera.ClientId, camera.Streams, camera.CreatedAt,
+                RtspUrl = ExtractRtspUrl(camera.Streams),
+                Client = camera.Client == null ? null : new { camera.Client.Id, camera.Client.Name, camera.Client.GatewayId }
+            });
         }
 
         // GET api/cameras/{id}/status
@@ -60,41 +106,68 @@ namespace MotorControlEnterprise.Api.Controllers
                 camera.Status,
                 IsOnline = isOnline,
                 camera.LastSeen,
-                camera.Streams
+                camera.Streams,
+                RtspUrl = ExtractRtspUrl(camera.Streams)
             });
         }
 
         // POST api/cameras
         [HttpPost]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> Create([FromBody] Camera camera)
+        public async Task<IActionResult> Create([FromBody] CameraUpsertDto dto)
         {
-            camera.CreatedAt = DateTime.UtcNow;
-            camera.UpdatedAt = DateTime.UtcNow;
+            var userIdStr = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            _ = int.TryParse(userIdStr, out var userId);
+
+            var camera = new Camera
+            {
+                Name      = dto.Name,
+                Location  = dto.Location,
+                Ptz       = dto.Ptz,
+                ClientId  = dto.ClientId,
+                UserId    = userId,
+                Streams   = dto.RtspUrl != null ? BuildStreams(dto.RtspUrl) : null,
+                Status    = "active",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
 
             _db.Cameras.Add(camera);
             await _db.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = camera.Id }, camera);
+            return CreatedAtAction(nameof(GetById), new { id = camera.Id }, new
+            {
+                camera.Id, camera.Name, camera.Location, camera.Status,
+                camera.Ptz, camera.ClientId, camera.Streams, camera.CreatedAt,
+                RtspUrl = ExtractRtspUrl(camera.Streams)
+            });
         }
 
         // PUT api/cameras/{id}
         [HttpPut("{id:int}")]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> Update(int id, [FromBody] Camera updated)
+        public async Task<IActionResult> Update(int id, [FromBody] CameraUpsertDto dto)
         {
             var camera = await _db.Cameras.FindAsync(id);
             if (camera == null) return NotFound();
 
-            camera.Name      = updated.Name;
-            camera.Location  = updated.Location;
-            camera.Status    = updated.Status;
-            camera.Ptz       = updated.Ptz;
-            camera.ClientId  = updated.ClientId;
+            camera.Name      = dto.Name;
+            camera.Location  = dto.Location;
+            camera.Ptz       = dto.Ptz;
+            camera.ClientId  = dto.ClientId;
             camera.UpdatedAt = DateTime.UtcNow;
 
+            if (dto.RtspUrl != null)
+                camera.Streams = BuildStreams(dto.RtspUrl);
+
             await _db.SaveChangesAsync();
-            return Ok(camera);
+
+            return Ok(new
+            {
+                camera.Id, camera.Name, camera.Location, camera.Status,
+                camera.Ptz, camera.ClientId, camera.Streams, camera.CreatedAt,
+                RtspUrl = ExtractRtspUrl(camera.Streams)
+            });
         }
 
         // DELETE api/cameras/{id}

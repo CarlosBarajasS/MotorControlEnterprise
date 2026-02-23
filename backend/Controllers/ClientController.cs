@@ -20,19 +20,24 @@ namespace MotorControlEnterprise.Api.Controllers
         public async Task<IActionResult> GetAll()
         {
             var clients = await _db.Clients
-                .Include(c => c.User)
                 .OrderBy(c => c.Name)
-                .Select(c => new {
-                    c.Id, c.Name, c.BusinessType, c.Rfc,
-                    c.City, c.State, c.Country,
-                    c.ContactName, c.ContactPhone, c.ContactEmail,
-                    c.GatewayId, c.Status, c.CloudStorageActive,
-                    c.CreatedAt,
-                    CameraCount = c.Id  // placeholder — joined below
-                })
                 .ToListAsync();
 
-            return Ok(clients);
+            // Conteo real de cámaras por cliente
+            var cameraCountMap = await _db.Cameras
+                .Where(c => c.ClientId != null)
+                .GroupBy(c => c.ClientId!.Value)
+                .Select(g => new { ClientId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.ClientId, x => x.Count);
+
+            return Ok(clients.Select(c => new {
+                c.Id, c.Name, c.BusinessType, c.Rfc,
+                c.City, c.State, c.Country,
+                c.ContactName, c.ContactPhone, c.ContactEmail,
+                c.GatewayId, c.Status, c.CloudStorageActive,
+                c.CreatedAt,
+                CameraCount = cameraCountMap.GetValueOrDefault(c.Id, 0)
+            }));
         }
 
         // GET api/clients/{id}
