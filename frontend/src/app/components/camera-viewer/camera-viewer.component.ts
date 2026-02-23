@@ -25,12 +25,20 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
         const video = this.videoEl.nativeElement;
 
         if (Hls.isSupported()) {
-            this.hls = new Hls({ maxLiveSyncPlaybackRate: 1.5 });
+            const token = localStorage.getItem('motor_control_token');
+            this.hls = new Hls({
+                maxLiveSyncPlaybackRate: 1.5,
+                xhrSetup: (xhr: XMLHttpRequest) => {
+                    if (token) {
+                        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                    }
+                }
+            });
             this.hls.loadSource(this.streamUrl);
             this.hls.attachMedia(video);
             this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 this.isLoading = false;
-                video.play().catch(() => {});
+                video.play().catch(() => { });
             });
             this.hls.on(Hls.Events.ERROR, (_, data) => {
                 if (data.fatal) {
@@ -42,7 +50,7 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
             video.src = this.streamUrl;
             video.addEventListener('loadedmetadata', () => {
                 this.isLoading = false;
-                video.play().catch(() => {});
+                video.play().catch(() => { });
             });
             video.addEventListener('error', () => {
                 this.isLoading = false;

@@ -75,8 +75,14 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
     const streamUrl = `${API_URL}/stream/${this.cameraId}/hls`;
 
     if (Hls.isSupported()) {
+      const token = localStorage.getItem('motor_control_token');
       this.hls = new Hls({
         maxLiveSyncPlaybackRate: 1.5,
+        xhrSetup: (xhr: XMLHttpRequest) => {
+          if (token) {
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+          }
+        }
       });
       this.hls.loadSource(streamUrl);
       this.hls.attachMedia(video);

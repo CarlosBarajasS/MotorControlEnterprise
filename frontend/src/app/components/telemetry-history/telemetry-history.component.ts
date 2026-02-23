@@ -69,10 +69,10 @@ export class TelemetryHistoryComponent implements OnInit {
             url += `&device=${encodeURIComponent(this.selectedDevice())}`;
         }
 
-        this.http.get<any[]>(`${API_URL}/admin/telemetry/history?hours=${this.timeRangeHours()}`).subscribe({
+        this.http.get<any>(url).subscribe({
             next: (res) => {
-                // Filter locally if backend doesn't support ?device= query param on /history endpoint initially
-                let data = res || [];
+                // Handle paginated response: { total, page, pageSize, data: [...] }
+                let data: any[] = Array.isArray(res) ? res : ((res as any)?.data || []);
                 if (this.selectedDevice() !== 'all') {
                     data = data.filter((d: any) => d.deviceId === this.selectedDevice());
                 }
