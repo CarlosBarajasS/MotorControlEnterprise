@@ -14,7 +14,8 @@ const API_URL = '/api';
   styleUrls: ['./camera-detail.component.scss']
 })
 export class CameraDetailComponent implements OnInit, OnDestroy {
-  @ViewChild('videoElement', { static: true }) videoElement!: ElementRef<HTMLVideoElement>;
+  // static: false because the element is inside *ngIf="camera()" which is null on init
+  @ViewChild('videoElement', { static: false }) videoElement?: ElementRef<HTMLVideoElement>;
 
   route = inject(ActivatedRoute);
   http = inject(HttpClient);
@@ -31,7 +32,6 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
     this.cameraId = this.route.snapshot.paramMap.get('id') || '';
     if (this.cameraId) {
       this.loadCameraData();
-      this.initPlayer();
       this.statusInterval = setInterval(() => this.checkStatus(), 10000);
       // Load presets
       this.http.get<any[]>(`${API_URL}/cameras/${this.cameraId}/ptz/presets`).subscribe({
@@ -55,6 +55,8 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
       next: (cam) => {
         this.camera.set(cam);
         this.checkStatus();
+        // *ngIf="camera()" is now true — wait one tick for the DOM to render
+        setTimeout(() => this.initPlayer(), 0);
       },
       error: (err) => console.error(err)
     });
@@ -68,6 +70,7 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
   }
 
   initPlayer() {
+    if (!this.videoElement) return;
     const video = this.videoElement.nativeElement;
     const streamUrl = `${API_URL}/stream/${this.cameraId}/hls`;
 

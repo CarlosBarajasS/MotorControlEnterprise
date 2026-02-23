@@ -45,7 +45,7 @@
                     Cámaras Activas</h4>
                 <div *ngFor="let cam of cameras()" style="margin-bottom:6px;">
                     <button class="cam-btn"
-                        (click)="viewCamera(cam.streams?.hls ?? '/api/admin/stream/' + cam.id + '/hls')">
+                        (click)="viewCamera('/api/stream/' + cam.id + '/hls')">
                         🎥 {{ cam.name }}
                     </button>
                 </div>

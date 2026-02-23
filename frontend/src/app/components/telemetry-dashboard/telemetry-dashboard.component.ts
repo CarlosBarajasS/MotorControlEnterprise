@@ -27,6 +27,8 @@ export class TelemetryDashboardComponent implements OnInit, OnDestroy {
     devices = signal<DeviceLive[]>([]);
     stats = signal<any>(null);
     private pollingInterval: any;
+    private _chartLabels: string[] = [];
+    private _chartValues: number[] = [];
 
     // Chart Properties
     public lineChartData: ChartConfiguration['data'] = {
@@ -111,23 +113,21 @@ export class TelemetryDashboardComponent implements OnInit, OnDestroy {
             avgSpeed = devices.reduce((sum, d) => sum + (d.speed || 0), 0) / devices.length;
         }
 
-        const labels = [...(this.lineChartData.labels as string[])];
-        const data = [...this.lineChartData.datasets[0].data];
-
-        labels.push(timeLabel);
-        data.push(avgSpeed);
+        // Use private arrays as source of truth — do not read back from Chart.js state
+        this._chartLabels.push(timeLabel);
+        this._chartValues.push(avgSpeed);
 
         // Keep last 20 points
-        if (labels.length > 20) {
-            labels.shift();
-            data.shift();
+        if (this._chartLabels.length > 20) {
+            this._chartLabels.shift();
+            this._chartValues.shift();
         }
 
         this.lineChartData = {
             ...this.lineChartData,
-            labels,
+            labels: [...this._chartLabels],
             datasets: [
-                { ...this.lineChartData.datasets[0], data }
+                { ...this.lineChartData.datasets[0], data: [...this._chartValues] }
             ]
         };
     }

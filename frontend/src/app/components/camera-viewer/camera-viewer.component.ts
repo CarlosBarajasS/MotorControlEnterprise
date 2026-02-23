@@ -1,5 +1,6 @@
 import { Component, Input, OnDestroy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import Hls from 'hls.js';
 
 @Component({
     selector: 'app-camera-viewer',
@@ -10,35 +11,62 @@ import { CommonModule } from '@angular/common';
 })
 export class CameraViewerComponent implements AfterViewInit, OnDestroy {
     @Input() streamUrl!: string;
-    @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
+    @ViewChild('videoEl') videoEl!: ElementRef<HTMLVideoElement>;
 
     isLoading = true;
     hasError = false;
-
-    // NOTE: Para MediaMTX WebRTC completo, aquí instanciarías RTCPeerConnection.
-    // Como esto es un port del layout anterior de HTML puro, usamos un iframe embebido
-    // hacia el puerto 8889 de MediaMTX (que trae su propio reproductor WebRTC integrado por defecto)
-    // o se conectaría un iframe genérico. Para este componente daremos una UI polish robusta.
+    private hls: Hls | null = null;
 
     ngAfterViewInit() {
         this.initStream();
     }
 
     private initStream() {
-        // Si la URL es directa de WebRTC de mediamtx, carga más rápido.
-        // Simulamos carga para la UI
-        setTimeout(() => {
+        const video = this.videoEl.nativeElement;
+
+        if (Hls.isSupported()) {
+            this.hls = new Hls({ maxLiveSyncPlaybackRate: 1.5 });
+            this.hls.loadSource(this.streamUrl);
+            this.hls.attachMedia(video);
+            this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                this.isLoading = false;
+                video.play().catch(() => {});
+            });
+            this.hls.on(Hls.Events.ERROR, (_, data) => {
+                if (data.fatal) {
+                    this.isLoading = false;
+                    this.hasError = true;
+                }
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = this.streamUrl;
+            video.addEventListener('loadedmetadata', () => {
+                this.isLoading = false;
+                video.play().catch(() => {});
+            });
+            video.addEventListener('error', () => {
+                this.isLoading = false;
+                this.hasError = true;
+            });
+        } else {
             this.isLoading = false;
-        }, 1500);
+            this.hasError = true;
+        }
     }
 
     retry() {
         this.isLoading = true;
         this.hasError = false;
+        if (this.hls) {
+            this.hls.destroy();
+            this.hls = null;
+        }
         this.initStream();
     }
 
     ngOnDestroy() {
-        // Limpieza de WebRTC / HLS si se instancia una librería.
+        if (this.hls) {
+            this.hls.destroy();
+        }
     }
 }

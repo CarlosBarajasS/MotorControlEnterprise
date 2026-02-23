@@ -12,16 +12,11 @@
         <button (click)="retry()">Reintentar conexión</button>
     </div>
 
-    <!-- 
-    MediaMTX expone por WebRTC un iframe incrustable en el puerto 8889. 
-    Ej: http://177.247.175.4:8889/edge-gateway-cliente001/cam-principal/
-  -->
-    <iframe *ngIf="!isLoading && !hasError" [src]="streamUrl" frameborder="0" scrolling="no" allowfullscreen
-        class="stream-frame" sandbox="allow-scripts allow-same-origin">
-    </iframe>
+    <video #videoEl controls autoplay muted playsinline class="stream-frame"
+        [class.hidden]="isLoading || hasError">
+    </video>
 
     <div class="overlay-controls" *ngIf="!isLoading && !hasError">
         <div class="badge live">LIVE</div>
-        <div class="badge ptz">PTZ Ready</div>
     </div>
 </div>
