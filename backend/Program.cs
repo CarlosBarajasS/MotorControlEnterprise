@@ -13,11 +13,16 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// HttpClient para proxying de streams HLS desde central-mediamtx
+// HttpClient — mediamtx proxy + Resend.dev email
 builder.Services.AddHttpClient("mediamtx", client =>
 {
     client.Timeout = TimeSpan.FromSeconds(10);
 });
+builder.Services.AddHttpClient();  // default factory para ResendEmailService
+
+// Email service (Resend.dev) — alertas de cámaras
+builder.Services.AddScoped<MotorControlEnterprise.Api.Services.IEmailService,
+                            MotorControlEnterprise.Api.Services.ResendEmailService>();
 
 // Seeder: crea el primer admin desde env vars (corre antes que MQTT)
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.AdminSeederService>();

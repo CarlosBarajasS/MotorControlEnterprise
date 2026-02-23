@@ -122,9 +122,20 @@ namespace MotorControlEnterprise.Api.Controllers
             var client = await _db.Clients.FindAsync(id);
             if (client == null) return NotFound();
 
-            // Soft-delete: marcar como inactivo en lugar de borrar
+            // Soft-delete: marcar cliente y sus cámaras como inactivo
             client.Status    = "inactive";
             client.UpdatedAt = DateTime.UtcNow;
+
+            var cameras = await _db.Cameras
+                .Where(c => c.ClientId == id && c.Status != "inactive")
+                .ToListAsync();
+
+            foreach (var cam in cameras)
+            {
+                cam.Status    = "inactive";
+                cam.UpdatedAt = DateTime.UtcNow;
+            }
+
             await _db.SaveChangesAsync();
 
             return NoContent();

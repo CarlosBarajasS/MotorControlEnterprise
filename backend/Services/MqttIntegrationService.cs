@@ -64,8 +64,10 @@ namespace MotorControlEnterprise.Api.Services
                 await _mqttClient!.ConnectAsync(options, ct);
 
                 await _mqttClient.SubscribeAsync("gateway/+/heartbeat",  cancellationToken: ct);
-                await _mqttClient.SubscribeAsync("camera/+/+/status",    cancellationToken: ct);
                 await _mqttClient.SubscribeAsync("camera/+/+/register",  cancellationToken: ct);
+                await _mqttClient.SubscribeAsync("camera/+/+/status",    cancellationToken: ct);
+                await _mqttClient.SubscribeAsync("camera/+/+/events",    cancellationToken: ct);
+                await _mqttClient.SubscribeAsync("camera/+/+/stats",     cancellationToken: ct);
                 await _mqttClient.SubscribeAsync("motor/+/telemetry",    cancellationToken: ct);
                 await _mqttClient.SubscribeAsync("response/+/+",         cancellationToken: ct);
 
@@ -95,8 +97,9 @@ namespace MotorControlEnterprise.Api.Services
 
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                using var scope   = _serviceProvider.CreateScope();
+                var db            = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var emailService  = scope.ServiceProvider.GetRequiredService<IEmailService>();
 
                 // gateway/{gatewayId}/heartbeat
                 if (topic.StartsWith("gateway/") && topic.EndsWith("/heartbeat"))
@@ -117,12 +120,14 @@ namespace MotorControlEnterprise.Api.Services
                     var parts = topic.Split('/');
                     if (parts.Length == 4)
                     {
+                        var gatewayId = parts[1];
                         var cameraKey = parts[2];
-                        var camera = db.Cameras.FirstOrDefault(c => c.CameraKey == cameraKey);
+                        var camera    = db.Cameras.FirstOrDefault(c => c.CameraKey == cameraKey);
                         if (camera != null)
                         {
-                            camera.LastSeen  = DateTime.UtcNow;
-                            camera.UpdatedAt = DateTime.UtcNow;
+                            var previousStatus = camera.Status;
+                            camera.LastSeen    = DateTime.UtcNow;
+                            camera.UpdatedAt   = DateTime.UtcNow;
                             try
                             {
                                 var doc  = JsonDocument.Parse(payload);
@@ -137,7 +142,35 @@ namespace MotorControlEnterprise.Api.Services
                             catch { /* payload no es JSON válido */ }
 
                             await db.SaveChangesAsync();
+
+                            // Alertar por email cuando la cámara pasa a offline
+                            if (previousStatus != "offline" && camera.Status == "offline")
+                                _ = emailService.SendCameraAlertAsync(camera.Name, gatewayId, "offline");
+                            else if (previousStatus == "offline" && camera.Status == "active")
+                                _ = emailService.SendCameraAlertAsync(camera.Name, gatewayId, "online");
                         }
+                    }
+                }
+
+                // camera/{gatewayId}/{cameraKey}/events
+                else if (topic.EndsWith("/events"))
+                {
+                    var parts = topic.Split('/');
+                    if (parts.Length == 4)
+                    {
+                        var cameraKey = parts[2];
+                        _logger.LogInformation("Evento de cámara {CameraKey}: {Payload}", cameraKey, payload);
+                    }
+                }
+
+                // camera/{gatewayId}/{cameraKey}/stats
+                else if (topic.EndsWith("/stats"))
+                {
+                    var parts = topic.Split('/');
+                    if (parts.Length == 4)
+                    {
+                        var cameraKey = parts[2];
+                        _logger.LogDebug("Stats de cámara {CameraKey}: {Payload}", cameraKey, payload);
                     }
                 }
 
@@ -254,6 +287,10 @@ namespace MotorControlEnterprise.Api.Services
                             _logger.LogInformation(
                                 "Cámara {CameraKey} auto-registrada desde edge {GatewayId} (client: {ClientId}).",
                                 cameraKey, gatewayId, client?.Id.ToString() ?? "desconocido");
+
+                            _ = emailService.SendCameraAlertAsync(
+                                newCamera.Name, gatewayId, "registrada",
+                                $"Nueva cámara detectada desde el gateway {gatewayId}");
                         }
                     }
                 }
