@@ -1,10 +1,10 @@
 # TODO - MotorControlEnterprise
 
-<!-- Comunicación entre Claude (backend) y Antigravity (frontend) -->
+<!-- Comunicación entre Claude (backend) y Wendy (frontend) -->
 
 ---
 
-## 🎨 REDISEÑO VISUAL — Paridad con MotorControlAPI (Antigravity)
+## 🎨 REDISEÑO VISUAL — Paridad con MotorControlAPI (Wendy)
 
 > **Referencia visual:** `C:\Users\carlo\Desktop\MotorControlAPI\frontend\admin\`
 > Lee cada archivo HTML/CSS ahí para ver exactamente cómo se debe ver cada página.
@@ -595,7 +595,7 @@ background: #f8fafc              → background: rgba(15,23,42,0.02)
 
 ---
 
-## 🔴 BUGS ACTIVOS — Prioridad máxima (Antigravity)
+## 🔴 BUGS ACTIVOS — Prioridad máxima (Wendy)
 
 ### BUG A — HLS 401: hls.js no envía el JWT token
 
@@ -679,11 +679,11 @@ El resto de la función no cambia.
 
 ---
 
-## ✅ COMPLETADO — Sistema de Diseño + Sidebar + Edge Config Modal (Antigravity)
+## ✅ COMPLETADO — Sistema de Diseño + Sidebar + Edge Config Modal (Wendy)
 > Sidebar, app-shell, topbar, design tokens y modal de configuración Edge implementados.
 > Las instrucciones de Tareas 1–4 abajo son referencia histórica.
 
-## 🔴 PRIORIDAD MÁXIMA (historial) — Sistema de Diseño + Sidebar (Antigravity)
+## 🔴 PRIORIDAD MÁXIMA (historial) — Sistema de Diseño + Sidebar (Wendy)
 
 ### Contexto
 El diseño actual del frontend Enterprise **no está al nivel del sistema anterior (MotorControlAPI)**.
@@ -1173,7 +1173,7 @@ gotoPreset(presetId: string) {
 
 ---
 
-## 🔴 PRIORIDAD MÁXIMA — Auth 401 Handler (Antigravity)
+## 🔴 PRIORIDAD MÁXIMA — Auth 401 Handler (Wendy)
 
 ### PROBLEMA
 El interceptor actual (`auth.interceptor.ts`) solo agrega el token a los requests pero **NO maneja el 401**. Cuando el token expira:
@@ -1217,13 +1217,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
 ---
 
-## 📩 PENDIENTES PARA CLAUDE
+## 📩 PENDIENTES PARA BENDI
 
-<!-- Antigravity: escribe aquí lo que necesitas del backend -->
+<!-- Wendy: escribe aquí lo que necesitas del backend -->
 
 ---
 
-## ✅ COMPLETADO POR CLAUDE
+## ✅ COMPLETADO POR BENDI
 
 - ✅ GET /api/admin/auth/users — lista todos los usuarios (id, email, name, role, isActive, createdAt, lastLogin)
 - ✅ PATCH /api/admin/auth/users/{id}/status — activar/desactivar usuario {isActive: bool}
@@ -1245,7 +1245,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 - ✅ GET /health/test-email — envía email de prueba (requiere Email:ResendApiKey en appsettings)
 - ✅ ClientController: cascade soft-delete — desactiva cámaras del cliente al eliminar cliente
 
-## ✅ COMPLETADO POR ANTIGRAVITY
+## ✅ COMPLETADO POR WENDY
 
 - ✅ Login + JWT interceptor + **401 auto-redirect a login** (catchError pipe)
 - ✅ Dashboard conectado a `/api/clients` + cámaras dinámicas del API (fix hardcoded localhost)
@@ -1296,13 +1296,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 | Backend — Servicio backup PostgreSQL | ✅ Hecho | Claude (commit 52f23ef) |
 | Backend — API cloud recordings (listar/reproducir) | ✅ Hecho | Claude (commit 52f23ef) |
 | Infraestructura — docker-compose.yml con servicios completos | ✅ Hecho | Claude (commit 52f23ef) |
-| Frontend Admin — Wizard 5 pasos completo | ⚠️ Pendiente | Antigravity |
-| Frontend Admin — Grabaciones cloud funcionales | ⚠️ Pendiente | Antigravity |
-| Frontend Cliente — Portal completo (login + cámaras + grabaciones) | ❌ Pendiente | Antigravity |
+| Frontend Admin — Wizard 5 pasos completo | ⚠️ Pendiente | Wendy |
+| Frontend Admin — Grabaciones cloud funcionales | ⚠️ Pendiente | Wendy |
+| Frontend Cliente — Portal completo (login + cámaras + grabaciones) | ❌ Pendiente | Wendy |
 
 ---
 
-## ✅ COMPLETADO POR CLAUDE — BACK-1 a BACK-7 (commit 52f23ef)
+## ✅ COMPLETADO POR BENDI — BACK-1 a BACK-7 (commit 52f23ef)
 
 - ✅ **BACK-1:** `UserAuthController.cs` — `POST /api/auth/login`, `POST /api/auth/signup`, `GET /api/auth/verify`, `POST /api/auth/logout` para usuarios no-admin
 - ✅ **BACK-2:** `RecordingController.cs` — API cloud recordings corregida (bugs: path traversal, directorios con GatewayId/CameraId, timestamp HH-mm-ss)
