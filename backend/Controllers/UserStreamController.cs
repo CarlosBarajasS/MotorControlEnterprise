@@ -212,19 +212,51 @@ namespace MotorControlEnterprise.Api.Controllers
             {
                 try
                 {
-                    var doc = JsonDocument.Parse(camera.Streams);
-                    if (doc.RootElement.TryGetProperty("centralRtsp", out var rtspEl))
+                    var doc  = JsonDocument.Parse(camera.Streams);
+                    var root = doc.RootElement;
+
+                    static string? HlsPath(string? url)
                     {
-                        var rtspUrl = rtspEl.GetString();
-                        if (!string.IsNullOrEmpty(rtspUrl))
-                            return new Uri(rtspUrl).AbsolutePath.TrimStart('/');
+                        if (string.IsNullOrEmpty(url)) return null;
+                        try { return new Uri(url).AbsolutePath.TrimStart('/').Replace("/index.m3u8", ""); }
+                        catch { return null; }
                     }
-                    if (doc.RootElement.TryGetProperty("centralHls", out var hlsEl))
+                    static string? RtspPath(string? url)
                     {
-                        var hlsUrl = hlsEl.GetString();
-                        if (!string.IsNullOrEmpty(hlsUrl))
-                            return new Uri(hlsUrl).AbsolutePath.TrimStart('/').Replace("/index.m3u8", "");
+                        if (string.IsNullOrEmpty(url)) return null;
+                        try { return new Uri(url).AbsolutePath.TrimStart('/'); }
+                        catch { return null; }
                     }
+
+                    string? path = null;
+
+                    // 1. centralRtsp (formato legacy)
+                    if (path == null && root.TryGetProperty("centralRtsp", out var el1))
+                        path = RtspPath(el1.GetString());
+
+                    // 2. centralHls (formato legacy)
+                    if (path == null && root.TryGetProperty("centralHls", out var el2))
+                        path = HlsPath(el2.GetString());
+
+                    // 3. rtsp top-level (normalizado)
+                    if (path == null && root.TryGetProperty("rtsp", out var el3))
+                        path = RtspPath(el3.GetString());
+
+                    // 4. hls top-level (normalizado)
+                    if (path == null && root.TryGetProperty("hls", out var el4))
+                        path = HlsPath(el4.GetString());
+
+                    // 5. streams.hls anidado (edge-agent directo)
+                    if (path == null && root.TryGetProperty("streams", out var nested)
+                        && nested.TryGetProperty("hls", out var el5))
+                        path = HlsPath(el5.GetString());
+
+                    // 6. streams.main anidado (edge-agent, fallback RTSP)
+                    if (path == null && root.TryGetProperty("streams", out var nested2)
+                        && nested2.TryGetProperty("main", out var el6))
+                        path = RtspPath(el6.GetString());
+
+                    if (!string.IsNullOrEmpty(path)) return path;
                 }
                 catch { /* ignorar */ }
             }
