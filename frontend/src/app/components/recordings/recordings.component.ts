@@ -39,9 +39,10 @@ export class RecordingsComponent implements OnInit {
     }
 
     loadAvailableDates() {
-        this.http.get<string[]>(`${API_URL}/recordings/cloud/${this.cameraId()}/dates`).subscribe({
-            next: (dates) => {
-                this.availableDates.set(dates || []);
+        this.http.get<any>(`${API_URL}/recordings/cloud/${this.cameraId()}/dates`).subscribe({
+            next: (res) => {
+                const dates = res?.dates || [];
+                this.availableDates.set(dates);
                 if (dates && dates.length > 0) {
                     this.selectDate(dates[0]);
                 } else {
@@ -64,8 +65,8 @@ export class RecordingsComponent implements OnInit {
     }
 
     loadCloudRecordings(date: string) {
-        this.http.get<any[]>(`${API_URL}/recordings/cloud/${this.cameraId()}?date=${date}`).subscribe({
-            next: (files) => this.cloudRecordings.set(files || []),
+        this.http.get<any>(`${API_URL}/recordings/cloud/${this.cameraId()}?date=${date}`).subscribe({
+            next: (res) => this.cloudRecordings.set(res?.files || []),
             error: () => this.cloudRecordings.set([])
         });
     }
@@ -78,8 +79,8 @@ export class RecordingsComponent implements OnInit {
     }
 
     playCloudVideo(filePath: string) {
-        // Para la nube, es un HTTP byte-range stream servido en NodeJS / C# WebAPI
-        const src = `${API_URL}/recordings/cloud/video?path=${encodeURIComponent(filePath)}`;
+        const token = localStorage.getItem('motor_control_token') || '';
+        const src = `${API_URL}/recordings/cloud/video?path=${encodeURIComponent(filePath)}&token=${encodeURIComponent(token)}`;
         this.currentVideoSource.set(src);
         this.initVideoSrc(src);
     }
