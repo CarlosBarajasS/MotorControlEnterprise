@@ -14,9 +14,20 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // HttpClient — mediamtx proxy + Resend.dev email
-builder.Services.AddHttpClient("mediamtx", client =>
+builder.Services.AddHttpClient("mediamtx", (sp, client) =>
 {
     client.Timeout = TimeSpan.FromSeconds(10);
+
+    // Basic auth para acceder a central-mediamtx (lectura HLS/WebRTC)
+    var cfg  = sp.GetRequiredService<IConfiguration>();
+    var user = cfg["Mediamtx:User"];
+    var pass = cfg["Mediamtx:Password"];
+    if (!string.IsNullOrEmpty(user))
+    {
+        var creds = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{user}:{pass}"));
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", creds);
+    }
 });
 builder.Services.AddHttpClient();  // default factory para ResendEmailService
 

@@ -73,6 +73,8 @@ services:
       Mqtt__Port:    "1883"
       Mediamtx__HlsBaseUrl:    "http://central-mediamtx:8888"
       Mediamtx__HlsPublicUrl:  ""
+      Mediamtx__User:          "edge"
+      Mediamtx__Password:      "edge123"
       # Primer admin — eliminar del .env después del primer login
       Seed__AdminEmail:    ${Seed__AdminEmail:-}
       Seed__AdminPassword: ${Seed__AdminPassword:-}
