@@ -65,6 +65,33 @@ namespace MotorControlEnterprise.Api.Models
         [Column("cloud_storage_enabled_at")]
         public DateTime? CloudStorageEnabledAt { get; set; }
 
+        // ─── Almacenamiento local (NVR/DVR físico) ───────────────────────────
+        /// <summary>Tipo de almacenamiento local: "nvr", "dvr", "sd", "none".</summary>
+        [Column("local_storage_type")]
+        [MaxLength(20)]
+        public string? LocalStorageType { get; set; } = "nvr";
+
+        [Column("nvr_ip")]
+        [MaxLength(100)]
+        public string? NvrIp { get; set; }
+
+        [Column("nvr_port")]
+        public int? NvrPort { get; set; }
+
+        [Column("nvr_user")]
+        [MaxLength(100)]
+        public string? NvrUser { get; set; }
+
+        /// <summary>Contraseña NVR en texto plano (solo accesible desde el backend).</summary>
+        [Column("nvr_password")]
+        [MaxLength(255)]
+        public string? NvrPassword { get; set; }
+
+        /// <summary>Marca del NVR: "hikvision", "dahua", "generic".</summary>
+        [Column("nvr_brand")]
+        [MaxLength(50)]
+        public string? NvrBrand { get; set; }
+
         [Column(TypeName = "jsonb")]
         public string? Metadata { get; set; }
 

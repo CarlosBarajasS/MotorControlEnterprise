@@ -251,6 +251,88 @@ namespace MotorControlEnterprise.Api.Controllers
             }
         }
 
+        // ─── GET /api/recordings/nvr/{cameraId}?date=YYYY-MM-DD ──────────────
+        /// <summary>
+        /// Proxy al edge gateway para listar grabaciones del NVR/DVR local del cliente.
+        /// El edge-agent debe tener el módulo NVR habilitado con las credenciales del dispositivo.
+        /// </summary>
+        [HttpGet("nvr/{cameraId:int}")]
+        public async Task<IActionResult> ListNvrRecordings(
+            int cameraId,
+            [FromQuery] string? date = null,
+            CancellationToken ct    = default)
+        {
+            var camera = await GetAuthorizedCamera(cameraId);
+            if (camera == null) return NotFound(new { message = "Cámara no encontrada." });
+
+            var gatewayId = camera.Client?.GatewayId;
+            if (string.IsNullOrEmpty(gatewayId))
+                return BadRequest(new { message = "La cámara no tiene gateway asignado." });
+
+            try
+            {
+                var response = await _edge.RequestEdgeAsync(
+                    gatewayId, "nvr", "listRecordings",
+                    new { cameraId = camera.CameraId ?? camera.CameraKey, date },
+                    15000, ct);
+
+                return Ok(JsonDocument.Parse(response).RootElement);
+            }
+            catch (TimeoutException)
+            {
+                return StatusCode(504, new { message = "El edge gateway no respondió. Verifica que el módulo NVR esté activo." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(503, new { message = ex.Message });
+            }
+        }
+
+        // ─── GET /api/recordings/nvr/{cameraId}/playback?start=&end= ─────────
+        /// <summary>
+        /// Inicia el playback de un clip del NVR vía relay RTSP en el edge gateway.
+        /// El edge convierte el stream del NVR a HLS y devuelve la URL.
+        /// </summary>
+        [HttpGet("nvr/{cameraId:int}/playback")]
+        public async Task<IActionResult> StartNvrPlayback(
+            int cameraId,
+            [FromQuery] string? start = null,
+            [FromQuery] string? end   = null,
+            [FromQuery] int? channel  = null,
+            CancellationToken ct      = default)
+        {
+            var camera = await GetAuthorizedCamera(cameraId);
+            if (camera == null) return NotFound(new { message = "Cámara no encontrada." });
+
+            var gatewayId = camera.Client?.GatewayId;
+            if (string.IsNullOrEmpty(gatewayId))
+                return BadRequest(new { message = "La cámara no tiene gateway asignado." });
+
+            try
+            {
+                var response = await _edge.RequestEdgeAsync(
+                    gatewayId, "nvr", "startPlayback",
+                    new
+                    {
+                        cameraId = camera.CameraId ?? camera.CameraKey,
+                        channel,
+                        start,
+                        end
+                    },
+                    20000, ct);
+
+                return Ok(JsonDocument.Parse(response).RootElement);
+            }
+            catch (TimeoutException)
+            {
+                return StatusCode(504, new { message = "El edge gateway no respondió al iniciar el playback NVR." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(503, new { message = ex.Message });
+            }
+        }
+
         // ─── GET /api/recordings/sd/{cameraId} ───────────────────────────────
         /// <summary>
         /// Alias de GET /api/cameras/{cameraId}/sdcard.

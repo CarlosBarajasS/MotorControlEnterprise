@@ -35,6 +35,7 @@ namespace MotorControlEnterprise.Api.Controllers
                 c.City, c.State, c.Country,
                 c.ContactName, c.ContactPhone, c.ContactEmail,
                 c.GatewayId, c.Status, c.CloudStorageActive,
+                c.LocalStorageType, c.NvrIp, c.NvrPort, c.NvrBrand,
                 c.CreatedAt,
                 CameraCount = cameraCountMap.GetValueOrDefault(c.Id, 0)
             }));
@@ -94,6 +95,13 @@ namespace MotorControlEnterprise.Api.Controllers
             client.ContactPhone        = updated.ContactPhone;
             client.ContactEmail        = updated.ContactEmail;
             client.CloudStorageActive  = updated.CloudStorageActive;
+            client.LocalStorageType    = updated.LocalStorageType;
+            client.NvrIp               = updated.NvrIp;
+            client.NvrPort             = updated.NvrPort;
+            client.NvrUser             = updated.NvrUser;
+            if (!string.IsNullOrWhiteSpace(updated.NvrPassword))
+                client.NvrPassword     = updated.NvrPassword;
+            client.NvrBrand            = updated.NvrBrand;
             client.Metadata            = updated.Metadata;
             client.UpdatedAt           = DateTime.UtcNow;
 

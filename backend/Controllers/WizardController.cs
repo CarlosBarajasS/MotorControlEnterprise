@@ -75,7 +75,8 @@ namespace MotorControlEnterprise.Api.Controllers
                 mosquittoLine  = $"{mqttUsername}:{mqttPassword}",  // para agregar a password_file
                 env            = BuildEnv(client, gatewayId, mqttHost, mqttPort, mqttUsername, mqttPassword, centralApi, location),
                 dockerCompose  = BuildDockerCompose(centralRtsp, centralPort, pushUser, pushPass),
-                mediamtxYml    = BuildMediamtxYml(cameras, gatewayId)
+                mediamtxYml    = BuildMediamtxYml(cameras, gatewayId),
+                localStorageType = client.LocalStorageType ?? "nvr"
             });
         }
 
@@ -98,7 +99,7 @@ namespace MotorControlEnterprise.Api.Controllers
         }
 
         private static string BuildEnv(
-            Client client, string gatewayId,
+            Client client,  string gatewayId,
             string mqttHost, string mqttPort,
             string mqttUser, string mqttPass,
             string centralApi, string location)
@@ -143,6 +144,25 @@ namespace MotorControlEnterprise.Api.Controllers
             sb.AppendLine();
             sb.AppendLine($"CENTRAL_API_URL={centralApi}");
             sb.AppendLine("CENTRAL_API_TOKEN=");
+
+            // NVR/DVR local — solo si el cliente tiene configuración NVR
+            var storageType = client.LocalStorageType ?? "nvr";
+            if (storageType != "none")
+            {
+                sb.AppendLine();
+                sb.AppendLine("# ===================================================");
+                sb.AppendLine($"# ALMACENAMIENTO LOCAL — {storageType.ToUpper()}");
+                sb.AppendLine("# ===================================================");
+                sb.AppendLine();
+                sb.AppendLine($"NVR_TYPE={storageType}");
+                sb.AppendLine($"NVR_IP={client.NvrIp ?? "192.168.1.64"}");
+                sb.AppendLine($"NVR_PORT={client.NvrPort ?? 80}");
+                sb.AppendLine($"NVR_USER={client.NvrUser ?? "admin"}");
+                sb.AppendLine($"NVR_PASSWORD={client.NvrPassword ?? ""}");
+                sb.AppendLine($"NVR_BRAND={client.NvrBrand ?? "hikvision"}");
+                sb.AppendLine("# NVR_CHANNELS=1,2,3,4  # canales a consultar (opcional)");
+            }
+
             return sb.ToString();
         }
 
