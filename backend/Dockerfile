@@ -18,6 +18,11 @@ RUN dotnet publish "MotorControlEnterprise.Api.csproj" -c Release -o /app/publis
 # Etapa final (Runtime)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
+
+# ffmpeg requerido por StreamRecorderService para grabación de streams
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=publish /app/publish .
 
 # Variables de entorno por defecto (se sobrescriben con docker-compose)

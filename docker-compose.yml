@@ -75,9 +75,51 @@ services:
       Mediamtx__HlsPublicUrl:  ""
       Mediamtx__User:          "edge"
       Mediamtx__Password:      "edge123"
+      # Stream Recorder — graba streams a NAS
+      StreamRecorder__MediamtxHost: "central-mediamtx"
+      StreamRecorder__MediamtxPort: "8554"
+      StreamRecorder__SegmentSeconds: "900"
+      StreamRecorder__RefreshIntervalSeconds: "300"
+      # Storage path compartido con el volumen NAS
+      Storage__NasRecordingsPath: "/mnt/nas/recordings"
+      TZ: "America/Mexico_City"
       # Primer admin — eliminar del .env después del primer login
       Seed__AdminEmail:    ${Seed__AdminEmail:-}
       Seed__AdminPassword: ${Seed__AdminPassword:-}
+    volumes:
+      # NAS: grabaciones de cámaras (bind mount al directorio local del servidor)
+      # En producción cambiar /home/victormanuel/recordings por la ruta real del NAS
+      - ${NAS_RECORDINGS_PATH:-/home/victormanuel/recordings}:/mnt/nas/recordings
+    networks:
+      - mce-net
+
+  # ─── PostgreSQL Backup ────────────────────────────────────────
+  # Realiza pg_dump cada 24h y conserva los últimos 7 backups
+  postgres-backup:
+    image: postgres:15-alpine
+    container_name: mce-postgres-backup
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-motor_ent}
+      POSTGRES_DB:   ${POSTGRES_DB:-MotorControlEnterprise}
+    volumes:
+      - ${NAS_BACKUPS_PATH:-/home/victormanuel/backups}:/backups
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        while true; do
+          BACKUP_FILE="/backups/backup-$$(date +%Y%m%d-%H%M).sql.gz"
+          pg_dump -h postgres -U $$POSTGRES_USER $$POSTGRES_DB | gzip > $$BACKUP_FILE
+          echo "Backup creado: $$BACKUP_FILE"
+          # Conservar solo los últimos 7 backups
+          ls -t /backups/backup-*.sql.gz | tail -n +8 | xargs -r rm
+          sleep 86400
+        done
     networks:
       - mce-net
 

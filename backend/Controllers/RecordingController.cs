@@ -50,10 +50,10 @@ namespace MotorControlEnterprise.Api.Controllers
             var camera = await GetAuthorizedCamera(cameraId);
             if (camera == null) return NotFound(new { message = "Cámara no encontrada." });
 
-            var nasPath = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/raspberry_data/videos";
-            var dir     = Path.Combine(nasPath,
-                camera.ClientId?.ToString() ?? "unknown",
-                cameraId.ToString());
+            var nasPath   = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/recordings";
+            var clientDir = camera.Client?.GatewayId ?? camera.ClientId?.ToString() ?? "unknown";
+            var cameraDir = camera.CameraId ?? cameraId.ToString();
+            var dir       = Path.Combine(nasPath, clientDir, cameraDir);
 
             if (!Directory.Exists(dir))
                 return Ok(new { dates = Array.Empty<string>() });
@@ -83,12 +83,11 @@ namespace MotorControlEnterprise.Api.Controllers
             var camera = await GetAuthorizedCamera(cameraId);
             if (camera == null) return NotFound(new { message = "Cámara no encontrada." });
 
-            var nasPath  = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/raspberry_data/videos";
-            var dateDir  = date ?? DateTime.UtcNow.ToString("yyyy-MM-dd");
-            var dir      = Path.Combine(nasPath,
-                camera.ClientId?.ToString() ?? "unknown",
-                cameraId.ToString(),
-                dateDir);
+            var nasPath   = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/recordings";
+            var dateDir   = date ?? DateTime.UtcNow.ToString("yyyy-MM-dd");
+            var clientDir = camera.Client?.GatewayId ?? camera.ClientId?.ToString() ?? "unknown";
+            var cameraDir = camera.CameraId ?? cameraId.ToString();
+            var dir       = Path.Combine(nasPath, clientDir, cameraDir, dateDir);
 
             if (!Directory.Exists(dir))
                 return Ok(new { date = dateDir, files = Array.Empty<object>() });
@@ -98,23 +97,36 @@ namespace MotorControlEnterprise.Api.Controllers
                 var files = Directory.GetFiles(dir, "*.mp4")
                     .Select(f =>
                     {
-                        var name      = Path.GetFileNameWithoutExtension(f);
-                        var info      = new FileInfo(f);
-                        // Nombre esperado: YYYYMMDD_HHmmss.mp4
-                        DateTime.TryParseExact(name, "yyyyMMdd_HHmmss",
-                            null, System.Globalization.DateTimeStyles.None, out var startTime);
+                        var name = Path.GetFileNameWithoutExtension(f);
+                        var info = new FileInfo(f);
+
+                        // Nombre esperado: HH-MM-SS.mp4 (segmentos de ffmpeg -strftime)
+                        DateTime? startTime = null;
+                        if (DateTime.TryParseExact(
+                            $"{dateDir} {name}",
+                            "yyyy-MM-dd HH-mm-ss",
+                            null,
+                            System.Globalization.DateTimeStyles.None,
+                            out var parsed))
+                        {
+                            startTime = parsed;
+                        }
+
                         return new
                         {
                             filename  = Path.GetFileName(f),
-                            path      = f,
+                            path      = string.Join("/",
+                                clientDir, cameraDir, dateDir, Path.GetFileName(f)),
                             sizeMb    = Math.Round(info.Length / 1024.0 / 1024.0, 2),
-                            startTime = startTime != default ? startTime : (DateTime?)null
+                            size      = info.Length,
+                            duration  = (string?)null,
+                            startTime
                         };
                     })
                     .OrderBy(f => f.filename)
                     .ToArray();
 
-                return Ok(new { date = dateDir, files });
+                return Ok(new { date = dateDir, cameraId, files });
             }
             catch (Exception ex)
             {
@@ -126,6 +138,7 @@ namespace MotorControlEnterprise.Api.Controllers
         // ─── GET /api/recordings/cloud/video?path=... ─────────────────────────
         /// <summary>
         /// Sirve un archivo MP4 desde NAS con soporte Range (seek en el video).
+        /// path: relativo al NAS base, ej: "edge-gateway-raspberry/cam-principal/2026-02-23/14-30-00.mp4"
         /// </summary>
         [HttpGet("cloud/video")]
         public async Task<IActionResult> ServeCloudVideo([FromQuery] string path)
@@ -133,34 +146,38 @@ namespace MotorControlEnterprise.Api.Controllers
             if (string.IsNullOrWhiteSpace(path))
                 return BadRequest(new { message = "Path requerido." });
 
-            // Seguridad: solo archivos .mp4 sin path traversal
-            if (path.Contains("..") || !path.EndsWith(".mp4"))
+            // Seguridad: solo archivos .mp4, sin path traversal
+            if (path.Contains("..") || !path.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase))
                 return BadRequest(new { message = "Path inválido." });
 
-            var nasBase = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/raspberry_data/videos";
-            var fullPath = Path.GetFullPath(path);
+            var nasBase  = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/recordings";
+            // Combinar el base con el path relativo y normalizar
+            var fullPath = Path.GetFullPath(Path.Combine(nasBase, path));
 
-            if (!fullPath.StartsWith(Path.GetFullPath(nasBase)))
-                return Forbid();
+            // Verificar que el resultado sigue estando bajo nasBase (double-check)
+            if (!fullPath.StartsWith(Path.GetFullPath(nasBase) + Path.DirectorySeparatorChar))
+                return BadRequest(new { message = "Path fuera del área permitida." });
 
             if (!System.IO.File.Exists(fullPath))
                 return NotFound(new { message = "Archivo no encontrado." });
 
-            // Verificar que la cámara en el path pertenece al usuario
-            // Path esperado: {nasBase}/{clientId}/{cameraId}/{date}/{filename}.mp4
-            var parts = fullPath.Replace(Path.GetFullPath(nasBase), "")
-                               .TrimStart(Path.DirectorySeparatorChar)
-                               .Split(Path.DirectorySeparatorChar);
-
-            if (parts.Length >= 2 && int.TryParse(parts[1], out var pathCameraId))
+            // Control de acceso: extraer gatewayId (primer segmento del path relativo)
+            var parts = path.TrimStart('/').Split('/');
+            if (parts.Length >= 1)
             {
-                var camera = await _db.Cameras
-                    .Include(c => c.Client)
-                    .FirstOrDefaultAsync(c => c.Id == pathCameraId);
-                if (camera == null) return Forbid();
+                var gatewayId = parts[0];
+                var client    = await _db.Clients.FirstOrDefaultAsync(c => c.GatewayId == gatewayId);
 
-                if (camera.Client != null && !camera.Client.CloudStorageActive)
+                if (client == null)
+                    return Forbid();
+
+                if (!client.CloudStorageActive)
                     return StatusCode(403, new { message = "El almacenamiento cloud no está activo para este cliente." });
+
+                var userId = GetCurrentUserId();
+                var role   = GetCurrentUserRole();
+                if (role != "admin" && client.UserId != userId)
+                    return Forbid();
             }
 
             return PhysicalFile(fullPath, "video/mp4", enableRangeProcessing: true);
@@ -171,7 +188,7 @@ namespace MotorControlEnterprise.Api.Controllers
         [HttpGet("local/{cameraId:int}")]
         public async Task<IActionResult> ListLocalFiles(int cameraId, [FromQuery] string? date = null, CancellationToken ct = default)
         {
-            var camera = await GetAuthorizedCamera(cameraId, includeClient: true);
+            var camera = await GetAuthorizedCamera(cameraId);
             if (camera == null) return NotFound(new { message = "Cámara no encontrada." });
 
             var gatewayId = camera.Client?.GatewayId;
@@ -201,7 +218,6 @@ namespace MotorControlEnterprise.Api.Controllers
         /// <summary>
         /// Inicia reproducción de un archivo local en el edge vía mediamtx relay.
         /// Body: { "filename": "20260101_120000.mp4" }
-        /// Devuelve: { "hlsPath": "http://central-mediamtx:8888/.../index.m3u8" }
         /// </summary>
         [HttpPost("local/{cameraId:int}/play")]
         public async Task<IActionResult> PlayLocalFile(int cameraId, [FromBody] LocalPlayRequest req, CancellationToken ct)
@@ -209,7 +225,7 @@ namespace MotorControlEnterprise.Api.Controllers
             if (string.IsNullOrWhiteSpace(req.Filename))
                 return BadRequest(new { message = "filename es requerido." });
 
-            var camera = await GetAuthorizedCamera(cameraId, includeClient: true);
+            var camera = await GetAuthorizedCamera(cameraId);
             if (camera == null) return NotFound(new { message = "Cámara no encontrada." });
 
             var gatewayId = camera.Client?.GatewayId;
@@ -236,19 +252,16 @@ namespace MotorControlEnterprise.Api.Controllers
         }
 
         // ─── Helpers ──────────────────────────────────────────────────────────
-        private async Task<Models.Camera?> GetAuthorizedCamera(int cameraId, bool includeClient = false)
+        private async Task<Models.Camera?> GetAuthorizedCamera(int cameraId)
         {
             var userId = GetCurrentUserId();
             var role   = GetCurrentUserRole();
 
-            var query = _db.Cameras.AsQueryable();
-            if (includeClient) query = query.Include(c => c.Client);
-
-            return await query.FirstOrDefaultAsync(c =>
-                c.Id == cameraId && (role == "admin" || c.UserId == userId));
+            return await _db.Cameras
+                .Include(c => c.Client)
+                .FirstOrDefaultAsync(c =>
+                    c.Id == cameraId && (role == "admin" || c.UserId == userId));
         }
-
-        private bool CloudStorageActive => true; // accedido desde camera.Client
     }
 
     public class LocalPlayRequest

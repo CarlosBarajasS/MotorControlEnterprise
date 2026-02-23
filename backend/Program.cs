@@ -48,6 +48,10 @@ builder.Services.AddHostedService(sp =>
     sp.GetRequiredService<MotorControlEnterprise.Api.Services.IMqttPublisherService>());
 // MQTT Integration: suscripción a topics de edge gateways
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.MqttIntegrationService>();
+// Stream Recorder: grabación continua de cámaras con cloud storage activo
+builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.StreamRecorderService>();
+// Storage Cleaner: limpieza diaria de grabaciones antiguas en NAS
+builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.StorageCleanerService>();
 
 // Configure Entity Framework
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
