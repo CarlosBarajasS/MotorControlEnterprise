@@ -143,6 +143,47 @@
                     <div class="hint" style="margin-top:8px;">El acceso a grabaciones locales es directo desde
                         el monitor conectado al NVR/DVR, sin necesidad de internet.</div>
                 </div>
+
+                <!-- NVR/DVR Connection Fields (for edge .env generation) -->
+                @if (clientData.localStorageType === 'nvr' || clientData.localStorageType === 'dvr') {
+                <div class="nvr-fields" style="margin-top:12px;">
+                    <label style="font-weight:600;font-size:13px;display:block;margin-bottom:10px;">
+                        🔌 Datos del {{ clientData.localStorageType === 'nvr' ? 'NVR' : 'DVR' }}
+                        <small style="font-weight:400;color:var(--muted);display:block;margin-top:2px;">
+                            Se usan para generar la configuración del edge gateway</small>
+                    </label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>IP en red local</label>
+                            <input type="text" [(ngModel)]="clientData.nvrIp" placeholder="192.168.1.64">
+                        </div>
+                        <div class="form-group" style="max-width:120px;">
+                            <label>Puerto</label>
+                            <input type="number" [(ngModel)]="clientData.nvrPort" placeholder="80">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Usuario</label>
+                            <input type="text" [(ngModel)]="clientData.nvrUser" placeholder="admin">
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña</label>
+                            <input type="password" [(ngModel)]="clientData.nvrPassword" placeholder="••••••">
+                        </div>
+                    </div>
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label>Marca</label>
+                            <select [(ngModel)]="clientData.nvrBrand">
+                                <option value="hikvision">Hikvision</option>
+                                <option value="dahua">Dahua</option>
+                                <option value="generic">Otro / Genérico</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                }
             </div>
         </div>
         }

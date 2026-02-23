@@ -32,7 +32,12 @@ export class WizardComponent implements OnInit {
     location: '',
     gatewayId: '',
     cloudStorageActive: true,
-    localStorageType: 'nvr' as 'nvr' | 'dvr' | 'none'
+    localStorageType: 'nvr' as 'nvr' | 'dvr' | 'none',
+    nvrIp: '',
+    nvrPort: 80,
+    nvrUser: 'admin',
+    nvrPassword: '',
+    nvrBrand: 'hikvision' as 'hikvision' | 'dahua' | 'generic'
   };
   clientErrors = signal<any>({});
 
@@ -169,7 +174,12 @@ export class WizardComponent implements OnInit {
           userId: userBody.user.id || userBody.user.Id, // Fallback if capitalization changes
           gatewayId: this.clientData.gatewayId,
           cloudStorageActive: this.clientData.cloudStorageActive,
-          localStorageType: this.clientData.localStorageType
+          localStorageType: this.clientData.localStorageType,
+          nvrIp: this.clientData.nvrIp || null,
+          nvrPort: this.clientData.nvrPort,
+          nvrUser: this.clientData.nvrUser || null,
+          nvrPassword: this.clientData.nvrPassword || null,
+          nvrBrand: this.clientData.nvrBrand || null
         })
       });
 
