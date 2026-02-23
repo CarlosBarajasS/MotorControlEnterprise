@@ -11,16 +11,16 @@
 }
 
 .motor-card {
-    background: white;
+    background: var(--surface);
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    border: 1px solid var(--outline);
+    box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
 
     .card-header {
         padding: 20px;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid var(--outline);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -61,7 +61,7 @@
             color: #64748b;
 
             strong {
-                color: #334155;
+                color: var(--ink);
             }
         }
 
@@ -70,7 +70,7 @@
             gap: 16px;
             margin-top: 16px;
             padding-top: 16px;
-            border-top: 1px dashed #e2e8f0;
+            border-top: 1px dashed var(--outline);
 
             .metric {
                 display: flex;
@@ -85,7 +85,7 @@
                 span {
                     font-size: 1.25rem;
                     font-weight: 700;
-                    color: #0f172a;
+                    color: var(--ink);
                 }
             }
         }
@@ -93,9 +93,9 @@
 
     .card-footer {
         padding: 16px 20px;
-        background: #f8fafc;
+        background: rgba(15, 23, 42, 0.02);
         border-radius: 0 0 12px 12px;
-        border-top: 1px solid #e2e8f0;
+        border-top: 1px solid var(--outline);
     }
 }
 

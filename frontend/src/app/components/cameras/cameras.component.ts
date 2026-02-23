@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
 
 const API_URL = '/api';
 
 @Component({
     selector: 'app-cameras',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule],
+    imports: [CommonModule, FormsModule, RouterModule, CameraViewerComponent],
     templateUrl: './cameras.component.html',
     styleUrls: ['./cameras.component.scss']
 })
@@ -20,6 +21,7 @@ export class CamerasComponent implements OnInit {
     cameras = signal<any[]>([]);
     clients = signal<any[]>([]); // For dropdown when creating a camera
     searchTerm = signal('');
+    gridCols = 2;
     filtered = computed(() =>
         this.cameras().filter(c =>
             c.name.toLowerCase().includes(this.searchTerm().toLowerCase()) ||
@@ -91,5 +93,9 @@ export class CamerasComponent implements OnInit {
 
     isOnline(cam: any): boolean {
         return cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 60000;
+    }
+
+    openStream(cam: any) {
+        this.router.navigate(['/cameras', cam.id]);
     }
 }

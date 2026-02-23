@@ -347,3 +347,45 @@
     gap: 12px;
     border-radius: 0 0 16px 16px;
 }
+
+.client-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+        text-decoration: underline;
+        color: var(--accent-hover);
+    }
+}
+
+// Online/Offline badges
+.badge.online {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.badge.offline {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+// role badges
+.role-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+
+    &.admin {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    &.client {
+        background: #f1f5f9;
+        color: #475569;
+    }
+}

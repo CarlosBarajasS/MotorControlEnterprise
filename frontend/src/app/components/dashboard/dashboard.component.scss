@@ -83,3 +83,109 @@
         justify-content: center;
     }
 }
+
+// ─── DISEÑO 1: Stat Cards + Device Cards + Telemetry ─────────
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid var(--outline);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease;
+  &:hover { transform: translateY(-2px); }
+
+  h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+}
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+.stat-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.gateways-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.device-card {
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 1.5rem;
+  border: 1px solid var(--outline);
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--outline);
+  &.online  { border-left-color: var(--teal); }
+  &.offline { border-left-color: var(--red); }
+}
+.device-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  h3 { margin: 0; font-size: 1.1rem; }
+}
+.device-meta {
+  margin-bottom: 1rem;
+}
+.mono-id {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.date-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.camera-list {
+  background: rgba(15, 23, 42, 0.03);
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid var(--outline);
+}
+.cam-list-title {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 10px;
+}
+.empty-cam {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.telemetry-section {
+  margin-top: 3.5rem;
+}
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}

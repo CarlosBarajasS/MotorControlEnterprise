@@ -1,99 +1,154 @@
-<div class="topbar">
-    <div>
-        <h1>Gestión de Cámaras IP</h1>
-        <p class="subtitle">Administra los feeds de video RTSP e integra nodos al sistema HLS en el Edge.</p>
-    </div>
-    <div style="display: flex; gap: 12px;">
-        <button class="btn-primary" (click)="openCreate()">+ Nueva Cámara</button>
-        <button class="btn-secondary" (click)="loadData()">🔄 Actualizar</button>
-    </div>
-</div>
+<div class="clients-layout">
 
-<div style="margin-bottom:16px;">
-    <input type="text" class="form-control" placeholder="🔍 Buscar cámara..." [ngModel]="searchTerm()"
-        (ngModelChange)="searchTerm.set($event)" style="max-width:320px;">
-</div>
-
-<div class="table-container">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Estado</th>
-                <th>Ubicación</th>
-                <th>RTSP URL</th>
-                <th>Gateway Asignado</th>
-                <th>Añadido</th>
-                <th class="text-right">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngIf="filtered().length === 0">
-                <td colspan="7" class="text-center empty-state">No hay cámaras registradas. Añade una para comenzar
-                    el streaming.</td>
-            </tr>
-            <tr *ngFor="let cam of filtered()">
-                <td class="font-medium">
-                    <a [routerLink]="['/cameras', cam.id]" class="stream-link" title="Ver Streaming en Vivo">{{
-                        cam.name }}</a>
-                </td>
-                <td>
-                    <span class="badge" [class.online]="isOnline(cam)" [class.offline]="!isOnline(cam)">
-                        {{ isOnline(cam) ? 'Online' : 'Offline' }}
-                    </span>
-                </td>
-                <td>{{ cam.location || 'N/A' }}</td>
-                <td class="mono-text url-truncate" [title]="cam.rtspUrl">{{ cam.rtspUrl }}</td>
-                <td>{{ cam.clientId ? 'Asignado' : 'Sin asignar' }}</td>
-                <td class="text-muted">{{ cam.createdAt | date:'shortDate' }}</td>
-                <td class="actions-cell">
-                    <a class="action-btn" [routerLink]="['/recordings', cam.id]">Grabaciones</a>
-                    <button class="action-btn view" (click)="viewStream(cam.id)">Ver HLS</button>
-                    <button class="action-btn edit" (click)="openEdit(cam)">Editar</button>
-                    <button class="action-btn delete" (click)="deleteCamera(cam.id)">Borrar</button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-<!-- Modal Formulario -->
-<div class="modal-overlay" *ngIf="showModal()">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>{{ modalMode() === 'create' ? 'Añadir Cámara IP' : 'Editar Cámara IP' }}</h2>
-            <button class="close-btn" (click)="showModal.set(false)">✕</button>
+    <!-- ═══ PANEL NVR — Monitor en Vivo ═══ -->
+    <div class="nvr-panel">
+        <div class="nvr-toolbar">
+            <span class="nvr-toolbar-title">
+                Monitor NVR en Vivo
+                <span class="nvr-sub">{{ filtered().length }} cámara(s) registradas</span>
+            </span>
+            <div class="nvr-layout-btns">
+                <button class="layout-btn" [class.active]="gridCols === 1" (click)="gridCols = 1">1×1</button>
+                <button class="layout-btn" [class.active]="gridCols === 2" (click)="gridCols = 2">2×2</button>
+                <button class="layout-btn" [class.active]="gridCols === 3" (click)="gridCols = 3">3×3</button>
+            </div>
         </div>
-        <div class="modal-body">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Alias / Nombre</label>
-                    <input type="text" [(ngModel)]="currentCamera().name" class="form-control"
-                        placeholder="Camara Frontal">
+
+        <div class="camera-grid" [style.grid-template-columns]="'repeat(' + gridCols + ', 1fr)'">
+            <div class="camera-cell" *ngFor="let cam of filtered(); let i = index" (click)="openStream(cam)">
+                <!-- Video player inside cell -->
+                <app-camera-viewer [streamUrl]="'/api/stream/' + cam.id + '/hls'"
+                    class="cell-viewer"></app-camera-viewer>
+                <!-- Overlay con info -->
+                <div class="cell-overlay">
+                    <div class="cell-info">
+                        <span class="cell-name">{{ cam.name }}</span>
+                        <span class="cell-status" [class.online]="isOnline(cam)" [class.offline]="!isOnline(cam)">
+                            <span class="dot"></span>
+                            {{ isOnline(cam) ? 'EN VIVO' : 'SIN SEÑAL' }}
+                        </span>
+                    </div>
+                </div>
+                <span class="cell-index">{{ i + 1 }}</span>
+            </div>
+
+            <div class="nvr-state" *ngIf="filtered().length === 0">
+                <div class="nvr-state-icon">📷</div>
+                <div class="nvr-state-title">Sin Cámaras Registradas</div>
+                <div class="nvr-state-sub">Agrega una cámara IP con el botón de abajo</div>
+            </div>
+        </div>
+
+        <div class="nvr-statusbar">
+            <span><span class="dot online"></span> En Línea</span>
+            <span>|</span>
+            <span>{{ filtered().filter(isOnline).length }}/{{ filtered().length }} cámaras activas</span>
+        </div>
+    </div>
+
+    <!-- ═══ SEPARADOR ═══ -->
+    <div style="margin-top: 2rem;"></div>
+
+    <!-- TOPBAR gestión -->
+    <div class="topbar">
+        <div>
+            <h1>Gestión de Cámaras IP</h1>
+            <p class="subtitle">Administra los feeds de video RTSP e integra nodos al sistema HLS en el Edge.</p>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <button class="btn-primary" (click)="openCreate()">+ Nueva Cámara</button>
+            <button class="btn-secondary" (click)="loadData()">🔄 Actualizar</button>
+        </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+        <input type="text" class="form-control" placeholder="🔍 Buscar cámara..." [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)" style="max-width:320px;">
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Ubicación</th>
+                    <th>RTSP URL</th>
+                    <th>Gateway Asignado</th>
+                    <th>Añadido</th>
+                    <th class="text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngIf="filtered().length === 0">
+                    <td colspan="7" class="text-center empty-state">No hay cámaras registradas. Añade una para comenzar
+                        el streaming.</td>
+                </tr>
+                <tr *ngFor="let cam of filtered()">
+                    <td class="font-medium">
+                        <a [routerLink]="['/cameras', cam.id]" class="stream-link" title="Ver Streaming en Vivo">{{
+                            cam.name }}</a>
+                    </td>
+                    <td>
+                        <span class="badge" [class.online]="isOnline(cam)" [class.offline]="!isOnline(cam)">
+                            {{ isOnline(cam) ? 'Online' : 'Offline' }}
+                        </span>
+                    </td>
+                    <td>{{ cam.location || 'N/A' }}</td>
+                    <td class="mono-text url-truncate" [title]="cam.rtspUrl">{{ cam.rtspUrl }}</td>
+                    <td>{{ cam.clientId ? 'Asignado' : 'Sin asignar' }}</td>
+                    <td class="text-muted">{{ cam.createdAt | date:'shortDate' }}</td>
+                    <td class="actions-cell">
+                        <a class="action-btn" [routerLink]="['/recordings', cam.id]">Grabaciones</a>
+                        <button class="action-btn view" (click)="viewStream(cam.id)">Ver HLS</button>
+                        <button class="action-btn edit" (click)="openEdit(cam)">Editar</button>
+                        <button class="action-btn delete" (click)="deleteCamera(cam.id)">Borrar</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal Formulario -->
+    <div class="modal-overlay" *ngIf="showModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>{{ modalMode() === 'create' ? 'Añadir Cámara IP' : 'Editar Cámara IP' }}</h2>
+                <button class="close-btn" (click)="showModal.set(false)">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Alias / Nombre</label>
+                        <input type="text" [(ngModel)]="currentCamera().name" class="form-control"
+                            placeholder="Camara Frontal">
+                    </div>
+                    <div class="form-group">
+                        <label>Ubicación Física</label>
+                        <input type="text" [(ngModel)]="currentCamera().location" class="form-control"
+                            placeholder="Pasillo A">
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label>Ubicación Física</label>
-                    <input type="text" [(ngModel)]="currentCamera().location" class="form-control"
-                        placeholder="Pasillo A">
+                    <label>URL RTSP</label>
+                    <input type="text" [(ngModel)]="currentCamera().rtspUrl" class="form-control"
+                        placeholder="rtsp://admin:pass@192.168.1.100:554/stream1">
+                </div>
+                <div class="form-group">
+                    <label>Asignar a Cliente / Gateway Edge</label>
+                    <select [(ngModel)]="currentCamera().clientId" class="form-control">
+                        <option value="">-- Sin Asignar (Nube Autónoma) --</option>
+                        <option *ngFor="let client of clients()" [value]="client.id">{{ client.name }} ({{
+                            client.gatewayId
+                            }})</option>
+                    </select>
                 </div>
             </div>
-            <div class="form-group">
-                <label>URL RTSP</label>
-                <input type="text" [(ngModel)]="currentCamera().rtspUrl" class="form-control"
-                    placeholder="rtsp://admin:pass@192.168.1.100:554/stream1">
+            <div class="modal-footer">
+                <button class="btn-secondary" (click)="showModal.set(false)">Cancelar</button>
+                <button class="btn-primary" (click)="saveCamera()">Guardar Cámara</button>
             </div>
-            <div class="form-group">
-                <label>Asignar a Cliente / Gateway Edge</label>
-                <select [(ngModel)]="currentCamera().clientId" class="form-control">
-                    <option value="">-- Sin Asignar (Nube Autónoma) --</option>
-                    <option *ngFor="let client of clients()" [value]="client.id">{{ client.name }} ({{ client.gatewayId
-                        }})</option>
-                </select>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-secondary" (click)="showModal.set(false)">Cancelar</button>
-            <button class="btn-primary" (click)="saveCamera()">Guardar Cámara</button>
         </div>
     </div>
+
 </div>

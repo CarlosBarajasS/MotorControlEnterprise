@@ -1,83 +1,87 @@
-<div class="topbar">
-    <div>
-        <h1>Gestión de Usuarios</h1>
-        <p class="subtitle">Administra los accesos de clientes y personal de mantenimiento (Solo Administradores).</p>
+<div class="clients-layout">
+    <div class="topbar">
+        <div>
+            <h1>Gestión de Usuarios</h1>
+            <p class="subtitle">Administra los accesos de clientes y personal de mantenimiento (Solo Administradores).
+            </p>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <button class="btn-primary" (click)="openCreate()">+ Nuevo Usuario</button>
+            <button class="btn-secondary" (click)="loadUsers()">🔄 Actualizar</button>
+        </div>
     </div>
-    <div style="display: flex; gap: 12px;">
-        <button class="btn-primary" (click)="openCreate()">+ Nuevo Usuario</button>
-        <button class="btn-secondary" (click)="loadUsers()">🔄 Actualizar</button>
-    </div>
-</div>
 
-<div class="table-container">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Nombre Completo</th>
-                <th>Correo (Login)</th>
-                <th>Rol</th>
-                <th>ID del Sistema</th>
-                <th class="text-right">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngIf="users().length === 0">
-                <td colspan="5" class="text-center empty-state">No se recibieron usuarios (o no tienes permiso).
-                </td>
-            </tr>
-            <tr *ngFor="let u of users()">
-                <td class="font-medium">{{ u.name || 'Sin Nombre' }}</td>
-                <td>{{ u.email }}</td>
-                <td>
-                    <span class="role-badge" [class.admin]="u.role === 'admin'" [class.client]="u.role === 'client'">
-                        {{ (u.role || 'client') | uppercase }}
-                    </span>
-                </td>
-                <td class="mono-text">{{ u.id }}</td>
-                <td class="actions-cell">
-                    <button class="action-btn delete" (click)="deleteUser(u.id)">Revocar</button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nombre Completo</th>
+                    <th>Correo (Login)</th>
+                    <th>Rol</th>
+                    <th>ID del Sistema</th>
+                    <th class="text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngIf="users().length === 0">
+                    <td colspan="5" class="text-center empty-state">No se recibieron usuarios (o no tienes permiso).
+                    </td>
+                </tr>
+                <tr *ngFor="let u of users()">
+                    <td class="font-medium">{{ u.name || 'Sin Nombre' }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>
+                        <span class="role-badge" [class.admin]="u.role === 'admin'"
+                            [class.client]="u.role === 'client'">
+                            {{ (u.role || 'client') | uppercase }}
+                        </span>
+                    </td>
+                    <td class="mono-text">{{ u.id }}</td>
+                    <td class="actions-cell">
+                        <button class="action-btn delete" (click)="deleteUser(u.id)">Revocar</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
 
-    <!-- Modal Creación -->
-    <div class="modal-overlay" *ngIf="showModal()">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Dar de Alta Usuario</h2>
-                <button class="close-btn" (click)="showModal.set(false)">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Nombre Completo</label>
-                    <input type="text" [(ngModel)]="newUser().name" class="form-control"
-                        placeholder="Ej. Ing. Juan Pérez">
+        <!-- Modal Creación -->
+        <div class="modal-overlay" *ngIf="showModal()">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Dar de Alta Usuario</h2>
+                    <button class="close-btn" (click)="showModal.set(false)">✕</button>
                 </div>
-                <div class="form-group">
-                    <label>Correo Electrónico (Login API)</label>
-                    <input type="email" [(ngModel)]="newUser().email" class="form-control"
-                        placeholder="juan@empresa.com">
-                </div>
-                <div class="form-row">
+                <div class="modal-body">
                     <div class="form-group">
-                        <label>Contraseña Temporal</label>
-                        <input type="password" [(ngModel)]="newUser().password" class="form-control"
-                            placeholder="••••••••">
+                        <label>Nombre Completo</label>
+                        <input type="text" [(ngModel)]="newUser().name" class="form-control"
+                            placeholder="Ej. Ing. Juan Pérez">
                     </div>
                     <div class="form-group">
-                        <label>Rol de Permisos</label>
-                        <select [(ngModel)]="newUser().role" class="form-control">
-                            <option value="client">Client (Solo lectura Edge)</option>
-                            <option value="admin">Admin (Control Total HMI)</option>
-                        </select>
+                        <label>Correo Electrónico (Login API)</label>
+                        <input type="email" [(ngModel)]="newUser().email" class="form-control"
+                            placeholder="juan@empresa.com">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Contraseña Temporal</label>
+                            <input type="password" [(ngModel)]="newUser().password" class="form-control"
+                                placeholder="••••••••">
+                        </div>
+                        <div class="form-group">
+                            <label>Rol de Permisos</label>
+                            <select [(ngModel)]="newUser().role" class="form-control">
+                                <option value="client">Client (Solo lectura Edge)</option>
+                                <option value="admin">Admin (Control Total HMI)</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" (click)="showModal.set(false)">Cancelar</button>
-                <button class="btn-primary" (click)="saveUser()">Crear y Notificar</button>
+                <div class="modal-footer">
+                    <button class="btn-secondary" (click)="showModal.set(false)">Cancelar</button>
+                    <button class="btn-primary" (click)="saveUser()">Crear y Notificar</button>
+                </div>
             </div>
         </div>
     </div>

@@ -13,7 +13,7 @@ $error: #ef4444;
   min-height: 100vh;
   background: radial-gradient(circle at bottom right, #1e0b35, $bg-dark 50%);
   color: $text-light;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
 }
 
 .login-card {
@@ -40,7 +40,11 @@ $error: #ef4444;
     color: $primary;
     border-radius: 1rem;
     margin-bottom: 1rem;
-    svg { width: 32px; height: 32px; }
+
+    svg {
+      width: 32px;
+      height: 32px;
+    }
   }
 
   h2 {
@@ -87,7 +91,10 @@ $error: #ef4444;
 
     &.is-invalid {
       border-color: $error;
-      &:focus { box-shadow: 0 0 0 3px rgba($error, 0.2); }
+
+      &:focus {
+        box-shadow: 0 0 0 3px rgba($error, 0.2);
+      }
     }
   }
 }
@@ -103,7 +110,7 @@ $error: #ef4444;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &:hover:not(:disabled) {
     background: lighten($primary, 5%);
     transform: translateY(-1px);
@@ -128,6 +135,13 @@ $error: #ef4444;
 }
 
 @keyframes slideUpFade {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
