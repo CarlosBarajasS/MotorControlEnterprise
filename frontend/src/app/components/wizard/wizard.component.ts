@@ -79,6 +79,7 @@ export class WizardComponent implements OnInit {
       return;
     } else if (this.currentStep() === 3) {
       if (!this.validateStep3()) return;
+      this.createCamerasInApi();
       this.generateFiles();
       this.clearAlert(3);
     }
@@ -137,9 +138,9 @@ export class WizardComponent implements OnInit {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
         },
-        body: JSON.stringify({ email: emailStr, password: passStr })
+        body: JSON.stringify({ email: emailStr, password: passStr, name: this.clientData.contactName, role: 'client' })
       });
       const userBody = await userRes.json();
 
@@ -154,7 +155,7 @@ export class WizardComponent implements OnInit {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
         },
         body: JSON.stringify({
           name: this.clientData.name,
@@ -215,6 +216,29 @@ export class WizardComponent implements OnInit {
       }
     }
     return true;
+  }
+
+  async createCamerasInApi() {
+    const token = localStorage.getItem('motor_control_token');
+    for (const cam of this.cameras()) {
+      try {
+        await fetch(`${this.API_URL}/cameras`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            name: cam.id,
+            location: this.clientData.location,
+            rtspUrl: `rtsp://${cam.user || 'admin'}:${cam.password || ''}@${cam.ip}${cam.rtspPath}`,
+            ptz: false
+          })
+        });
+      } catch (e) {
+        console.warn('Error creating camera:', cam.id, e);
+      }
+    }
   }
 
   // --- Step 4 ---

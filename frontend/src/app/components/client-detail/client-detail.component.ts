@@ -111,4 +111,12 @@ export class ClientDetailComponent implements OnInit {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }
+
+  toggleCloudStorage(event: Event) {
+    const enabled = (event.target as HTMLInputElement).checked;
+    this.http.patch(`${API_URL}/clients/${this.clientId()}`, { cloudStorageEnabled: enabled }).subscribe({
+      next: () => this.loadClientDetails(),
+      error: (err: any) => console.error('Error toggling cloud storage:', err)
+    });
+  }
 }

@@ -14,25 +14,65 @@ import { RecordingsComponent } from './components/recordings/recordings.componen
 import { UsersComponent } from './components/users/users.component';
 import { TelemetryHistoryComponent } from './components/telemetry-history/telemetry-history.component';
 
-const authGuard = () => {
+// Client Portal
+import { ClientLoginComponent } from './components/client-portal/client-login.component';
+import { ClientShellComponent } from './components/client-portal/client-shell.component';
+import { ClientCamerasComponent } from './components/client-portal/client-cameras.component';
+import { ClientCameraDetailComponent } from './components/client-portal/client-camera-detail.component';
+import { ClientRecordingsComponent } from './components/client-portal/client-recordings.component';
+import { clientAuthGuard } from './guards/client-auth.guard';
+
+const adminAuthGuard = () => {
     const token = localStorage.getItem('motor_control_token');
-    if (token) return true;
-    inject(Router).navigate(['/login']);
-    return false;
+    if (!token) {
+        inject(Router).navigate(['/login']);
+        return false;
+    }
+    // If client role, redirect to client portal
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.role === 'client') {
+            inject(Router).navigate(['/client/cameras']);
+            return false;
+        }
+    } catch { }
+    return true;
 };
 
 export const routes: Routes = [
     { path: '', component: LandingComponent, pathMatch: 'full' },
     { path: 'login', component: LoginComponent },
-    { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
-    { path: 'clients', component: ClientsComponent, canActivate: [authGuard] },
-    { path: 'clients/:id', component: ClientDetailComponent, canActivate: [authGuard] },
-    { path: 'cameras', component: CamerasComponent, canActivate: [authGuard] },
-    { path: 'cameras/:id', component: CameraDetailComponent, canActivate: [authGuard] },
-    { path: 'recordings/:id', component: RecordingsComponent, canActivate: [authGuard] },
-    { path: 'motors', component: MotorsComponent, canActivate: [authGuard] },
-    { path: 'users', component: UsersComponent, canActivate: [authGuard] },
-    { path: 'telemetry-history', component: TelemetryHistoryComponent, canActivate: [authGuard] },
-    { path: 'wizard', component: WizardComponent, canActivate: [authGuard] },
+
+    // Admin routes
+    { path: 'dashboard', component: DashboardComponent, canActivate: [adminAuthGuard] },
+    { path: 'clients', component: ClientsComponent, canActivate: [adminAuthGuard] },
+    { path: 'clients/:id', component: ClientDetailComponent, canActivate: [adminAuthGuard] },
+    { path: 'cameras', component: CamerasComponent, canActivate: [adminAuthGuard] },
+    { path: 'cameras/:id', component: CameraDetailComponent, canActivate: [adminAuthGuard] },
+    { path: 'recordings/:id', component: RecordingsComponent, canActivate: [adminAuthGuard] },
+    { path: 'motors', component: MotorsComponent, canActivate: [adminAuthGuard] },
+    { path: 'users', component: UsersComponent, canActivate: [adminAuthGuard] },
+    { path: 'telemetry-history', component: TelemetryHistoryComponent, canActivate: [adminAuthGuard] },
+    { path: 'wizard', component: WizardComponent, canActivate: [adminAuthGuard] },
+
+    // Client Portal routes
+    {
+        path: 'client',
+        children: [
+            { path: 'login', component: ClientLoginComponent },
+            {
+                path: '',
+                component: ClientShellComponent,
+                canActivate: [clientAuthGuard],
+                children: [
+                    { path: 'cameras', component: ClientCamerasComponent },
+                    { path: 'cameras/:id', component: ClientCameraDetailComponent },
+                    { path: 'recordings/:id', component: ClientRecordingsComponent },
+                    { path: '', redirectTo: 'cameras', pathMatch: 'full' }
+                ]
+            }
+        ]
+    },
+
     { path: '**', redirectTo: 'dashboard' }
 ];
