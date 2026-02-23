@@ -1,0 +1,46 @@
+<div class="layout-container">
+    <div class="header-section">
+        <div>
+            <h1>Telemetría Histórica</h1>
+            <p>Análisis de comportamiento y tendencias de sensores en periodos retroactivos.</p>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="form-group">
+            <label>Dispositivo Edge (Motor / Nodo)</label>
+            <select class="form-control" [(ngModel)]="selectedDevice" (change)="onFilterChange()">
+                <option value="all">-- Todos los Dispositivos --</option>
+                <option *ngFor="let dev of devices()" [value]="dev">{{ dev }}</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Rango de Tiempo</label>
+            <select class="form-control" [(ngModel)]="timeRangeHours" (change)="onFilterChange()">
+                <option [value]="1">Última Hora</option>
+                <option [value]="6">Últimas 6 Horas</option>
+                <option [value]="12">Últimas 12 Horas</option>
+                <option [value]="24">Últimas 24 Horas</option>
+            </select>
+        </div>
+
+        <div class="form-group actions-align">
+            <button class="btn-secondary" (click)="loadHistory()">🔄 Re-calcular</button>
+        </div>
+    </div>
+
+    <div class="chart-container" *ngIf="historyData().length > 0; else noData">
+        <canvas baseChart [data]="lineChartData" [options]="lineChartOptions" [type]="lineChartType">
+        </canvas>
+    </div>
+
+    <ng-template #noData>
+        <div class="empty-state">
+            <span class="icon">📊</span>
+            <h3>Sin Datos de Telemetría</h3>
+            <p>No se encontraron registros indexados para el periodo o dispositivo seleccionado.</p>
+        </div>
+    </ng-template>
+
+</div>
