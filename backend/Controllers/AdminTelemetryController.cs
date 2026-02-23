@@ -153,7 +153,9 @@ namespace MotorControlEnterprise.Api.Controllers
                 t.Voltage,
                 t.State,
                 t.Timestamp,
-                isActive = t.Timestamp >= since30s
+                isActive = t.Timestamp >= since30s,   // compatibilidad
+                isOnline = t.Timestamp >= since30s,   // campo esperado por DeviceLive
+                online   = t.Timestamp >= since30s    // alias alternativo
             });
 
             return Ok(result);
