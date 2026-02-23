@@ -8,6 +8,7 @@ import { CamerasComponent } from './components/cameras/cameras.component';
 import { CameraDetailComponent } from './components/cameras/camera-detail.component';
 import { MotorsComponent } from './components/motors/motors.component';
 import { RecordingsComponent } from './components/recordings/recordings.component';
+import { UsersComponent } from './components/users/users.component';
 
 const authGuard = () => {
     const token = localStorage.getItem('motor_control_token');
@@ -25,5 +26,6 @@ export const routes: Routes = [
     { path: 'cameras/:id', component: CameraDetailComponent, canActivate: [authGuard] },
     { path: 'recordings/:id', component: RecordingsComponent, canActivate: [authGuard] },
     { path: 'motors', component: MotorsComponent, canActivate: [authGuard] },
+    { path: 'users', component: UsersComponent, canActivate: [authGuard] },
     { path: '**', redirectTo: 'login' }
 ];
