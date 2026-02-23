@@ -251,6 +251,65 @@ namespace MotorControlEnterprise.Api.Controllers
             }
         }
 
+        // ─── GET /api/recordings/sd/{cameraId} ───────────────────────────────
+        /// <summary>
+        /// Alias de GET /api/cameras/{cameraId}/sdcard.
+        /// Lista grabaciones en la SD card del edge gateway vía MQTT.
+        /// </summary>
+        [HttpGet("sd/{cameraId:int}")]
+        public async Task<IActionResult> ListSdRecordings(
+            int cameraId,
+            [FromQuery] DateTime? start = null,
+            [FromQuery] DateTime? end   = null,
+            CancellationToken ct        = default)
+        {
+            var camera = await GetAuthorizedCamera(cameraId);
+            if (camera == null) return NotFound(new { message = "Cámara no encontrada." });
+
+            var gatewayId = camera.Client?.GatewayId;
+            if (string.IsNullOrEmpty(gatewayId))
+                return BadRequest(new { message = "La cámara no tiene gateway asignado." });
+
+            try
+            {
+                var response = await _edge.RequestEdgeAsync(
+                    gatewayId, "isapi", "listSdRecordings",
+                    new
+                    {
+                        cameraId  = camera.CameraId ?? camera.CameraKey,
+                        startTime = start?.ToUniversalTime().ToString("o"),
+                        endTime   = end?.ToUniversalTime().ToString("o")
+                    },
+                    12000, ct);
+
+                return Ok(JsonDocument.Parse(response).RootElement);
+            }
+            catch (TimeoutException)
+            {
+                return StatusCode(504, new { message = "El gateway no respondió. La cámara puede estar offline." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(503, new { message = ex.Message });
+            }
+        }
+
+        // ─── GET /api/recordings/sd/video ─────────────────────────────────────
+        /// <summary>
+        /// La reproducción directa de SD no está soportada.
+        /// Usar POST /api/cameras/{id}/sdcard/play para iniciar el relay HLS.
+        /// </summary>
+        [HttpGet("sd/video")]
+        public IActionResult SdVideoNotSupported()
+        {
+            return StatusCode(501, new
+            {
+                message         = "La reproducción directa de grabaciones SD no está soportada. " +
+                                  "Use POST /api/cameras/{cameraId}/sdcard/play para iniciar el relay HLS.",
+                hlsPlayEndpoint = "/api/cameras/{cameraId}/sdcard/play"
+            });
+        }
+
         // ─── Helpers ──────────────────────────────────────────────────────────
         private async Task<Models.Camera?> GetAuthorizedCamera(int cameraId)
         {
