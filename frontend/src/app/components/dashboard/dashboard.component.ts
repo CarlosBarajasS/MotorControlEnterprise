@@ -17,7 +17,6 @@ const API_URL = '/api';
     styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
-    authService = inject(AuthService);
     http = inject(HttpClient);
 
     gateways = signal<any[]>([]);
@@ -40,15 +39,12 @@ export class DashboardComponent implements OnInit {
             error: (err) => {
                 console.error('Error cargando gateways:', err);
                 if (err.status === 401) {
-                    this.logout();
+                    // Token expired is handled by interceptor, or do a window.location.href='/login' if needed
                 }
             }
         });
     }
 
-    logout() {
-        this.authService.logout();
-    }
 
     viewCamera(streamUrl: string) {
         this.selectedCameraStream = streamUrl;

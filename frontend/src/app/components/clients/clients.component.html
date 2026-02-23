@@ -1,75 +1,74 @@
-<div class="clients-layout">
-    <div class="header-section">
-        <div>
-            <h1>Gestión de Clientes (Gateways)</h1>
-            <p>Administra los dispositivos edge vinculados, su estado de almacenamiento y telemetría.</p>
-        </div>
-        <div class="actions">
-            <button class="btn-primary" (click)="openCreate()">+ Nuevo Cliente</button>
-            <button class="btn-secondary" (click)="loadData()">🔄 Actualizar</button>
-        </div>
+<div class="topbar">
+    <div>
+        <h1>Gestión de Clientes (Gateways)</h1>
+        <p class="subtitle">Administra los dispositivos edge vinculados, su estado de almacenamiento y telemetría.</p>
     </div>
-
-    <div class="stats-grid" *ngIf="stats()">
-        <div class="stat-card">
-            <span class="label">Total Clientes</span>
-            <span class="value">{{ stats().clients?.total || 0 }}</span>
-        </div>
-        <div class="stat-card">
-            <span class="label">Activos</span>
-            <span class="value success">{{ stats().clients?.active || 0 }}</span>
-        </div>
-        <div class="stat-card">
-            <span class="label">Almacenamiento Total</span>
-            <span class="value">{{ stats().storage?.totalTb || "0" }} TB</span>
-        </div>
-    </div>
-
-    <div class="table-container">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Tipo Negocio</th>
-                    <th>Gateway ID</th>
-                    <th>Estado</th>
-                    <th>Grabación Cloud</th>
-                    <th>Creación</th>
-                    <th class="text-right">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngIf="clients().length === 0">
-                    <td colspan="7" class="text-center empty-state">No hay clientes registrados en el sistema.</td>
-                </tr>
-                <tr *ngFor="let client of clients()">
-                    <td class="font-medium">{{ client.name }}</td>
-                    <td>{{ client.businessType || 'N/A' }}</td>
-                    <td class="mono-text">{{ client.gatewayId || 'Asignar' }}</td>
-                    <td>
-                        <span class="badge"
-                            [ngClass]="{'active': client.status === 'active', 'inactive': client.status !== 'active'}"
-                            (click)="toggleStatus(client)" title="Clic para cambiar estado">
-                            {{ client.status | uppercase }}
-                        </span>
-                    </td>
-                    <td>
-                        <label class="toggle-switch">
-                            <input type="checkbox" [checked]="client.cloudStorageActive"
-                                (change)="toggleCloudStorage(client)">
-                            <span class="slider"></span>
-                        </label>
-                    </td>
-                    <td class="text-muted">{{ client.createdAt | date:'shortDate' }}</td>
-                    <td class="actions-cell">
-                        <button class="action-btn edit" (click)="openEdit(client)">Editar</button>
-                        <button class="action-btn delete" (click)="deleteClient(client.id)">Borrar</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <div style="display: flex; gap: 12px;">
+        <button class="btn-primary" (click)="openCreate()">+ Nuevo Cliente</button>
+        <button class="btn-secondary" (click)="loadData()">🔄 Actualizar</button>
     </div>
 </div>
+
+<div class="stats-grid" *ngIf="stats()">
+    <div class="stat-card">
+        <span class="label">Total Clientes</span>
+        <span class="value">{{ stats().clients?.total || 0 }}</span>
+    </div>
+    <div class="stat-card">
+        <span class="label">Activos</span>
+        <span class="value success">{{ stats().clients?.active || 0 }}</span>
+    </div>
+    <div class="stat-card">
+        <span class="label">Almacenamiento Total</span>
+        <span class="value">{{ stats().storage?.totalTb || "0" }} TB</span>
+    </div>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Tipo Negocio</th>
+                <th>Gateway ID</th>
+                <th>Estado</th>
+                <th>Grabación Cloud</th>
+                <th>Creación</th>
+                <th class="text-right">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngIf="clients().length === 0">
+                <td colspan="7" class="text-center empty-state">No hay clientes registrados en el sistema.</td>
+            </tr>
+            <tr *ngFor="let client of clients()">
+                <td class="font-medium">{{ client.name }}</td>
+                <td>{{ client.businessType || 'N/A' }}</td>
+                <td class="mono-text">{{ client.gatewayId || 'Asignar' }}</td>
+                <td>
+                    <span class="badge"
+                        [ngClass]="{'active': client.status === 'active', 'inactive': client.status !== 'active'}"
+                        (click)="toggleStatus(client)" title="Clic para cambiar estado">
+                        {{ client.status | uppercase }}
+                    </span>
+                </td>
+                <td>
+                    <label class="toggle-switch">
+                        <input type="checkbox" [checked]="client.cloudStorageActive"
+                            (change)="toggleCloudStorage(client)">
+                        <span class="slider"></span>
+                    </label>
+                </td>
+                <td class="text-muted">{{ client.createdAt | date:'shortDate' }}</td>
+                <td class="actions-cell">
+                    <button class="action-btn edit" (click)="openEdit(client)">Editar</button>
+                    <button class="action-btn delete" (click)="deleteClient(client.id)">Borrar</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
 
 <!-- Modal Formulario -->
 <div class="modal-overlay" *ngIf="showModal()">

@@ -1,51 +1,49 @@
-<div class="layout-container">
-    <div class="header-section">
-        <div>
-            <h1>Gestión de Cámaras IP</h1>
-            <p>Administra los feeds de video RTSP e integra nodos al sistema HLS en el Edge.</p>
-        </div>
-        <div class="actions">
-            <button class="btn-primary" (click)="openCreate()">+ Nueva Cámara</button>
-            <button class="btn-secondary" (click)="loadData()">🔄 Actualizar</button>
-        </div>
+<div class="topbar">
+    <div>
+        <h1>Gestión de Cámaras IP</h1>
+        <p class="subtitle">Administra los feeds de video RTSP e integra nodos al sistema HLS en el Edge.</p>
     </div>
+    <div style="display: flex; gap: 12px;">
+        <button class="btn-primary" (click)="openCreate()">+ Nueva Cámara</button>
+        <button class="btn-secondary" (click)="loadData()">🔄 Actualizar</button>
+    </div>
+</div>
 
-    <div class="table-container">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Ubicación</th>
-                    <th>RTSP URL</th>
-                    <th>Gateway Asignado</th>
-                    <th>Añadido</th>
-                    <th class="text-right">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngIf="cameras().length === 0">
-                    <td colspan="6" class="text-center empty-state">No hay cámaras registradas. Añade una para comenzar
-                        el streaming.</td>
-                </tr>
-                <tr *ngFor="let cam of cameras()">
-                    <td class="font-medium">
-                        <a [routerLink]="['/cameras', cam.id]" class="stream-link" title="Ver Streaming en Vivo">{{
-                            cam.name }}</a>
-                    </td>
-                    <td>{{ cam.location || 'N/A' }}</td>
-                    <td class="mono-text url-truncate" [title]="cam.rtspUrl">{{ cam.rtspUrl }}</td>
-                    <td>{{ cam.clientId ? 'Asignado' : 'Sin asignar' }}</td>
-                    <td class="text-muted">{{ cam.createdAt | date:'shortDate' }}</td>
-                    <td class="actions-cell">
-                        <a class="action-btn" [routerLink]="['/recordings', cam.id]">Grabaciones</a>
-                        <button class="action-btn view" (click)="viewStream(cam.id)">Ver HLS</button>
-                        <button class="action-btn edit" (click)="openEdit(cam)">Editar</button>
-                        <button class="action-btn delete" (click)="deleteCamera(cam.id)">Borrar</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Ubicación</th>
+                <th>RTSP URL</th>
+                <th>Gateway Asignado</th>
+                <th>Añadido</th>
+                <th class="text-right">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngIf="cameras().length === 0">
+                <td colspan="6" class="text-center empty-state">No hay cámaras registradas. Añade una para comenzar
+                    el streaming.</td>
+            </tr>
+            <tr *ngFor="let cam of cameras()">
+                <td class="font-medium">
+                    <a [routerLink]="['/cameras', cam.id]" class="stream-link" title="Ver Streaming en Vivo">{{
+                        cam.name }}</a>
+                </td>
+                <td>{{ cam.location || 'N/A' }}</td>
+                <td class="mono-text url-truncate" [title]="cam.rtspUrl">{{ cam.rtspUrl }}</td>
+                <td>{{ cam.clientId ? 'Asignado' : 'Sin asignar' }}</td>
+                <td class="text-muted">{{ cam.createdAt | date:'shortDate' }}</td>
+                <td class="actions-cell">
+                    <a class="action-btn" [routerLink]="['/recordings', cam.id]">Grabaciones</a>
+                    <button class="action-btn view" (click)="viewStream(cam.id)">Ver HLS</button>
+                    <button class="action-btn edit" (click)="openEdit(cam)">Editar</button>
+                    <button class="action-btn delete" (click)="deleteCamera(cam.id)">Borrar</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 <!-- Modal Formulario -->

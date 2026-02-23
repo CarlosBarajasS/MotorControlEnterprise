@@ -1,14 +1,140 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
 
-body {
-    margin: 0;
-    padding: 0;
-    background-color: #0f172a;
-    color: white;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
+:root {
+    --bg: #f6f3ee;
+    --ink: #0b1220;
+    --muted: #667085;
+    --surface: #ffffff;
+    --accent: #2563EB;
+    --accent-hover: #1D4ED8;
+    --teal: #14b8a6;
+    --nav: #0f172a;
+    --nav-ink: #f8fafc;
+    --nav-muted: rgba(248, 250, 252, 0.7);
+    --outline: rgba(15, 23, 42, 0.08);
+    --shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+    --green: #10b981;
+    --red: #ef4444;
 }
 
 * {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
+}
+
+body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background:
+        radial-gradient(1200px circle at -10% -20%, #ffe6c7 0, transparent 60%),
+        radial-gradient(900px circle at 110% 10%, #d3f4f0 0, transparent 55%),
+        var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.02em;
+}
+
+/* Patrón estandarizado para Topbars en todas las secciones */
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-radius: 18px;
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.topbar h1 {
+    font-size: 22px;
+}
+
+.subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+/* Botones Premium */
+.btn-primary {
+    padding: 10px 18px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+}
+
+.btn-secondary {
+    padding: 10px 18px;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--outline);
+    border-radius: 10px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Cards (Motores, Gateways) */
+.card {
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--outline);
+}
+
+.card.online {
+    border-left: 4px solid var(--teal);
+}
+
+.card.offline {
+    border-left: 4px solid var(--red);
+}
+
+/* Status Badges universales */
+.badge {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.badge.online {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.badge.offline {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.badge.active {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.badge.inactive {
+    background: #f9fafb;
+    color: #6b7280;
+}
+
+.badge.suspended {
+    background: #fff7ed;
+    color: #c2410c;
 }

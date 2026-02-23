@@ -1,1 +1,11 @@
-<router-outlet></router-outlet>
+<ng-container *ngIf="isLoggedIn(); else loginOnly">
+    <div class="app-shell">
+        <app-sidebar></app-sidebar>
+        <main class="main-content">
+            <router-outlet></router-outlet>
+        </main>
+    </div>
+</ng-container>
+<ng-template #loginOnly>
+    <router-outlet></router-outlet>
+</ng-template>

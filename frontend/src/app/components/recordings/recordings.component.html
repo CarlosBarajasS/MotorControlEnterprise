@@ -1,78 +1,83 @@
-<div class="layout-container">
-  <div class="header-section">
-    <a routerLink="/cameras" class="back-link">← Volver a Cámaras</a>
+<div class="topbar">
+  <div>
+    <a routerLink="/cameras"
+      style="text-decoration:none; color:var(--accent); font-size:13px; font-weight:600; margin-bottom:4px; display:inline-block;">←
+      Volver a Cámaras</a>
     <h1>Repositorio de Grabaciones</h1>
-    <p>Visualiza el metraje almacenado en Nube y en la Memoria SD del Gateway Edge.</p>
-    <div class="camera-id-badge">Cam ID: <strong>{{ cameraId() }}</strong></div>
+    <p class="subtitle">Visualiza el metraje almacenado en Nube y en la Memoria SD del Gateway Edge.</p>
   </div>
-
-  <div class="main-grid">
-    <!-- Panel Izquierdo: Buscador de Fechas y Lista de Archivos -->
-    <div class="sidebar-panel">
-      
-      <div class="panel-card">
-        <h3>Selección de Respaldo</h3>
-        <div class="form-group">
-          <label>Indica el día a inspeccionar:</label>
-          <input type="date" class="form-control" [ngModel]="selectedDate()" (ngModelChange)="selectDate($event)">
-        </div>
-
-        <div class="quick-dates" *ngIf="availableDates().length > 0">
-           <small>Fechas con índice en la nube:</small>
-           <div class="pills">
-             <span *ngFor="let d of availableDates()" class="date-pill" [class.active]="d === selectedDate()" (click)="selectDate(d)">
-                {{ d }}
-             </span>
-           </div>
-        </div>
-      </div>
-
-      <div class="panel-card mt-20">
-        <h3>Almacenamiento en Nube</h3>
-        <div class="file-list" *ngIf="cloudRecordings().length > 0; else noCloud">
-          <div class="file-item" *ngFor="let file of cloudRecordings()" (click)="playCloudVideo(file.path)">
-             <span class="icon">☁️</span>
-             <div class="details">
-                <strong>{{ file.filename || file.name }}</strong>
-                <small>{{ file.size | number:'1.1-2' }} MB - {{ file.duration || 'N/A' }} s</small>
-             </div>
-          </div>
-        </div>
-        <ng-template #noCloud><p class="text-muted">No hay grabaciones cloud indexadas para este día.</p></ng-template>
-      </div>
-
-      <div class="panel-card mt-20">
-        <h3>SD Card Gateway Edge (Local)</h3>
-        <div class="file-list" *ngIf="localRecordings().length > 0; else noLocal">
-          <div class="file-item" *ngFor="let edgeFile of localRecordings()" (click)="playLocalVideo(edgeFile.filename)">
-             <span class="icon">💾</span>
-             <div class="details">
-                <strong>{{ edgeFile.filename }}</strong>
-                <small>{{ edgeFile.size }} Bytes</small>
-             </div>
-          </div>
-        </div>
-        <ng-template #noLocal><p class="text-muted">No se ha sincronizado metadata Edge de este día.</p></ng-template>
-      </div>
-
-    </div>
-
-    <!-- Panel Derecho: Reproductor de Video -->
-    <div class="viewer-panel">
-       <div class="video-container" *ngIf="currentVideoSource(); else placeholder">
-          <video #videoPlayer controls class="primary-player"></video>
-          <div class="now-playing">
-             Reproduciendo: <span class="mono">{{ currentVideoSource() }}</span>
-          </div>
-       </div>
-       <ng-template #placeholder>
-          <div class="empty-viewer">
-             <span class="big-icon">🎞️</span>
-             <h3>Selecciona un archivo</h3>
-             <p>Haz clic en una grabación del panel izquierdo para comenzar la inspección.</p>
-          </div>
-       </ng-template>
-    </div>
-
-  </div>
+  <div class="badge active" style="font-size: 13px; padding: 6px 12px;">Cam ID: <strong>{{ cameraId() }}</strong></div>
 </div>
+
+<div class="main-grid">
+  <!-- Panel Izquierdo: Buscador de Fechas y Lista de Archivos -->
+  <div class="sidebar-panel">
+
+    <div class="panel-card">
+      <h3>Selección de Respaldo</h3>
+      <div class="form-group">
+        <label>Indica el día a inspeccionar:</label>
+        <input type="date" class="form-control" [ngModel]="selectedDate()" (ngModelChange)="selectDate($event)">
+      </div>
+
+      <div class="quick-dates" *ngIf="availableDates().length > 0">
+        <small>Fechas con índice en la nube:</small>
+        <div class="pills">
+          <span *ngFor="let d of availableDates()" class="date-pill" [class.active]="d === selectedDate()"
+            (click)="selectDate(d)">
+            {{ d }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-card mt-20">
+      <h3>Almacenamiento en Nube</h3>
+      <div class="file-list" *ngIf="cloudRecordings().length > 0; else noCloud">
+        <div class="file-item" *ngFor="let file of cloudRecordings()" (click)="playCloudVideo(file.path)">
+          <span class="icon">☁️</span>
+          <div class="details">
+            <strong>{{ file.filename || file.name }}</strong>
+            <small>{{ file.size | number:'1.1-2' }} MB - {{ file.duration || 'N/A' }} s</small>
+          </div>
+        </div>
+      </div>
+      <ng-template #noCloud>
+        <p class="text-muted">No hay grabaciones cloud indexadas para este día.</p>
+      </ng-template>
+    </div>
+
+    <div class="panel-card mt-20">
+      <h3>SD Card Gateway Edge (Local)</h3>
+      <div class="file-list" *ngIf="localRecordings().length > 0; else noLocal">
+        <div class="file-item" *ngFor="let edgeFile of localRecordings()" (click)="playLocalVideo(edgeFile.filename)">
+          <span class="icon">💾</span>
+          <div class="details">
+            <strong>{{ edgeFile.filename }}</strong>
+            <small>{{ edgeFile.size }} Bytes</small>
+          </div>
+        </div>
+      </div>
+      <ng-template #noLocal>
+        <p class="text-muted">No se ha sincronizado metadata Edge de este día.</p>
+      </ng-template>
+    </div>
+
+  </div>
+
+  <!-- Panel Derecho: Reproductor de Video -->
+  <div class="viewer-panel">
+    <div class="video-container" *ngIf="currentVideoSource(); else placeholder">
+      <video #videoPlayer controls class="primary-player"></video>
+      <div class="now-playing">
+        Reproduciendo: <span class="mono">{{ currentVideoSource() }}</span>
+      </div>
+    </div>
+    <ng-template #placeholder>
+      <div class="empty-viewer">
+        <span class="big-icon">🎞️</span>
+        <h3>Selecciona un archivo</h3>
+        <p>Haz clic en una grabación del panel izquierdo para comenzar la inspección.</p>
+      </div>
+    </ng-template>
+  </div>

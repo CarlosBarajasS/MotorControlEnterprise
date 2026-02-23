@@ -1,44 +1,42 @@
-<div class="layout-container">
-    <div class="header-section">
-        <div>
-            <h1>Control de Motores Industriales</h1>
-            <p>Supervisa el estado y controla los motores mediante infraestructura MQTT.</p>
-        </div>
-        <div class="actions">
-            <div class="mqtt-badge" [class.connected]="mqttStatus()?.connected"
-                [title]="'Broker: ' + (mqttStatus()?.broker || 'Desconectado')">
-                <span class="dot"></span> MQTT {{ mqttStatus()?.connected ? 'Online' : 'Offline' }}
-            </div>
-            <button class="btn-secondary" (click)="loadData()">🔄 Refrescar</button>
-        </div>
+<div class="topbar">
+    <div>
+        <h1>Control de Motores Industriales</h1>
+        <p class="subtitle">Supervisa el estado y controla los motores mediante infraestructura MQTT.</p>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <span class="badge" [class.online]="mqttStatus()?.connected" [class.offline]="!mqttStatus()?.connected"
+            [title]="'Broker: ' + (mqttStatus()?.broker || 'Desconectado')">
+            MQTT {{ mqttStatus()?.connected ? 'Online' : 'Offline' }}
+        </span>
+        <button class="btn-secondary" (click)="loadData()">🔄 Refrescar</button>
+    </div>
+</div>
+
+<div class="motors-grid">
+    <div *ngIf="motors().length === 0" class="empty-state">
+        <p>No se encontraron motores sincronizados en la base de datos.</p>
     </div>
 
-    <div class="motors-grid">
-        <div *ngIf="motors().length === 0" class="empty-state">
-            <p>No se encontraron motores sincronizados en la base de datos.</p>
+    <div class="motor-card" *ngFor="let m of motors()">
+        <div class="card-header">
+            <h3 class="motor-name">{{ m.name || m.deviceId || 'Motor Desconocido' }}</h3>
+            <span class="status-pill" [class.running]="m.lastState === 'running'"
+                [class.stopped]="m.lastState === 'stopped' || !m.lastState">
+                {{ m.lastState | uppercase }}
+            </span>
         </div>
+        <div class="card-body">
+            <p class="meta"><strong>ID:</strong> {{ m.id }}</p>
+            <p class="meta"><strong>Última Respuesta:</strong> {{ m.lastSeen ? (m.lastSeen | date:'short') : 'Nunca'
+                }}</p>
 
-        <div class="motor-card" *ngFor="let m of motors()">
-            <div class="card-header">
-                <h3 class="motor-name">{{ m.name || m.deviceId || 'Motor Desconocido' }}</h3>
-                <span class="status-pill" [class.running]="m.lastState === 'running'"
-                    [class.stopped]="m.lastState === 'stopped' || !m.lastState">
-                    {{ m.lastState | uppercase }}
-                </span>
+            <div class="metrics" *ngIf="m.lastTelemetry">
+                <div class="metric"><small>RPM</small> <span>{{ m.lastTelemetry.speed || 0 }}</span></div>
+                <div class="metric"><small>Corriente</small> <span>{{ m.lastTelemetry.current || 0 }} A</span></div>
             </div>
-            <div class="card-body">
-                <p class="meta"><strong>ID:</strong> {{ m.id }}</p>
-                <p class="meta"><strong>Última Respuesta:</strong> {{ m.lastSeen ? (m.lastSeen | date:'short') : 'Nunca'
-                    }}</p>
-
-                <div class="metrics" *ngIf="m.lastTelemetry">
-                    <div class="metric"><small>RPM</small> <span>{{ m.lastTelemetry.speed || 0 }}</span></div>
-                    <div class="metric"><small>Corriente</small> <span>{{ m.lastTelemetry.current || 0 }} A</span></div>
-                </div>
-            </div>
-            <div class="card-footer">
-                <button class="btn-primary full-width" (click)="openMotorControl(m)">Abrir Panel de Control</button>
-            </div>
+        </div>
+        <div class="card-footer">
+            <button class="btn-primary full-width" (click)="openMotorControl(m)">Abrir Panel de Control</button>
         </div>
     </div>
 </div>
