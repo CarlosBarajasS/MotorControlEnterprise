@@ -25,6 +25,7 @@ namespace MotorControlEnterprise.Api.Controllers
 
         public record LoginRequest(string Email, string Password);
         public record CreateUserRequest(string Email, string Password, string? Name, string Role = "client");
+        public record UserStatusRequest(bool IsActive);
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -56,6 +57,22 @@ namespace MotorControlEnterprise.Api.Controllers
             return Ok(new { id, email, name, role });
         }
 
+        [HttpGet("users")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetUsers()
+        {
+            var users = await _context.Users
+                .OrderBy(u => u.Role)
+                .ThenBy(u => u.Name)
+                .Select(u => new {
+                    u.Id, u.Email, u.Name, u.Role,
+                    u.IsActive, u.CreatedAt, u.LastLogin
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
         [HttpPost("users")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
@@ -78,12 +95,35 @@ namespace MotorControlEnterprise.Api.Controllers
             return CreatedAtAction(nameof(Verify), new { user.Id, user.Email, user.Name, user.Role });
         }
 
+        [HttpPatch("users/{id:int}/status")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> ToggleUserStatus(int id, [FromBody] UserStatusRequest req)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            // No permitir desactivarse a sí mismo
+            var requesterId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            if (requesterId == id.ToString())
+                return BadRequest(new { message = "No puedes desactivar tu propia cuenta" });
+
+            user.IsActive = req.IsActive;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { user.Id, user.Email, user.IsActive });
+        }
+
         [HttpDelete("users/{id:int}")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
             if (user == null) return NotFound();
+
+            // No permitir eliminarse a sí mismo
+            var requesterId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            if (requesterId == id.ToString())
+                return BadRequest(new { message = "No puedes eliminar tu propia cuenta" });
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
