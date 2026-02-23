@@ -15,14 +15,15 @@ const API_URL = '/api';
 })
 export class CameraDetailComponent implements OnInit, OnDestroy {
   @ViewChild('videoElement', { static: true }) videoElement!: ElementRef<HTMLVideoElement>;
-  
+
   route = inject(ActivatedRoute);
   http = inject(HttpClient);
 
   cameraId: string = '';
   camera = signal<any>(null);
-  camStatus = signal<{isOnline: boolean, lastSeen?: string}>({ isOnline: false });
-  
+  camStatus = signal<{ isOnline: boolean, lastSeen?: string }>({ isOnline: false });
+  presets = signal<any[]>([]);
+
   private hls: Hls | null = null;
   private statusInterval: any;
 
@@ -32,6 +33,11 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
       this.loadCameraData();
       this.initPlayer();
       this.statusInterval = setInterval(() => this.checkStatus(), 10000);
+      // Load presets
+      this.http.get<any[]>(`${API_URL}/cameras/${this.cameraId}/ptz/presets`).subscribe({
+        next: (p) => this.presets.set(p || []),
+        error: () => { } // PTZ presets may not exist for all cameras
+      });
     }
   }
 
@@ -90,5 +96,9 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
 
   ptzStop() {
     this.http.post(`${API_URL}/cameras/${this.cameraId}/ptz/stop`, {}).subscribe();
+  }
+
+  gotoPreset(presetId: string) {
+    this.http.post(`${API_URL}/cameras/${this.cameraId}/ptz/presets/${presetId}/goto`, {}).subscribe();
   }
 }

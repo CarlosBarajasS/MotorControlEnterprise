@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +19,13 @@ export class CamerasComponent implements OnInit {
 
     cameras = signal<any[]>([]);
     clients = signal<any[]>([]); // For dropdown when creating a camera
+    searchTerm = signal('');
+    filtered = computed(() =>
+        this.cameras().filter(c =>
+            c.name.toLowerCase().includes(this.searchTerm().toLowerCase()) ||
+            (c.location ?? '').toLowerCase().includes(this.searchTerm().toLowerCase())
+        )
+    );
 
     showModal = signal(false);
     modalMode = signal<'create' | 'edit'>('create');
@@ -80,5 +87,9 @@ export class CamerasComponent implements OnInit {
 
     viewStream(id: string) {
         this.router.navigate(['/cameras', id]);
+    }
+
+    isOnline(cam: any): boolean {
+        return cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 60000;
     }
 }

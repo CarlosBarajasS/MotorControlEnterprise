@@ -17,7 +17,7 @@
         <span
             style="font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 0.5rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">Cámaras
             Online</span>
-        <strong style="font-size: 1.8rem; color: var(--ink);">--</strong>
+        <strong style="font-size: 1.8rem; color: var(--ink);">{{ camerasOnline() }}</strong>
     </div>
 </div>
 
@@ -43,12 +43,13 @@
                 <h4
                     style="margin: 0 0 0.75rem; font-size: 0.8rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                     Cámaras Activas</h4>
-                <button class="cam-btn" (click)="viewCamera('http://localhost:8888/cam-principal')">
-                    🎥 Entrada Principal
-                </button>
-                <button class="cam-btn" (click)="viewCamera('http://localhost:8888/cam-patio')">
-                    🎥 Patio Trasero
-                </button>
+                <div *ngFor="let cam of cameras()" style="margin-bottom:6px;">
+                    <button class="cam-btn"
+                        (click)="viewCamera(cam.streams?.hls ?? '/api/admin/stream/' + cam.id + '/hls')">
+                        🎥 {{ cam.name }}
+                    </button>
+                </div>
+                <p *ngIf="cameras().length === 0" style="font-size:12px;color:var(--muted)">Sin cámaras asignadas</p>
             </div>
         </div>
     </div>

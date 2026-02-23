@@ -28,24 +28,42 @@
       <div class="panel-card ptz-panel">
         <h3><span class="icon">🕹️</span> Control PTZ</h3>
         <p class="help-text">Mantén presionado para mover la cámara si soporta protocolo ONVIF/PTZ.</p>
-        
+
         <div class="joystick-grid">
-          <div></div>
-          <button class="ptz-btn" (mousedown)="ptzMove(0, 100, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">⬆️</button>
-          <div></div>
-          
-          <button class="ptz-btn" (mousedown)="ptzMove(-100, 0, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">⬅️</button>
+          <button class="ptz-btn diag" (mousedown)="ptzMove(-70, 70, 0)" (mouseup)="ptzStop()"
+            (mouseleave)="ptzStop()">↖</button>
+          <button class="ptz-btn" (mousedown)="ptzMove(0, 100, 0)" (mouseup)="ptzStop()"
+            (mouseleave)="ptzStop()">⬆️</button>
+          <button class="ptz-btn diag" (mousedown)="ptzMove(70, 70, 0)" (mouseup)="ptzStop()"
+            (mouseleave)="ptzStop()">↗</button>
+
+          <button class="ptz-btn" (mousedown)="ptzMove(-100, 0, 0)" (mouseup)="ptzStop()"
+            (mouseleave)="ptzStop()">⬅️</button>
           <button class="ptz-btn stop" (click)="ptzStop()">⏹️</button>
-          <button class="ptz-btn" (mousedown)="ptzMove(100, 0, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">➡️</button>
-          
-          <div></div>
-          <button class="ptz-btn" (mousedown)="ptzMove(0, -100, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">⬇️</button>
-          <div></div>
+          <button class="ptz-btn" (mousedown)="ptzMove(100, 0, 0)" (mouseup)="ptzStop()"
+            (mouseleave)="ptzStop()">➡️</button>
+
+          <button class="ptz-btn diag" (mousedown)="ptzMove(-70, -70, 0)" (mouseup)="ptzStop()"
+            (mouseleave)="ptzStop()">↙</button>
+          <button class="ptz-btn" (mousedown)="ptzMove(0, -100, 0)" (mouseup)="ptzStop()"
+            (mouseleave)="ptzStop()">⬇️</button>
+          <button class="ptz-btn diag" (mousedown)="ptzMove(70, -70, 0)" (mouseup)="ptzStop()"
+            (mouseleave)="ptzStop()">↘</button>
         </div>
 
         <div class="zoom-controls">
-          <button class="ptz-btn zoom" (mousedown)="ptzMove(0, 0, 100)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">➕ Zoom In</button>
-          <button class="ptz-btn zoom" (mousedown)="ptzMove(0, 0, -100)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">➖ Zoom Out</button>
+          <button class="ptz-btn zoom" (mousedown)="ptzMove(0, 0, 100)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">➕
+            Zoom In</button>
+          <button class="ptz-btn zoom" (mousedown)="ptzMove(0, 0, -100)" (mouseup)="ptzStop()"
+            (mouseleave)="ptzStop()">➖ Zoom Out</button>
+        </div>
+
+        <div class="presets-section" *ngIf="presets().length > 0">
+          <h4 style="font-size:12px;color:var(--muted);margin:12px 0 6px;">Presets</h4>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="ptz-btn" *ngFor="let p of presets()" (click)="gotoPreset(p.id)"
+              style="font-size:11px;padding:4px 8px;">{{ p.name }}</button>
+          </div>
         </div>
       </div>
 

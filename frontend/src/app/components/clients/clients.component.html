@@ -24,12 +24,20 @@
     </div>
 </div>
 
+<div style="margin-bottom:16px; display:flex; gap:12px; align-items:center;">
+    <input type="text" class="form-control" placeholder="🔍 Buscar cliente..." [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)" style="max-width:320px;">
+    <span style="font-size:13px; color:var(--muted);">{{ filtered().length }} clientes</span>
+</div>
+
 <div class="table-container">
     <table class="data-table">
         <thead>
             <tr>
                 <th>Nombre</th>
                 <th>Tipo Negocio</th>
+                <th>Ubicación</th>
+                <th>Contacto</th>
                 <th>Gateway ID</th>
                 <th>Estado</th>
                 <th>Grabación Cloud</th>
@@ -38,15 +46,20 @@
             </tr>
         </thead>
         <tbody>
-            <tr *ngIf="clients().length === 0">
-                <td colspan="7" class="text-center empty-state">No hay clientes registrados en el sistema.</td>
+            <tr *ngIf="filtered().length === 0">
+                <td colspan="9" class="text-center empty-state">No hay clientes registrados en el sistema.</td>
             </tr>
-            <tr *ngFor="let client of clients()">
+            <tr *ngFor="let client of filtered()">
                 <td class="font-medium">
                     <a [routerLink]="['/clients', client.id]" style="color:var(--accent); text-decoration:none;">{{
                         client.name }}</a>
                 </td>
                 <td>{{ client.businessType || 'N/A' }}</td>
+                <td>{{ client.city || '—' }}{{ client.state ? ', ' + client.state : '' }}</td>
+                <td>
+                    <div style="font-size:13px;">{{ client.contactName || '—' }}</div>
+                    <div style="font-size:11px; color:var(--muted);">{{ client.contactPhone || '' }}</div>
+                </td>
                 <td class="mono-text">{{ client.gatewayId || 'Asignar' }}</td>
                 <td>
                     <span class="badge"
@@ -88,8 +101,15 @@
             </div>
             <div class="form-group">
                 <label>Tipo de Negocio</label>
-                <input type="text" [(ngModel)]="currentClient().businessType" class="form-control"
-                    placeholder="Retail, Bodega, etc.">
+                <select [(ngModel)]="currentClient().businessType" class="form-control">
+                    <option value="">-- Seleccionar --</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Restaurante">Restaurante</option>
+                    <option value="Oficina">Oficina</option>
+                    <option value="Bodega">Bodega</option>
+                    <option value="Manufactura">Manufactura</option>
+                    <option value="Otro">Otro</option>
+                </select>
             </div>
             <div class="form-row">
                 <div class="form-group">
@@ -100,6 +120,30 @@
                     <label>Ciudad</label>
                     <input type="text" [(ngModel)]="currentClient().city" class="form-control">
                 </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Estado</label>
+                    <input type="text" [(ngModel)]="currentClient().state" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>País</label>
+                    <input type="text" [(ngModel)]="currentClient().country" class="form-control" placeholder="México">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre del Contacto</label>
+                    <input type="text" [(ngModel)]="currentClient().contactName" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono</label>
+                    <input type="tel" [(ngModel)]="currentClient().contactPhone" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Email del Contacto</label>
+                <input type="email" [(ngModel)]="currentClient().contactEmail" class="form-control">
             </div>
         </div>
         <div class="modal-footer">

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -18,6 +18,14 @@ export class ClientsComponent implements OnInit {
 
     clients = signal<any[]>([]);
     stats = signal<any>(null);
+    searchTerm = signal('');
+    filtered = computed(() =>
+        this.clients().filter(c =>
+            c.name.toLowerCase().includes(this.searchTerm().toLowerCase()) ||
+            (c.gatewayId ?? '').toLowerCase().includes(this.searchTerm().toLowerCase()) ||
+            (c.city ?? '').toLowerCase().includes(this.searchTerm().toLowerCase())
+        )
+    );
 
     showModal = signal(false);
     modalMode = signal<'create' | 'edit'>('create');
@@ -40,7 +48,7 @@ export class ClientsComponent implements OnInit {
     }
 
     openCreate() {
-        this.currentClient.set({ name: '', businessType: '', rfc: '', city: '' });
+        this.currentClient.set({ name: '', businessType: '', rfc: '', city: '', state: '', country: 'México', contactName: '', contactPhone: '', contactEmail: '' });
         this.modalMode.set('create');
         this.showModal.set(true);
     }

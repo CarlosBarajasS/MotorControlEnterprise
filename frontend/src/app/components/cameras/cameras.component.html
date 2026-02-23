@@ -9,11 +9,17 @@
     </div>
 </div>
 
+<div style="margin-bottom:16px;">
+    <input type="text" class="form-control" placeholder="🔍 Buscar cámara..." [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)" style="max-width:320px;">
+</div>
+
 <div class="table-container">
     <table class="data-table">
         <thead>
             <tr>
                 <th>Nombre</th>
+                <th>Estado</th>
                 <th>Ubicación</th>
                 <th>RTSP URL</th>
                 <th>Gateway Asignado</th>
@@ -22,14 +28,19 @@
             </tr>
         </thead>
         <tbody>
-            <tr *ngIf="cameras().length === 0">
-                <td colspan="6" class="text-center empty-state">No hay cámaras registradas. Añade una para comenzar
+            <tr *ngIf="filtered().length === 0">
+                <td colspan="7" class="text-center empty-state">No hay cámaras registradas. Añade una para comenzar
                     el streaming.</td>
             </tr>
-            <tr *ngFor="let cam of cameras()">
+            <tr *ngFor="let cam of filtered()">
                 <td class="font-medium">
                     <a [routerLink]="['/cameras', cam.id]" class="stream-link" title="Ver Streaming en Vivo">{{
                         cam.name }}</a>
+                </td>
+                <td>
+                    <span class="badge" [class.online]="isOnline(cam)" [class.offline]="!isOnline(cam)">
+                        {{ isOnline(cam) ? 'Online' : 'Offline' }}
+                    </span>
                 </td>
                 <td>{{ cam.location || 'N/A' }}</td>
                 <td class="mono-text url-truncate" [title]="cam.rtspUrl">{{ cam.rtspUrl }}</td>

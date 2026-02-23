@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -21,11 +21,19 @@ export class DashboardComponent implements OnInit {
 
     gateways = signal<any[]>([]);
     stats = signal<{ active: number, total: number }>({ active: 0, total: 0 });
+    cameras = signal<any[]>([]);
+    camerasOnline = computed(() => this.cameras().filter(c =>
+        c.lastSeen && (Date.now() - new Date(c.lastSeen).getTime()) < 60000
+    ).length);
 
     selectedCameraStream: string | null = null;
 
     ngOnInit() {
         this.fetchClients();
+        this.http.get<any[]>(`${API_URL}/cameras`).subscribe({
+            next: (res) => this.cameras.set(res || []),
+            error: (err) => console.error('Error cargando cámaras:', err)
+        });
     }
 
     fetchClients() {
