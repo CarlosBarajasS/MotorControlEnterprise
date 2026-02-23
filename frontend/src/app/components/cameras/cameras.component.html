@@ -37,6 +37,7 @@
                     <td>{{ cam.clientId ? 'Asignado' : 'Sin asignar' }}</td>
                     <td class="text-muted">{{ cam.createdAt | date:'shortDate' }}</td>
                     <td class="actions-cell">
+                        <a class="action-btn" [routerLink]="['/recordings', cam.id]">Grabaciones</a>
                         <button class="action-btn view" (click)="viewStream(cam.id)">Ver HLS</button>
                         <button class="action-btn edit" (click)="openEdit(cam)">Editar</button>
                         <button class="action-btn delete" (click)="deleteCamera(cam.id)">Borrar</button>
