@@ -33,13 +33,14 @@ namespace MotorControlEnterprise.Api.Services
             await db.Database.EnsureCreatedAsync(cancellationToken);
 
             // Agregar columnas nuevas en tablas existentes (idempotente con IF NOT EXISTS)
+            // IMPORTANTE: Npgsql preserva mayúsculas en nombres de tabla → "Clients" (no clients)
             await db.Database.ExecuteSqlRawAsync(@"
-                ALTER TABLE clients ADD COLUMN IF NOT EXISTS local_storage_type VARCHAR(20) DEFAULT 'nvr';
-                ALTER TABLE clients ADD COLUMN IF NOT EXISTS nvr_ip VARCHAR(100);
-                ALTER TABLE clients ADD COLUMN IF NOT EXISTS nvr_port INTEGER;
-                ALTER TABLE clients ADD COLUMN IF NOT EXISTS nvr_user VARCHAR(100);
-                ALTER TABLE clients ADD COLUMN IF NOT EXISTS nvr_password VARCHAR(255);
-                ALTER TABLE clients ADD COLUMN IF NOT EXISTS nvr_brand VARCHAR(50);
+                ALTER TABLE ""Clients"" ADD COLUMN IF NOT EXISTS local_storage_type VARCHAR(20) DEFAULT 'nvr';
+                ALTER TABLE ""Clients"" ADD COLUMN IF NOT EXISTS nvr_ip VARCHAR(100);
+                ALTER TABLE ""Clients"" ADD COLUMN IF NOT EXISTS nvr_port INTEGER;
+                ALTER TABLE ""Clients"" ADD COLUMN IF NOT EXISTS nvr_user VARCHAR(100);
+                ALTER TABLE ""Clients"" ADD COLUMN IF NOT EXISTS nvr_password VARCHAR(255);
+                ALTER TABLE ""Clients"" ADD COLUMN IF NOT EXISTS nvr_brand VARCHAR(50);
             ", cancellationToken);
 
             // Si ya existe al menos un admin, no hacer nada
