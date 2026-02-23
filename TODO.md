@@ -1219,7 +1219,76 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
 ## 📩 PENDIENTES PARA BENDI
 
-<!-- Wendy: escribe aquí lo que necesitas del backend -->
+### *** PLAN ACTUALIZADO 23 FEB 2026 ***
+
+> NVR/DVR es 100% fisico (monitor local). SD Card eliminada del frontend.
+> Cloud (NAS) es la UNICA fuente de grabaciones remotas.
+> `localStorageType` en Client es solo informativo (nvr/dvr/none).
+
+### BENDI-1: Agregar campo `LocalStorageType` al modelo Client
+- Valores: "nvr", "dvr", "none" (string, default "nvr")
+- Wendy ya lo envia en POST /api/clients desde el Wizard
+- Aceptar en POST/GET/PATCH de ClientController
+- Migracion: dotnet ef migrations add AddLocalStorageType
+
+### BENDI-2: Verificar Cloud Recordings en produccion
+- StreamRecorderService debe generar MP4s en /mnt/nas/recordings/
+- GET /api/recordings/cloud/{cameraId}/dates -> { dates: [...] }
+- GET /api/recordings/cloud/{cameraId}?date= -> { files: [{name, path, sizeMb, startTime}] }
+- GET /api/recordings/cloud/video?path=&token= -> HTTP 206 video/mp4
+
+### BENDI-3: Deprecar endpoints SD local (ya no se usan)
+- GET /api/recordings/local/{cameraId}?date=
+- POST /api/recordings/local/{cameraId}/play
+- GET /api/recordings/sd/{cameraId}?date=
+
+### BENDI-4: Toggle Switch CSS en client-detail.component.scss
+- Wendy agrego toggle-switch HTML para Cloud Storage
+- Agregar CSS del toggle switch al SCSS del componente
+
+### BENDI-5: Arquitectura final
+- Video en vivo: Camara -> Edge -> MediaMTX relay -> Central -> HLS -> Frontend
+- Grabacion cloud: Edge relay -> StreamRecorderService (ffmpeg) -> NAS .mp4
+- Grabacion local: Camara -> NVR/DVR -> Monitor (100% fisico)
+- Playback cloud: Frontend -> /api/recordings/cloud/video?token= -> NAS -> HTTP 206
+Wendy ya envía estos campos en el Wizard POST:
+```json
+{
+  "localStorageType": "nvr|dvr|sd|none",
+  "nvrIp": "192.168.1.64",
+  "nvrPort": 80,
+  "nvrUser": "admin",
+  "nvrPassword": "...",
+  "nvrBrand": "hikvision|dahua|generic"
+}
+```
+**Agregar a `Client.cs`:** `LocalStorageType`, `NvrIp`, `NvrPort`, `NvrUser`, `NvrPassword`, `NvrBrand`.
+**Migración EF Core:** `dotnet ef migrations add AddNvrFields && dotnet ef database update`
+
+### NVR-BACK-2: Edge-Agent — módulo proxy ISAPI/NVR
+El edge-agent necesita endpoints para consultar el NVR del cliente:
+- `GET /nvr/recordings?date=YYYY-MM-DD` → lista grabaciones
+- `GET /nvr/playback?channel=&start=&end=` → RTSP playback→HLS conversion
+
+### NVR-BACK-3: Backend — endpoints proxy al edge
+- `GET /api/recordings/nvr/{cameraId}?date=` → proxy al edge `/nvr/recordings`
+- `GET /api/recordings/nvr/{cameraId}/playback?start=&end=` → proxy al edge playback
+
+### NVR-BACK-4: Toggle Switch CSS para ClientDetail
+Wendy agregó un `<label class="toggle-switch">` en ClientDetail pero falta el CSS del toggle.
+**Agregar a `client-detail.component.scss`:**
+```scss
+.toggle-switch {
+  position: relative; display: inline-block; width: 48px; height: 26px;
+  input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0; background: #cbd5e1; border-radius: 26px; cursor: pointer; transition: 0.3s;
+    &::before { content: ''; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+  }
+  input:checked + .slider { background: var(--accent); }
+  input:checked + .slider::before { transform: translateX(22px); }
+}
+```
 
 ---
 
@@ -1386,6 +1455,7 @@ pase `file.path` al método `playCloudVideo`:
 | Backend — Servicio limpieza storage (storage-cleaner) | ✅ Hecho | Claude (commit 52f23ef) |
 | Backend — Servicio backup PostgreSQL | ✅ Hecho | Claude (commit 52f23ef) |
 | Backend — API cloud recordings (listar/reproducir) | ✅ Hecho | Claude (commit 52f23ef) |
+| Backend — Rutas alias SD card `/api/recordings/sd/*` | ✅ Hecho | Bendi (commit a332bc1) |
 | Infraestructura — docker-compose.yml con servicios completos | ✅ Hecho | Claude (commit 52f23ef) |
 | Frontend Admin — Wizard 5 pasos completo | ✅ Hecho | Wendy (commit 80b9ac2) |
 | Frontend Admin — Grabaciones cloud funcionales | ✅ Hecho | Wendy (commit 9bc8b43) |
@@ -1402,6 +1472,43 @@ pase `file.path` al método `playCloudVideo`:
 - ✅ **BACK-5:** `postgres-backup` container en docker-compose — `pg_dump` cada 24h, retención 7 backups
 - ✅ **BACK-6:** `Client.CloudStorageActive` ya existía en el modelo
 - ✅ **BACK-7:** `docker-compose.yml` — volumen NAS bind mount para backend + postgres-backup container; `Dockerfile` agrega ffmpeg
+- ✅ **BACK-8:** `RecordingController.cs` — rutas alias `GET /api/recordings/sd/{cameraId}` y `GET /api/recordings/sd/video` para compatibilidad con portal cliente (commit a332bc1)
+
+---
+
+## ⚠️ PENDIENTE WENDY — SD Card Playback en ClientRecordingsComponent
+
+**Archivo:** `frontend/src/app/components/client-portal/client-recordings.component.ts`
+
+**Problema:** `playSdRecording(rec)` actualmente hace:
+```typescript
+this.currentVideo.set(`/api/recordings/sd/video?path=${encodeURIComponent(rec.path || rec.filename)}`);
+```
+Ese endpoint devuelve **501** porque los archivos SD no son accesibles directamente desde el servidor — están en la tarjeta SD de la cámara y requieren relay MQTT.
+
+**Flujo correcto (2 pasos):**
+1. `POST /api/cameras/{cameraId}/sdcard/play` con body `{ "playbackUri": rec.playbackUri }`
+2. Respuesta del edge incluye `{ "hlsPath": "http://..." }` → usar ese URL en el `<video src>`
+
+**Fix que necesita Wendy en `playSdRecording()`:**
+```typescript
+playSdRecording(rec: any) {
+    if (!rec.playbackUri) {
+        console.warn('SD recording sin playbackUri:', rec);
+        return;
+    }
+    this.http.post<any>(`/api/cameras/${this.cameraId()}/sdcard/play`,
+        { playbackUri: rec.playbackUri }).subscribe({
+        next: (res) => {
+            if (res.hlsPath) this.currentVideo.set(res.hlsPath);
+            else console.warn('Edge no devolvió hlsPath', res);
+        },
+        error: (err) => console.error('Error iniciando SD playback:', err)
+    });
+}
+```
+
+**Nota:** El campo `playbackUri` lo devuelve el edge gateway en la respuesta de `listSdRecordings`. Si el edge no lo devuelve, este flujo no funcionará hasta actualizar el firmware del edge — pero es un problema en el edge, no en el frontend/backend.
 
 ---
 
