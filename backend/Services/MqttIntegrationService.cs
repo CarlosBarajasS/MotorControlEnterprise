@@ -121,12 +121,18 @@ namespace MotorControlEnterprise.Api.Services
                         var camera = db.Cameras.FirstOrDefault(c => c.CameraKey == cameraKey);
                         if (camera != null)
                         {
-                            camera.LastSeen = DateTime.UtcNow;
+                            camera.LastSeen  = DateTime.UtcNow;
+                            camera.UpdatedAt = DateTime.UtcNow;
                             try
                             {
-                                var doc = JsonDocument.Parse(payload);
-                                if (doc.RootElement.TryGetProperty("status", out var el))
-                                    camera.Status = el.GetString() ?? camera.Status;
+                                var doc  = JsonDocument.Parse(payload);
+                                var root = doc.RootElement;
+
+                                // Prefer 'online' boolean (edge-template format)
+                                if (root.TryGetProperty("online", out var onlineEl))
+                                    camera.Status = onlineEl.GetBoolean() ? "active" : "offline";
+                                else if (root.TryGetProperty("status", out var statusEl))
+                                    camera.Status = statusEl.GetString() ?? camera.Status;
                             }
                             catch { /* payload no es JSON válido */ }
 
@@ -170,14 +176,84 @@ namespace MotorControlEnterprise.Api.Services
                     var parts = topic.Split('/');
                     if (parts.Length == 4)
                     {
+                        var gatewayId = parts[1];
                         var cameraKey = parts[2];
+
+                        // Look up client by gatewayId to get correct userId/clientId
+                        var client = db.Clients.FirstOrDefault(c => c.GatewayId == gatewayId);
                         var camera = db.Cameras.FirstOrDefault(c => c.CameraKey == cameraKey);
+
+                        // Parse the registration payload from edge-template
+                        string? camName     = null;
+                        string? camIp       = null;
+                        string? streamsJson = null;
+
+                        try
+                        {
+                            var doc  = JsonDocument.Parse(payload);
+                            var root = doc.RootElement;
+
+                            camName = root.TryGetProperty("name", out var n) ? n.GetString() : null;
+                            camIp   = root.TryGetProperty("ip",   out var ip) ? ip.GetString() : null;
+
+                            // Normalize streams: edge sends { main, hls, webrtc }
+                            // Store as { rtsp, hls, webrtc } to match ExtractRtspUrl() in CameraController
+                            string? rtspUrl   = null;
+                            string? hlsUrl    = null;
+                            string? webrtcUrl = null;
+
+                            if (root.TryGetProperty("streams", out var streamsEl))
+                            {
+                                if (streamsEl.TryGetProperty("main",   out var m)) rtspUrl   = m.GetString();
+                                if (streamsEl.TryGetProperty("hls",    out var h)) hlsUrl    = h.GetString();
+                                if (streamsEl.TryGetProperty("webrtc", out var w)) webrtcUrl = w.GetString();
+                            }
+
+                            // Fallback: top-level rtspUrl field
+                            if (rtspUrl == null && root.TryGetProperty("rtspUrl", out var ru))
+                                rtspUrl = ru.GetString();
+
+                            streamsJson = JsonSerializer.Serialize(new
+                            {
+                                rtsp   = rtspUrl,
+                                hls    = hlsUrl,
+                                webrtc = webrtcUrl
+                            });
+                        }
+                        catch { /* payload no es JSON válido, usar null */ }
+
                         if (camera != null)
                         {
-                            camera.Streams  = payload;
-                            camera.LastSeen = DateTime.UtcNow;
+                            // Update existing camera with fresh stream URLs
+                            if (streamsJson != null) camera.Streams = streamsJson;
+                            camera.LastSeen  = DateTime.UtcNow;
+                            camera.UpdatedAt = DateTime.UtcNow;
                             await db.SaveChangesAsync();
-                            _logger.LogInformation("Streams actualizados para cámara {CameraKey}.", cameraKey);
+                            _logger.LogInformation("Cámara {CameraKey} actualizada desde registro MQTT.", cameraKey);
+                        }
+                        else
+                        {
+                            // Auto-create camera from edge gateway registration
+                            var newCamera = new MotorControlEnterprise.Api.Models.Camera
+                            {
+                                Name      = camName ?? cameraKey,
+                                CameraKey = cameraKey,
+                                CameraId  = cameraKey,
+                                Location  = camIp,
+                                ClientId  = client?.Id,
+                                UserId    = client?.UserId ?? 1,  // fallback to admin (userId=1)
+                                Streams   = streamsJson,
+                                Status    = "active",
+                                LastSeen  = DateTime.UtcNow,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow
+                            };
+
+                            db.Cameras.Add(newCamera);
+                            await db.SaveChangesAsync();
+                            _logger.LogInformation(
+                                "Cámara {CameraKey} auto-registrada desde edge {GatewayId} (client: {ClientId}).",
+                                cameraKey, gatewayId, client?.Id.ToString() ?? "desconocido");
                         }
                     }
                 }
