@@ -21,24 +21,12 @@ export class RecordingsComponent implements OnInit {
 
     cameraId = signal<string>('');
 
-    // Source tabs
-    activeSource = signal<'cloud' | 'nvr' | 'sd'>('cloud');
-
-    // Nube
+    // Cloud recordings
     availableDates = signal<string[]>([]);
     cloudRecordings = signal<any[]>([]);
-
-    // NVR/DVR
-    nvrRecordings = signal<any[]>([]);
-
-    // Local (SD Edge)
-    localRecordings = signal<any[]>([]);
-
     selectedDate = signal<string>('');
     currentVideoSource = signal<string | null>(null);
-    playingLabel = signal<string>('');
-
-    private blobUrl = '';
+    loadingRecordings = signal<boolean>(false);
 
     ngOnInit() {
         this.cameraId.set(this.route.snapshot.paramMap.get('id') || '');
@@ -67,62 +55,28 @@ export class RecordingsComponent implements OnInit {
     selectDate(date: string) {
         this.selectedDate.set(date);
         this.loadCloudRecordings(date);
-        this.loadNvrRecordings(date);
-        this.loadLocalRecordings(date);
         this.currentVideoSource.set(null);
     }
 
     loadCloudRecordings(date: string) {
+        this.loadingRecordings.set(true);
         this.http.get<any>(`${API_URL}/recordings/cloud/${this.cameraId()}?date=${date}`).subscribe({
-            next: (res) => this.cloudRecordings.set(res?.files || []),
-            error: () => this.cloudRecordings.set([])
-        });
-    }
-
-    loadNvrRecordings(date: string) {
-        this.http.get<any>(`${API_URL}/recordings/nvr/${this.cameraId()}?date=${date}`).subscribe({
-            next: (res) => this.nvrRecordings.set(res?.files || []),
-            error: () => this.nvrRecordings.set([])
-        });
-    }
-
-    loadLocalRecordings(date: string) {
-        this.http.get<any[]>(`${API_URL}/recordings/local/${this.cameraId()}?date=${date}`).subscribe({
-            next: (files) => this.localRecordings.set(files || []),
-            error: () => this.localRecordings.set([])
+            next: (res) => {
+                this.cloudRecordings.set(res?.files || []);
+                this.loadingRecordings.set(false);
+            },
+            error: () => {
+                this.cloudRecordings.set([]);
+                this.loadingRecordings.set(false);
+            }
         });
     }
 
     playCloudVideo(filePath: string) {
         const token = localStorage.getItem('motor_control_token') || '';
         const src = `${API_URL}/recordings/cloud/video?path=${encodeURIComponent(filePath)}&token=${encodeURIComponent(token)}`;
-        this.playingLabel.set('Grabación cloud');
         this.currentVideoSource.set(src);
         this.initVideoSrc(src);
-    }
-
-    async playNvrVideo(file: any) {
-        // NVR videos proxied through edge gateway → backend
-        const token = localStorage.getItem('motor_control_token') || '';
-        const src = `${API_URL}/recordings/nvr/${this.cameraId()}/playback?start=${encodeURIComponent(file.startTime)}&end=${encodeURIComponent(file.endTime)}&token=${encodeURIComponent(token)}`;
-        this.playingLabel.set('Grabación NVR — ' + (file.name || ''));
-        this.currentVideoSource.set(src);
-        this.initVideoSrc(src);
-    }
-
-    playLocalVideo(filename: string) {
-        this.http.post<any>(`${API_URL}/recordings/local/${this.cameraId()}/play`, { filename }).subscribe({
-            next: (res) => {
-                if (res.hlsPath) {
-                    this.playingLabel.set('Grabación SD — ' + filename);
-                    this.currentVideoSource.set(res.hlsPath);
-                    this.initVideoSrc(res.hlsPath);
-                } else {
-                    alert("Endpoint Edge no regresó una ruta HLS válida");
-                }
-            },
-            error: (err) => alert('Error al solicitar video Edge local: ' + (err.error?.message || err.message))
-        });
     }
 
     private initVideoSrc(src: string) {

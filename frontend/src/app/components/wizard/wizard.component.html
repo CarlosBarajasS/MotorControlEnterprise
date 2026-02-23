@@ -131,64 +131,18 @@
                                 <span>Para cámaras analógicas con cable coaxial</span>
                             </div>
                         </label>
-                        <label class="radio-card" [class.selected]="clientData.localStorageType === 'sd'">
-                            <input type="radio" name="localStorageType" value="sd"
-                                [(ngModel)]="clientData.localStorageType">
-                            <div class="radio-content">
-                                <strong>💾 SD Card / Disco del Gateway</strong>
-                                <span>Grabación directa en el edge gateway (MediaMTX)</span>
-                            </div>
-                        </label>
                         <label class="radio-card" [class.selected]="clientData.localStorageType === 'none'">
                             <input type="radio" name="localStorageType" value="none"
                                 [(ngModel)]="clientData.localStorageType">
                             <div class="radio-content">
-                                <strong>🚫 Sin almacenamiento local</strong>
-                                <span>Solo streaming en vivo + nube (si está activa)</span>
+                                <strong>🚫 Sin equipo local</strong>
+                                <span>Solo streaming en vivo + respaldo en nube</span>
                             </div>
                         </label>
                     </div>
+                    <div class="hint" style="margin-top:8px;">El acceso a grabaciones locales es directo desde
+                        el monitor conectado al NVR/DVR, sin necesidad de internet.</div>
                 </div>
-
-                <!-- NVR/DVR Connection Fields -->
-                @if (clientData.localStorageType === 'nvr' || clientData.localStorageType === 'dvr') {
-                <div class="nvr-fields">
-                    <label style="font-weight:600;font-size:13px;display:block;margin-bottom:10px;">🔌 Conexión
-                        al {{ clientData.localStorageType === 'nvr' ? 'NVR' : 'DVR' }}</label>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>IP en red local <span class="required">*</span></label>
-                            <input type="text" [(ngModel)]="clientData.nvrIp" placeholder="192.168.1.64">
-                        </div>
-                        <div class="form-group" style="max-width:120px;">
-                            <label>Puerto HTTP</label>
-                            <input type="number" [(ngModel)]="clientData.nvrPort" placeholder="80">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Usuario</label>
-                            <input type="text" [(ngModel)]="clientData.nvrUser" placeholder="admin">
-                        </div>
-                        <div class="form-group">
-                            <label>Contraseña</label>
-                            <input type="password" [(ngModel)]="clientData.nvrPassword" placeholder="••••••">
-                        </div>
-                    </div>
-                    <div class="form-row full">
-                        <div class="form-group">
-                            <label>Marca del equipo</label>
-                            <select [(ngModel)]="clientData.nvrBrand">
-                                <option value="hikvision">Hikvision (ISAPI)</option>
-                                <option value="dahua">Dahua</option>
-                                <option value="generic">Otro / Genérico (ONVIF)</option>
-                            </select>
-                            <div class="hint">La marca determina el protocolo de comunicación para consultar
-                                grabaciones.</div>
-                        </div>
-                    </div>
-                </div>
-                }
             </div>
         </div>
         }
