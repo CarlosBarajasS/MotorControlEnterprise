@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ClientsComponent } from './components/clients/clients.component';
+import { ClientDetailComponent } from './components/client-detail/client-detail.component';
 import { CamerasComponent } from './components/cameras/cameras.component';
 import { CameraDetailComponent } from './components/cameras/camera-detail.component';
 import { MotorsComponent } from './components/motors/motors.component';
@@ -23,6 +24,7 @@ export const routes: Routes = [
     { path: 'login', component: LoginComponent },
     { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
     { path: 'clients', component: ClientsComponent, canActivate: [authGuard] },
+    { path: 'clients/:id', component: ClientDetailComponent, canActivate: [authGuard] },
     { path: 'cameras', component: CamerasComponent, canActivate: [authGuard] },
     { path: 'cameras/:id', component: CameraDetailComponent, canActivate: [authGuard] },
     { path: 'recordings/:id', component: RecordingsComponent, canActivate: [authGuard] },

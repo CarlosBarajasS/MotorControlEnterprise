@@ -42,7 +42,10 @@
                 <td colspan="7" class="text-center empty-state">No hay clientes registrados en el sistema.</td>
             </tr>
             <tr *ngFor="let client of clients()">
-                <td class="font-medium">{{ client.name }}</td>
+                <td class="font-medium">
+                    <a [routerLink]="['/clients', client.id]" style="color:var(--accent); text-decoration:none;">{{
+                        client.name }}</a>
+                </td>
                 <td>{{ client.businessType || 'N/A' }}</td>
                 <td class="mono-text">{{ client.gatewayId || 'Asignar' }}</td>
                 <td>

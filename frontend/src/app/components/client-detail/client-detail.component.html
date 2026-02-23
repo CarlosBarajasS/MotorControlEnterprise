@@ -1,0 +1,82 @@
+<div class="topbar">
+    <div>
+        <a routerLink="/clients"
+            style="text-decoration:none; color:var(--accent); font-size:13px; font-weight:600; margin-bottom:4px; display:inline-block;">←
+            Volver a Gateways</a>
+        <h1>Detalle del Gateway/Edge: {{ clientData()?.name || '...' }}</h1>
+        <p class="subtitle">Monitoreo específico e infraestructura conectada a este nodo.</p>
+    </div>
+    <div style="display: flex; gap: 12px; align-items:center;">
+        <span class="badge" *ngIf="clientData()" [class.online]="clientData()?.status === 'active'"
+            [class.offline]="clientData()?.status !== 'active'">
+            {{ (clientData()?.status || 'desconocido') | uppercase }}
+        </span>
+        <button class="btn-secondary" (click)="loadClientDetails()">🔄 Refrescar</button>
+    </div>
+</div>
+
+<div class="stats" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 24px;"
+    *ngIf="!loading()">
+    <div class="card" style="padding: 1.5rem;">
+        <span
+            style="font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 0.5rem; font-weight: 600; text-transform: uppercase;">Tipo
+            Negocio</span>
+        <strong style="font-size: 1.4rem; color: var(--ink);">{{ clientData()?.businessType || 'N/A' }}</strong>
+    </div>
+    <div class="card" style="padding: 1.5rem;">
+        <span
+            style="font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 0.5rem; font-weight: 600; text-transform: uppercase;">Gateway
+            ID</span>
+        <strong style="font-size: 1.4rem; color: var(--ink); font-family: monospace;">{{ clientData()?.gatewayId ||
+            'N/A' }}</strong>
+    </div>
+    <div class="card" style="padding: 1.5rem;">
+        <span
+            style="font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 0.5rem; font-weight: 600; text-transform: uppercase;">Almacenamiento
+            Local/Nube</span>
+        <strong style="font-size: 1.4rem; color: var(--ink);">{{ clientData()?.cloudStorageActive ? 'Habilitado' : 'Solo
+            Local' }}</strong>
+    </div>
+</div>
+
+<div class="card" style="padding: 24px;" *ngIf="!loading()">
+    <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1.15rem;">Cámaras Asociadas</h3>
+    <table class="data-table" style="width: 100%; text-align: left; border-collapse: collapse;">
+        <thead>
+            <tr
+                style="border-bottom: 1px solid var(--outline); color: var(--muted); font-size: 0.85rem; text-transform: uppercase;">
+                <th style="padding: 12px 0; font-weight: 600;">Nombre del Feed</th>
+                <th style="padding: 12px 0; font-weight: 600;">Estado RTSP</th>
+                <th style="padding: 12px 0; font-weight: 600;">Última Conexión</th>
+                <th style="padding: 12px 0; font-weight: 600; text-align: right;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngIf="cameras().length === 0">
+                <td colspan="4" style="text-align: center; padding: 24px; color: var(--muted);">No hay cámaras
+                    vinculadas a este nodo todavía.</td>
+            </tr>
+            <tr *ngFor="let cam of cameras()" style="border-bottom: 1px solid var(--outline);">
+                <td style="padding: 12px 0; font-weight: 500;">
+                    <a [routerLink]="['/cameras', cam.id]" style="color: var(--accent); text-decoration: none;">{{
+                        cam.name }}</a>
+                </td>
+                <td style="padding: 12px 0;">
+                    <span class="badge" [class.online]="cam.status === 'online'"
+                        [class.offline]="cam.status !== 'online'">
+                        {{ (cam.status || 'OFFLINE') | uppercase }}
+                    </span>
+                </td>
+                <td style="padding: 12px 0; color: var(--muted);">{{ cam.lastSeen ? (cam.lastSeen | date:'short') :
+                    'N/A' }}</td>
+                <td style="padding: 12px 0; text-align: right; display:flex; gap:6px; justify-content:end;">
+                    <button class="btn-secondary"
+                        style="font-size: 12px; padding: 6px 12px; border-color:transparent; background:rgba(37,99,235,0.08); color:var(--accent);"
+                        [routerLink]="['/cameras', cam.id]">👁 Ver En Vivo</button>
+                    <button class="btn-secondary" style="font-size: 12px; padding: 6px 12px;"
+                        [routerLink]="['/recordings', cam.id]">Grabaciones</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
