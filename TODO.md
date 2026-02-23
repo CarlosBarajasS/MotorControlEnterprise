@@ -1223,6 +1223,96 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
 ---
 
+## 🔴 ADMIN-3 — Grabaciones Cloud: 3 fixes en RecordingsComponent (Wendy)
+
+> **Contexto:** Bendi ya tiene el backend listo (commit 6ee202f). El backend ahora acepta
+> el token JWT como query param `?token=...` para el endpoint de video, igual que MotorControlAPI.
+> Solo faltan 3 correcciones en el frontend para que funcione.
+
+### Fix 1 — `loadAvailableDates`: respuesta tiene wrapper `{dates: [...]}`
+
+El endpoint `GET /api/recordings/cloud/{id}/dates` retorna `{ dates: string[] }`, no `string[]` directo.
+
+**Cambiar en `recordings.component.ts` línea 42-56:**
+```typescript
+// ❌ ACTUAL — espera array directo
+loadAvailableDates() {
+    this.http.get<string[]>(`${API_URL}/recordings/cloud/${this.cameraId()}/dates`).subscribe({
+        next: (dates) => {
+            this.availableDates.set(dates || []);
+```
+
+```typescript
+// ✅ FIX — extraer .dates del wrapper
+loadAvailableDates() {
+    this.http.get<any>(`${API_URL}/recordings/cloud/${this.cameraId()}/dates`).subscribe({
+        next: (res) => {
+            const dates = res?.dates || [];
+            this.availableDates.set(dates);
+```
+
+---
+
+### Fix 2 — `loadCloudRecordings`: respuesta tiene wrapper `{files: [...]}`
+
+El endpoint `GET /api/recordings/cloud/{id}?date=...` retorna `{ date, cameraId, files: [...] }`.
+
+**Cambiar en `recordings.component.ts` línea 66-71:**
+```typescript
+// ❌ ACTUAL — espera array directo
+loadCloudRecordings(date: string) {
+    this.http.get<any[]>(`${API_URL}/recordings/cloud/${this.cameraId()}?date=${date}`).subscribe({
+        next: (files) => this.cloudRecordings.set(files || []),
+```
+
+```typescript
+// ✅ FIX — extraer .files del wrapper
+loadCloudRecordings(date: string) {
+    this.http.get<any>(`${API_URL}/recordings/cloud/${this.cameraId()}?date=${date}`).subscribe({
+        next: (res) => this.cloudRecordings.set(res?.files || []),
+```
+
+---
+
+### Fix 3 — `playCloudVideo`: usar `?token=...` en la URL del video
+
+El elemento `<video src>` no puede enviar headers de Authorization. Bendi ya habilitó soporte
+de JWT como query param en el backend (igual que MotorControlAPI).
+
+**Cambiar en `recordings.component.ts` línea 80-85:**
+```typescript
+// ❌ ACTUAL — src sin auth, da 401
+playCloudVideo(filePath: string) {
+    const src = `${API_URL}/recordings/cloud/video?path=${encodeURIComponent(filePath)}`;
+    this.currentVideoSource.set(src);
+    this.initVideoSrc(src);
+}
+```
+
+```typescript
+// ✅ FIX — incluir token en query param
+playCloudVideo(filePath: string) {
+    const token = localStorage.getItem('motor_control_token') || '';
+    const src = `${API_URL}/recordings/cloud/video?path=${encodeURIComponent(filePath)}&token=${encodeURIComponent(token)}`;
+    this.currentVideoSource.set(src);
+    this.initVideoSrc(src);
+}
+```
+
+---
+
+### Bonus — cada `file` tiene `.path` (no `.filePath`)
+
+El modelo de respuesta de cloud recordings usa la propiedad `path`. Verificar en el HTML que el click
+pase `file.path` al método `playCloudVideo`:
+
+```html
+<!-- recordings.component.html — verificar que sea file.path -->
+<div class="file-item" *ngFor="let file of cloudRecordings()" (click)="playCloudVideo(file.path)">
+```
+
+---
+
 ## ✅ COMPLETADO POR BENDI
 
 - ✅ GET /api/admin/auth/users — lista todos los usuarios (id, email, name, role, isActive, createdAt, lastLogin)
@@ -1277,6 +1367,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 - ✅ **CLIENT-5:** ClientRecordingsComponent — cloud dates + blob URL player + SD card
 - ✅ **CLIENT-6:** ClientShellComponent — topbar oscuro con brand, username, logout
 - ✅ **CLIENT-7:** Redirección inteligente por rol (admin→/dashboard, client→/client/cameras)
+- ✅ **ADMIN-3:** Grabaciones Cloud fixes — dates wrapper, files wrapper, token query param, campos correctos (sizeMb, startTime)
 
 ---
 
@@ -1296,9 +1387,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 | Backend — Servicio backup PostgreSQL | ✅ Hecho | Claude (commit 52f23ef) |
 | Backend — API cloud recordings (listar/reproducir) | ✅ Hecho | Claude (commit 52f23ef) |
 | Infraestructura — docker-compose.yml con servicios completos | ✅ Hecho | Claude (commit 52f23ef) |
-| Frontend Admin — Wizard 5 pasos completo | ⚠️ Pendiente | Wendy |
-| Frontend Admin — Grabaciones cloud funcionales | ⚠️ Pendiente | Wendy |
-| Frontend Cliente — Portal completo (login + cámaras + grabaciones) | ❌ Pendiente | Wendy |
+| Frontend Admin — Wizard 5 pasos completo | ✅ Hecho | Wendy (commit 80b9ac2) |
+| Frontend Admin — Grabaciones cloud funcionales | ✅ Hecho | Wendy (commit 9bc8b43) |
+| Frontend Cliente — Portal completo (login + cámaras + grabaciones) | ✅ Hecho | Wendy (commit 80b9ac2) |
 
 ---
 
