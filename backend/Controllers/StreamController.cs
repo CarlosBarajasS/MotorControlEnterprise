@@ -38,33 +38,56 @@ namespace MotorControlEnterprise.Api.Controllers
             var camera = await _db.Cameras.FindAsync(new object[] { id }, ct);
             if (camera == null) return NotFound(new { message = "Cámara no encontrada" });
 
-            // Obtener streamPath desde el campo Streams (JSON) de la cámara
+            // Obtener streamPath desde el campo Streams (JSON) de la cámara.
+            // Soporta múltiples formatos: centralRtsp/centralHls (legacy),
+            // rtsp/hls (normalizado por register handler), streams.hls (edge-agent).
             string? streamPath = null;
             if (!string.IsNullOrEmpty(camera.Streams))
             {
                 try
                 {
-                    var doc = JsonDocument.Parse(camera.Streams);
-                    if (doc.RootElement.TryGetProperty("centralRtsp", out var el))
+                    var doc  = JsonDocument.Parse(camera.Streams);
+                    var root = doc.RootElement;
+
+                    static string? HlsUrlToPath(string? hlsUrl)
                     {
-                        // Extraer el path del RTSP URL: rtsp://host:port/{path}
-                        var rtspUrl = el.GetString();
-                        if (!string.IsNullOrEmpty(rtspUrl))
-                        {
-                            var uri = new Uri(rtspUrl);
-                            streamPath = uri.AbsolutePath.TrimStart('/');
-                        }
+                        if (string.IsNullOrEmpty(hlsUrl)) return null;
+                        try { return new Uri(hlsUrl).AbsolutePath.TrimStart('/').Replace("/index.m3u8", ""); }
+                        catch { return null; }
                     }
-                    // Fallback: centralHls directo
-                    if (streamPath == null && doc.RootElement.TryGetProperty("centralHls", out var hlsEl))
+
+                    static string? RtspUrlToPath(string? rtspUrl)
                     {
-                        var hlsUrl = hlsEl.GetString();
-                        if (!string.IsNullOrEmpty(hlsUrl))
-                        {
-                            var uri = new Uri(hlsUrl);
-                            streamPath = uri.AbsolutePath.TrimStart('/').Replace("/index.m3u8", "");
-                        }
+                        if (string.IsNullOrEmpty(rtspUrl)) return null;
+                        try { return new Uri(rtspUrl).AbsolutePath.TrimStart('/'); }
+                        catch { return null; }
                     }
+
+                    // 1. centralRtsp (formato legacy)
+                    if (streamPath == null && root.TryGetProperty("centralRtsp", out var crEl))
+                        streamPath = RtspUrlToPath(crEl.GetString());
+
+                    // 2. centralHls (formato legacy)
+                    if (streamPath == null && root.TryGetProperty("centralHls", out var chEl))
+                        streamPath = HlsUrlToPath(chEl.GetString());
+
+                    // 3. rtsp top-level (formato normalizado por register handler)
+                    if (streamPath == null && root.TryGetProperty("rtsp", out var rtspEl))
+                        streamPath = RtspUrlToPath(rtspEl.GetString());
+
+                    // 4. hls top-level (formato normalizado)
+                    if (streamPath == null && root.TryGetProperty("hls", out var hlsEl))
+                        streamPath = HlsUrlToPath(hlsEl.GetString());
+
+                    // 5. streams.hls anidado (formato edge-agent directo)
+                    if (streamPath == null && root.TryGetProperty("streams", out var streamsEl)
+                        && streamsEl.TryGetProperty("hls", out var nestedHlsEl))
+                        streamPath = HlsUrlToPath(nestedHlsEl.GetString());
+
+                    // 6. streams.main anidado (formato edge-agent, fallback RTSP)
+                    if (streamPath == null && root.TryGetProperty("streams", out var streamsEl2)
+                        && streamsEl2.TryGetProperty("main", out var mainEl))
+                        streamPath = RtspUrlToPath(mainEl.GetString());
                 }
                 catch (Exception ex)
                 {
