@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
+import { LandingComponent } from './components/landing/landing.component';
+import { WizardComponent } from './components/wizard/wizard.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ClientsComponent } from './components/clients/clients.component';
 import { ClientDetailComponent } from './components/client-detail/client-detail.component';
@@ -20,7 +22,7 @@ const authGuard = () => {
 };
 
 export const routes: Routes = [
-    { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: '', component: LandingComponent, pathMatch: 'full' },
     { path: 'login', component: LoginComponent },
     { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
     { path: 'clients', component: ClientsComponent, canActivate: [authGuard] },
@@ -31,5 +33,6 @@ export const routes: Routes = [
     { path: 'motors', component: MotorsComponent, canActivate: [authGuard] },
     { path: 'users', component: UsersComponent, canActivate: [authGuard] },
     { path: 'telemetry-history', component: TelemetryHistoryComponent, canActivate: [authGuard] },
-    { path: '**', redirectTo: 'login' }
+    { path: 'wizard', component: WizardComponent, canActivate: [authGuard] },
+    { path: '**', redirectTo: 'dashboard' }
 ];

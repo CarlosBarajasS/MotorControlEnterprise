@@ -1,0 +1,313 @@
+<div class="wizard-container">
+    <div class="wizard-header">
+        <h1>Alta de Nuevo Cliente</h1>
+        <p>Genera la configuración completa para instalar el edge gateway en el sitio del cliente</p>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-steps">
+            <div class="progress-line">
+                <div class="progress-line-fill" [style.width.%]="(currentStep() - 1) / (totalSteps - 1) * 100"></div>
+            </div>
+            <div class="step" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Cliente</div>
+            </div>
+            <div class="step" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Usuario</div>
+            </div>
+            <div class="step" [class.active]="currentStep() === 3" [class.completed]="currentStep() > 3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Cámaras</div>
+            </div>
+            <div class="step" [class.active]="currentStep() === 4" [class.completed]="currentStep() > 4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Archivos</div>
+            </div>
+            <div class="step" [class.active]="currentStep() === 5" [class.completed]="currentStep() > 5">
+                <div class="step-circle">5</div>
+                <div class="step-label">Despliegue</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="wizard-content">
+
+        <!-- Step 1: Datos del cliente -->
+        @if (currentStep() === 1) {
+        <div class="wizard-step">
+            <h2 class="step-title">Datos del Cliente</h2>
+            <p class="step-description">Información básica del negocio donde se instalarán las cámaras</p>
+
+            @if (alerts()[1]) {
+            <div class="alert" [ngClass]="alerts()[1].type">{{ alerts()[1].message }}</div>
+            }
+
+            <div class="form-row">
+                <div class="form-group" [class.error]="clientErrors().name">
+                    <label>Nombre del negocio <span class="required">*</span></label>
+                    <input type="text" [(ngModel)]="clientData.name" (blur)="updateGatewayId()"
+                        placeholder="Ej: Tienda La Esperanza" autocomplete="off">
+                    <div class="error-message">Este campo es requerido</div>
+                </div>
+                <div class="form-group" [class.error]="clientErrors().businessType">
+                    <label>Tipo de negocio <span class="required">*</span></label>
+                    <select [(ngModel)]="clientData.businessType">
+                        <option value="">Selecciona...</option>
+                        <option value="Retail">Retail / Tienda</option>
+                        <option value="Restaurante">Restaurante</option>
+                        <option value="Oficina">Oficina</option>
+                        <option value="Fábrica">Fábrica</option>
+                        <option value="Almacén">Almacén</option>
+                        <option value="Educación">Educación</option>
+                        <option value="Salud">Salud</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                    <div class="error-message">Selecciona un tipo</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" [class.error]="clientErrors().contactName">
+                    <label>Nombre de contacto <span class="required">*</span></label>
+                    <input type="text" [(ngModel)]="clientData.contactName" placeholder="Ej: Juan Pérez">
+                    <div class="error-message">Este campo es requerido</div>
+                </div>
+                <div class="form-group">
+                    <label>Teléfono de contacto</label>
+                    <input type="tel" [(ngModel)]="clientData.contactPhone" placeholder="+52 443 123 4567">
+                </div>
+            </div>
+            <div class="form-row full">
+                <div class="form-group" [class.error]="clientErrors().location">
+                    <label>Dirección / Ubicación <span class="required">*</span></label>
+                    <input type="text" [(ngModel)]="clientData.location"
+                        placeholder="Ej: Av. Madero 123, Morelia, Michoacán">
+                    <div class="error-message">Este campo es requerido</div>
+                </div>
+            </div>
+            <div class="form-row full">
+                <div class="form-group" [class.error]="clientErrors().gatewayId">
+                    <label>ID del Gateway <span class="required">*</span></label>
+                    <input type="text" [(ngModel)]="clientData.gatewayId" placeholder="edge-gateway-tienda-esperanza">
+                    <div class="hint">Se genera automáticamente del nombre. Sin espacios ni caracteres especiales. Es el
+                        identificador único en el sistema.</div>
+                    <div class="error-message">Este campo es requerido</div>
+                </div>
+            </div>
+            <div
+                style="margin-top:8px;padding:14px 16px;background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-radius:12px;display:flex;align-items:center;gap:12px;">
+                <input type="checkbox" [(ngModel)]="clientData.cloudStorageActive"
+                    style="width:18px;height:18px;accent-color:#6366f1;flex-shrink:0;">
+                <div>
+                    <div style="font-weight:600;font-size:13px; margin-bottom: 2px;">☁️ Activar grabación en nube (NAS)
+                    </div>
+                    <div class="hint" style="margin:0;">Las grabaciones se reciclarán de la SD o disco local hacia la
+                        red central para archivado infinito.</div>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- Step 2: Usuario de acceso -->
+        @if (currentStep() === 2) {
+        <div class="wizard-step">
+            <h2 class="step-title">Usuario de Acceso</h2>
+            <p class="step-description">Crea las credenciales con las que el cliente podrá ver sus cámaras</p>
+
+            @if (alerts()[2]) {
+            <div class="alert" [ngClass]="alerts()[2].type">{{ alerts()[2].message }}</div>
+            }
+
+            <div class="alert info" style="display:block">
+                El usuario se crea en el sistema inmediatamente en este paso. El cliente usará estas credenciales para
+                iniciar sesión y ver sus cámaras.
+            </div>
+
+            <div class="form-row full">
+                <div class="form-group" [class.error]="userErrors().email">
+                    <label>Email de acceso <span class="required">*</span></label>
+                    <input type="email" [(ngModel)]="userData.email" placeholder="cliente&#64;empresa.com">
+                    <div class="error-message">Ingresa un email válido</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" [class.error]="userErrors().password">
+                    <label>Contraseña <span class="required">*</span></label>
+                    <input type="password" [(ngModel)]="userData.password" placeholder="Mínimo 8 caracteres">
+                    <div class="password-strength">
+                        <div class="password-strength-bar" [style.width.%]="calculatePasswordStrength()"
+                            [ngClass]="{'weak': calculatePasswordStrength() <= 33, 'medium': calculatePasswordStrength() > 33 && calculatePasswordStrength() <= 66, 'strong': calculatePasswordStrength() > 66}">
+                        </div>
+                    </div>
+                    <div class="error-message">Mínimo 8 caracteres</div>
+                </div>
+                <div class="form-group" [class.error]="userErrors().confirmPassword">
+                    <label>Confirmar contraseña <span class="required">*</span></label>
+                    <input type="password" [(ngModel)]="userData.confirmPassword" placeholder="Repite la contraseña">
+                    <div class="error-message">Las contraseñas no coinciden</div>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- Step 3: Cámaras -->
+        @if (currentStep() === 3) {
+        <div class="wizard-step">
+            <h2 class="step-title">Cámaras IP</h2>
+            <p class="step-description">Define las cámaras que se van a conectar en la red local del cliente</p>
+
+            @if (alerts()[3]) {
+            <div class="alert" [ngClass]="alerts()[3].type">{{ alerts()[3].message }}</div>
+            }
+
+            <div class="alert info" style="display:block">
+                Las cámaras deben estar accesibles desde el dispositivo donde se instalará el edge gateway (misma red
+                local por el mismo medio físico).
+            </div>
+
+            <div id="camerasList">
+                @for (cam of cameras(); track $index) {
+                <div class="camera-card">
+                    <div class="camera-card-header">
+                        <div class="camera-card-title">Cámara {{ $index + 1 }}</div>
+                        <button class="btn-remove" (click)="removeCamera($index)">Eliminar</button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ID/Nombre <span class="required">*</span></label>
+                            <input type="text" [(ngModel)]="cam.id" placeholder="cam1">
+                        </div>
+                        <div class="form-group">
+                            <label>IP Local <span class="required">*</span></label>
+                            <input type="text" [(ngModel)]="cam.ip" placeholder="192.168.1.100">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Usuario RTSP</label>
+                            <input type="text" [(ngModel)]="cam.user" placeholder="admin">
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña RTSP</label>
+                            <input type="text" [(ngModel)]="cam.password" placeholder="******">
+                        </div>
+                    </div>
+                    <div class="form-row full" style="margin-bottom:0">
+                        <div class="form-group" style="margin-bottom:0">
+                            <label>Ruta RTSP <span class="required">*</span></label>
+                            <input type="text" [(ngModel)]="cam.rtspPath" placeholder="/Streaming/Channels/101">
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+
+            <button class="btn btn-secondary" style="margin-top: 10px;" (click)="addCamera()">+ Agregar cámara</button>
+        </div>
+        }
+
+        <!-- Step 4: Archivos generados -->
+        @if (currentStep() === 4) {
+        <div class="wizard-step">
+            <h2 class="step-title">Archivos de Configuración</h2>
+            <p class="step-description">Revisa y descarga los archivos que debes copiar al dispositivo edge (Raspberry
+                Pi / NUC)</p>
+
+            <div class="file-tab">
+                <button class="tab-btn" [class.active]="activeTab() === 'env'" (click)="showTab('env')">.env</button>
+                <button class="tab-btn" [class.active]="activeTab() === 'mediamtx'"
+                    (click)="showTab('mediamtx')">mediamtx/mediamtx.yml</button>
+                <button class="tab-btn" [class.active]="activeTab() === 'compose'"
+                    (click)="showTab('compose')">docker-compose.yml</button>
+            </div>
+
+            <div class="code-block">
+                @if (activeTab() === 'env') { {{ generatedFiles().env }} }
+                @if (activeTab() === 'mediamtx') { {{ generatedFiles().mediamtx }} }
+                @if (activeTab() === 'compose') { {{ generatedFiles().compose }} }
+            </div>
+
+            <div class="download-btns">
+                <button class="btn btn-primary" (click)="downloadFile('env')">Descargar .env</button>
+                <button class="btn btn-primary" (click)="downloadFile('mediamtx')">Descargar mediamtx.yml</button>
+                <button class="btn btn-primary" (click)="downloadFile('compose')">Descargar docker-compose.yml</button>
+            </div>
+        </div>
+        }
+
+        <!-- Step 5: Instrucciones de despliegue -->
+        @if (currentStep() === 5) {
+        <div class="wizard-step">
+            <h2 class="step-title">Instrucciones de Instalación</h2>
+            <p class="step-description">Pasos para instalar el equipo en la ubicación de
+                <strong>{{clientData.name}}</strong>. Realiza esto en la Raspberry Pi del cliente.</p>
+
+            <div class="alert success" style="display:block; color: rgb(21, 128, 61);">
+                ✅ Cliente registrado correctamente en el MotorControlAPI. Descarga los archivos del Paso 4 antes de
+                irte.
+            </div>
+
+            <div class="deploy-step">
+                <div class="deploy-step-num">1</div>
+                <div class="deploy-step-content">
+                    <strong>Descargar el software base del gateway</strong>
+                    <p>En la consola de la Raspberry Pi ejecutamos esto:</p>
+                    <code
+                        class="cmd">git clone https://github.com/CarlosBarajasS/motorcontrol-edge-template.git edge-gateway && cd edge-gateway</code>
+                </div>
+            </div>
+
+            <div class="deploy-step">
+                <div class="deploy-step-num">2</div>
+                <div class="deploy-step-content">
+                    <strong>Copiar los archivos de configuración del cliente</strong>
+                    <p>Trasfiere los 3 archivos descargados vía SFTP o USB, y reemplázalos sobre la carpeta actual
+                        <code>edge-gateway</code> asegurándote de colocar <code>mediamtx.yml</code> dentro del
+                        subdirectorio <code>mediamtx/</code>.</p>
+                </div>
+            </div>
+
+            <div class="deploy-step">
+                <div class="deploy-step-num">3</div>
+                <div class="deploy-step-content">
+                    <strong>Iniciar el contenedor Docker</strong>
+                    <p>Iniciamos el servicio en background de forma desatendida.</p>
+                    <code class="cmd">docker compose up -d</code>
+                </div>
+            </div>
+
+            <div class="deploy-step">
+                <div class="deploy-step-num">4</div>
+                <div class="deploy-step-content">
+                    <strong>Verificar</strong>
+                    <p>El enlace Heartbeat se validará en menos de dos minutos. Podremos verlo en línea en el listado de
+                        Gateways.</p>
+                    <code class="cmd">docker logs edge-agent --tail=20 -f</code>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; text-align: center;">
+                <button class="btn btn-secondary" routerLink="/clients">Ver gateways de clientes →</button>
+                <button class="btn btn-secondary" routerLink="/cameras" style="margin-left: 12px;">Ver cámaras
+                    →</button>
+            </div>
+        </div>
+        }
+
+    </div>
+
+    <!-- Navigation Footer -->
+    <div class="wizard-nav">
+        <button class="btn btn-secondary" [disabled]="currentStep() === 1" (click)="prevStep()">← Anterior</button>
+        <span class="step-counter">Paso <span>{{currentStep()}}</span> de 5</span>
+
+        <button class="btn btn-primary" (click)="nextStep()" [disabled]="isCreatingUser()">
+            @if (isCreatingUser()) {
+            Procesando...
+            } @else {
+            @if (currentStep() === 5) { ✓ Finalizar } @else { Siguiente → }
+            }
+        </button>
+    </div>
+</div>
