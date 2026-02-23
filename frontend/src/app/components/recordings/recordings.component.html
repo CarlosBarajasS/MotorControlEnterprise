@@ -3,7 +3,7 @@
     <a routerLink="/cameras" class="back-link">←
       Volver a Cámaras</a>
     <h1>Repositorio de Grabaciones</h1>
-    <p class="subtitle">Visualiza el metraje almacenado en Nube y en la Memoria SD del Gateway Edge.</p>
+    <p class="subtitle">Visualiza el metraje almacenado en Nube, NVR/DVR local, y la memoria del Gateway Edge.</p>
   </div>
   <div class="badge active" style="font-size: 13px; padding: 6px 12px;">Cam ID: <strong>{{ cameraId() }}</strong></div>
 </div>
@@ -30,8 +30,23 @@
       </div>
     </div>
 
+    <!-- Source Tabs -->
     <div class="panel-card mt-20">
-      <h3>Almacenamiento en Nube</h3>
+      <div class="source-tabs">
+        <button class="source-tab" [class.active]="activeSource() === 'cloud'" (click)="activeSource.set('cloud')">
+          ☁️ Nube
+        </button>
+        <button class="source-tab" [class.active]="activeSource() === 'nvr'" (click)="activeSource.set('nvr')">
+          📹 NVR/DVR
+        </button>
+        <button class="source-tab" [class.active]="activeSource() === 'sd'" (click)="activeSource.set('sd')">
+          💾 SD Local
+        </button>
+      </div>
+
+      <!-- Cloud Recordings -->
+      @if (activeSource() === 'cloud') {
+      <h3 style="margin-top:14px;">Almacenamiento en Nube</h3>
       <div class="file-list" *ngIf="cloudRecordings().length > 0; else noCloud">
         <div class="file-item" *ngFor="let file of cloudRecordings()" (click)="playCloudVideo(file.path)">
           <span class="icon">☁️</span>
@@ -44,10 +59,30 @@
       <ng-template #noCloud>
         <p class="text-muted">No hay grabaciones cloud indexadas para este día.</p>
       </ng-template>
-    </div>
+      }
 
-    <div class="panel-card mt-20">
-      <h3>SD Card Gateway Edge (Local)</h3>
+      <!-- NVR/DVR Recordings -->
+      @if (activeSource() === 'nvr') {
+      <h3 style="margin-top:14px;">Grabaciones NVR/DVR</h3>
+      <div class="file-list" *ngIf="nvrRecordings().length > 0; else noNvr">
+        <div class="file-item" *ngFor="let file of nvrRecordings()" (click)="playNvrVideo(file)">
+          <span class="icon">📹</span>
+          <div class="details">
+            <strong>{{ file.name || file.filename }}</strong>
+            <small>{{ file.startTime | date:'HH:mm:ss' }} — {{ file.endTime | date:'HH:mm:ss' }}</small>
+          </div>
+        </div>
+      </div>
+      <ng-template #noNvr>
+        <p class="text-muted">
+          No hay grabaciones NVR disponibles. Verifica que el edge gateway esté conectado y el NVR accesible.
+        </p>
+      </ng-template>
+      }
+
+      <!-- SD Local Recordings -->
+      @if (activeSource() === 'sd') {
+      <h3 style="margin-top:14px;">SD Card Gateway Edge (Local)</h3>
       <div class="file-list" *ngIf="localRecordings().length > 0; else noLocal">
         <div class="file-item" *ngFor="let edgeFile of localRecordings()" (click)="playLocalVideo(edgeFile.filename)">
           <span class="icon">💾</span>
@@ -60,6 +95,7 @@
       <ng-template #noLocal>
         <p class="text-muted">No se ha sincronizado metadata Edge de este día.</p>
       </ng-template>
+      }
     </div>
 
   </div>
@@ -69,7 +105,7 @@
     <div class="video-container" *ngIf="currentVideoSource(); else placeholder">
       <video #videoPlayer controls class="primary-player"></video>
       <div class="now-playing">
-        Reproduciendo: <span class="mono">Grabación cloud</span>
+        Reproduciendo: <span class="mono">{{ playingLabel() }}</span>
       </div>
     </div>
     <ng-template #placeholder>
@@ -80,3 +116,4 @@
       </div>
     </ng-template>
   </div>
+</div>

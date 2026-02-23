@@ -21,15 +21,24 @@ export class RecordingsComponent implements OnInit {
 
     cameraId = signal<string>('');
 
+    // Source tabs
+    activeSource = signal<'cloud' | 'nvr' | 'sd'>('cloud');
+
     // Nube
     availableDates = signal<string[]>([]);
     cloudRecordings = signal<any[]>([]);
+
+    // NVR/DVR
+    nvrRecordings = signal<any[]>([]);
 
     // Local (SD Edge)
     localRecordings = signal<any[]>([]);
 
     selectedDate = signal<string>('');
     currentVideoSource = signal<string | null>(null);
+    playingLabel = signal<string>('');
+
+    private blobUrl = '';
 
     ngOnInit() {
         this.cameraId.set(this.route.snapshot.paramMap.get('id') || '');
@@ -46,12 +55,10 @@ export class RecordingsComponent implements OnInit {
                 if (dates && dates.length > 0) {
                     this.selectDate(dates[0]);
                 } else {
-                    // Intenta cargar la fecha de hoy si no hay listado pre-cacheado
                     this.selectDate(new Date().toISOString().split('T')[0]);
                 }
             },
             error: () => {
-                // Fallback a hoy si el endpoint no responde
                 this.selectDate(new Date().toISOString().split('T')[0]);
             }
         });
@@ -60,14 +67,22 @@ export class RecordingsComponent implements OnInit {
     selectDate(date: string) {
         this.selectedDate.set(date);
         this.loadCloudRecordings(date);
+        this.loadNvrRecordings(date);
         this.loadLocalRecordings(date);
-        this.currentVideoSource.set(null); // Reset player
+        this.currentVideoSource.set(null);
     }
 
     loadCloudRecordings(date: string) {
         this.http.get<any>(`${API_URL}/recordings/cloud/${this.cameraId()}?date=${date}`).subscribe({
             next: (res) => this.cloudRecordings.set(res?.files || []),
             error: () => this.cloudRecordings.set([])
+        });
+    }
+
+    loadNvrRecordings(date: string) {
+        this.http.get<any>(`${API_URL}/recordings/nvr/${this.cameraId()}?date=${date}`).subscribe({
+            next: (res) => this.nvrRecordings.set(res?.files || []),
+            error: () => this.nvrRecordings.set([])
         });
     }
 
@@ -81,18 +96,26 @@ export class RecordingsComponent implements OnInit {
     playCloudVideo(filePath: string) {
         const token = localStorage.getItem('motor_control_token') || '';
         const src = `${API_URL}/recordings/cloud/video?path=${encodeURIComponent(filePath)}&token=${encodeURIComponent(token)}`;
+        this.playingLabel.set('Grabación cloud');
+        this.currentVideoSource.set(src);
+        this.initVideoSrc(src);
+    }
+
+    async playNvrVideo(file: any) {
+        // NVR videos proxied through edge gateway → backend
+        const token = localStorage.getItem('motor_control_token') || '';
+        const src = `${API_URL}/recordings/nvr/${this.cameraId()}/playback?start=${encodeURIComponent(file.startTime)}&end=${encodeURIComponent(file.endTime)}&token=${encodeURIComponent(token)}`;
+        this.playingLabel.set('Grabación NVR — ' + (file.name || ''));
         this.currentVideoSource.set(src);
         this.initVideoSrc(src);
     }
 
     playLocalVideo(filename: string) {
-        // Pide al edge que inicie transmisión HLS de ese archivo
         this.http.post<any>(`${API_URL}/recordings/local/${this.cameraId()}/play`, { filename }).subscribe({
             next: (res) => {
                 if (res.hlsPath) {
+                    this.playingLabel.set('Grabación SD — ' + filename);
                     this.currentVideoSource.set(res.hlsPath);
-                    // Nota: Al ser HLS, en una app real requeriríamos hls.js aquí de nuevo 
-                    // si la extensión no es soportada nativa. Asumimos HLS soportado/proxy para este MVP o pasarlo al iframe.
                     this.initVideoSrc(res.hlsPath);
                 } else {
                     alert("Endpoint Edge no regresó una ruta HLS válida");

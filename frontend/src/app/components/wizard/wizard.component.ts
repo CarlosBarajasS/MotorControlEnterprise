@@ -31,7 +31,13 @@ export class WizardComponent implements OnInit {
     contactPhone: '',
     location: '',
     gatewayId: '',
-    cloudStorageActive: true
+    cloudStorageActive: true,
+    localStorageType: 'nvr' as 'nvr' | 'dvr' | 'sd' | 'none',
+    nvrIp: '',
+    nvrPort: 80,
+    nvrUser: 'admin',
+    nvrPassword: '',
+    nvrBrand: 'hikvision' as 'hikvision' | 'dahua' | 'generic'
   };
   clientErrors = signal<any>({});
 
@@ -105,6 +111,11 @@ export class WizardComponent implements OnInit {
     if (!this.clientData.contactName.trim()) err.contactName = true;
     if (!this.clientData.location.trim()) err.location = true;
     if (!this.clientData.gatewayId.trim()) err.gatewayId = true;
+    // NVR/DVR validation
+    if ((this.clientData.localStorageType === 'nvr' || this.clientData.localStorageType === 'dvr') && !this.clientData.nvrIp.trim()) {
+      err.nvrIp = true;
+      this.showAlert(1, 'error', 'Ingresa la IP del ' + (this.clientData.localStorageType === 'nvr' ? 'NVR' : 'DVR'));
+    }
 
     this.clientErrors.set(err);
     return Object.keys(err).length === 0;
@@ -166,7 +177,13 @@ export class WizardComponent implements OnInit {
           contactEmail: emailStr,
           userId: userBody.user.id || userBody.user.Id, // Fallback if capitalization changes
           gatewayId: this.clientData.gatewayId,
-          cloudStorageActive: this.clientData.cloudStorageActive
+          cloudStorageActive: this.clientData.cloudStorageActive,
+          localStorageType: this.clientData.localStorageType,
+          nvrIp: this.clientData.nvrIp || null,
+          nvrPort: this.clientData.nvrPort,
+          nvrUser: this.clientData.nvrUser || null,
+          nvrPassword: this.clientData.nvrPassword || null,
+          nvrBrand: this.clientData.nvrBrand || null
         })
       });
 

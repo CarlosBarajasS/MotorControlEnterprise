@@ -95,16 +95,100 @@
                     <div class="error-message">Este campo es requerido</div>
                 </div>
             </div>
-            <div
-                style="margin-top:8px;padding:14px 16px;background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-radius:12px;display:flex;align-items:center;gap:12px;">
-                <input type="checkbox" [(ngModel)]="clientData.cloudStorageActive"
-                    style="width:18px;height:18px;accent-color:#6366f1;flex-shrink:0;">
-                <div>
-                    <div style="font-weight:600;font-size:13px; margin-bottom: 2px;">☁️ Activar grabación en nube (NAS)
+            <div class="storage-config">
+                <h3 class="storage-title">💾 Configuración de Almacenamiento</h3>
+
+                <!-- Cloud Toggle -->
+                <div class="storage-option cloud-option">
+                    <input type="checkbox" [(ngModel)]="clientData.cloudStorageActive" id="cloudToggle"
+                        style="width:18px;height:18px;accent-color:#6366f1;flex-shrink:0;">
+                    <div>
+                        <label for="cloudToggle" style="font-weight:600;font-size:13px;cursor:pointer;">☁️ Activar
+                            grabación en nube (NAS)</label>
+                        <div class="hint" style="margin:0;">Las grabaciones se sincronizan al servidor central para
+                            archivado de largo plazo.</div>
                     </div>
-                    <div class="hint" style="margin:0;">Las grabaciones se reciclarán de la SD o disco local hacia la
-                        red central para archivado infinito.</div>
                 </div>
+
+                <!-- Local Storage Type -->
+                <div class="storage-local-selector">
+                    <label style="font-weight:600;font-size:13px;display:block;margin-bottom:10px;">📦
+                        Almacenamiento local del sitio</label>
+                    <div class="radio-group">
+                        <label class="radio-card" [class.selected]="clientData.localStorageType === 'nvr'">
+                            <input type="radio" name="localStorageType" value="nvr"
+                                [(ngModel)]="clientData.localStorageType">
+                            <div class="radio-content">
+                                <strong>📹 NVR (Grabador en Red)</strong>
+                                <span>Para cámaras IP — Hikvision, Dahua, etc.</span>
+                            </div>
+                        </label>
+                        <label class="radio-card" [class.selected]="clientData.localStorageType === 'dvr'">
+                            <input type="radio" name="localStorageType" value="dvr"
+                                [(ngModel)]="clientData.localStorageType">
+                            <div class="radio-content">
+                                <strong>📼 DVR (Grabador Analógico)</strong>
+                                <span>Para cámaras analógicas con cable coaxial</span>
+                            </div>
+                        </label>
+                        <label class="radio-card" [class.selected]="clientData.localStorageType === 'sd'">
+                            <input type="radio" name="localStorageType" value="sd"
+                                [(ngModel)]="clientData.localStorageType">
+                            <div class="radio-content">
+                                <strong>💾 SD Card / Disco del Gateway</strong>
+                                <span>Grabación directa en el edge gateway (MediaMTX)</span>
+                            </div>
+                        </label>
+                        <label class="radio-card" [class.selected]="clientData.localStorageType === 'none'">
+                            <input type="radio" name="localStorageType" value="none"
+                                [(ngModel)]="clientData.localStorageType">
+                            <div class="radio-content">
+                                <strong>🚫 Sin almacenamiento local</strong>
+                                <span>Solo streaming en vivo + nube (si está activa)</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- NVR/DVR Connection Fields -->
+                @if (clientData.localStorageType === 'nvr' || clientData.localStorageType === 'dvr') {
+                <div class="nvr-fields">
+                    <label style="font-weight:600;font-size:13px;display:block;margin-bottom:10px;">🔌 Conexión
+                        al {{ clientData.localStorageType === 'nvr' ? 'NVR' : 'DVR' }}</label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>IP en red local <span class="required">*</span></label>
+                            <input type="text" [(ngModel)]="clientData.nvrIp" placeholder="192.168.1.64">
+                        </div>
+                        <div class="form-group" style="max-width:120px;">
+                            <label>Puerto HTTP</label>
+                            <input type="number" [(ngModel)]="clientData.nvrPort" placeholder="80">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Usuario</label>
+                            <input type="text" [(ngModel)]="clientData.nvrUser" placeholder="admin">
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña</label>
+                            <input type="password" [(ngModel)]="clientData.nvrPassword" placeholder="••••••">
+                        </div>
+                    </div>
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label>Marca del equipo</label>
+                            <select [(ngModel)]="clientData.nvrBrand">
+                                <option value="hikvision">Hikvision (ISAPI)</option>
+                                <option value="dahua">Dahua</option>
+                                <option value="generic">Otro / Genérico (ONVIF)</option>
+                            </select>
+                            <div class="hint">La marca determina el protocolo de comunicación para consultar
+                                grabaciones.</div>
+                        </div>
+                    </div>
+                </div>
+                }
             </div>
         </div>
         }
@@ -241,7 +325,8 @@
         <div class="wizard-step">
             <h2 class="step-title">Instrucciones de Instalación</h2>
             <p class="step-description">Pasos para instalar el equipo en la ubicación de
-                <strong>{{clientData.name}}</strong>. Realiza esto en la Raspberry Pi del cliente.</p>
+                <strong>{{clientData.name}}</strong>. Realiza esto en la Raspberry Pi del cliente.
+            </p>
 
             <div class="alert success" style="display:block; color: rgb(21, 128, 61);">
                 ✅ Cliente registrado correctamente en el MotorControlAPI. Descarga los archivos del Paso 4 antes de
@@ -264,7 +349,8 @@
                     <strong>Copiar los archivos de configuración del cliente</strong>
                     <p>Trasfiere los 3 archivos descargados vía SFTP o USB, y reemplázalos sobre la carpeta actual
                         <code>edge-gateway</code> asegurándote de colocar <code>mediamtx.yml</code> dentro del
-                        subdirectorio <code>mediamtx/</code>.</p>
+                        subdirectorio <code>mediamtx/</code>.
+                    </p>
                 </div>
             </div>
 
