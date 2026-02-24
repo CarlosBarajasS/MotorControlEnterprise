@@ -66,6 +66,7 @@ namespace MotorControlEnterprise.Api.Controllers
                 c.Id, c.Name, c.Location, c.Status,
                 c.CameraId, c.CameraKey, c.Ptz,
                 c.LastSeen, c.ClientId, c.Streams, c.CreatedAt,
+                GatewayId = c.Client != null ? c.Client.GatewayId : null,
                 RtspUrl = ExtractRtspUrl(c.Streams),
                 Client = c.Client == null ? null : new { c.Client.Id, c.Client.Name, c.Client.GatewayId }
             }));
@@ -86,6 +87,7 @@ namespace MotorControlEnterprise.Api.Controllers
                 camera.Id, camera.Name, camera.Location, camera.Status,
                 camera.CameraId, camera.CameraKey, camera.Ptz,
                 camera.LastSeen, camera.ClientId, camera.Streams, camera.CreatedAt,
+                GatewayId = camera.Client != null ? camera.Client.GatewayId : null,
                 RtspUrl = ExtractRtspUrl(camera.Streams),
                 Client = camera.Client == null ? null : new { camera.Client.Id, camera.Client.Name, camera.Client.GatewayId }
             });
