@@ -1,226 +1,477 @@
-@import '../clients/clients.component.scss';
-
-// Reusing identical global structural styles from Clients SCSS, adding specifics:
-.url-truncate {
-    max-width: 200px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: inline-block;
-    vertical-align: middle;
-}
-
-.stream-link {
-    color: #2563eb;
-    text-decoration: none;
-    font-weight: 600;
-
-    &:hover {
-        text-decoration: underline;
-        color: #1d4ed8;
-    }
-}
-
-.action-btn.view {
-    color: #10b981;
-
-    &:hover {
-        color: #059669;
-        text-decoration: underline;
-    }
-}
-
-// ─── NVR Panel ────────────────────────────────────────
-$nvr-bg: #0a0e1a;
-$nvr-cell: #0f1628;
-
-.nvr-panel {
-    background: $nvr-bg;
-    border-radius: 20px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
-}
-
-.nvr-toolbar {
+// ─── FILTER BAR ──────────────────────────────────────────────────────────────
+.cam-filters {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    background: rgba(255, 255, 255, 0.03);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    gap: 14px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
 }
 
-.nvr-toolbar-title {
+.cam-search {
+    flex: 1;
+    min-width: 220px;
+    max-width: 360px;
+    padding: 10px 14px;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid var(--outline);
+    border-radius: 10px;
+    color: var(--ink);
     font-size: 14px;
-    font-weight: 600;
-    color: #f1f5f9;
-    margin-right: auto;
+    font-family: inherit;
+    transition: border-color 0.2s;
+    backdrop-filter: blur(8px);
+
+    &::placeholder {
+        color: var(--muted);
+    }
+
+    &:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+}
+
+.filter-pills {
     display: flex;
+    gap: 8px;
+}
+
+.filter-pill {
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-}
-
-.nvr-sub {
-    font-size: 12px;
-    color: rgba(248, 250, 252, 0.5);
-    font-weight: 400;
-}
-
-.nvr-layout-btns {
-    display: flex;
     gap: 6px;
-}
-
-.layout-btn {
-    padding: 5px 10px;
-    border-radius: 7px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--outline);
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 12px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.15s;
+    font-family: inherit;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--ink);
     }
 
     &.active {
-        background: rgba(37, 99, 235, 0.25);
-        border-color: #3b82f6;
-        color: #93c5fd;
+        background: rgba(19, 127, 236, 0.15);
+        border-color: rgba(19, 127, 236, 0.4);
+        color: #60a5fa;
     }
 }
 
-.camera-grid {
-    display: grid;
-    gap: 3px;
-    padding: 3px;
-    background: #060a12;
-    min-height: 300px;
-}
-
-.camera-cell {
-    position: relative;
-    aspect-ratio: 16 / 9;
-    background: $nvr-cell;
-    overflow: hidden;
-    cursor: pointer;
-
-    &:hover {
-        outline: 2px solid #3b82f6;
-    }
-}
-
-.cell-viewer {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
-.cell-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, transparent 100%);
-    padding: 20px 10px 8px;
-}
-
-.cell-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-}
-
-.cell-name {
-    font-size: 11px;
-    font-weight: 600;
-    color: #f1f5f9;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-.cell-status {
-    font-size: 10px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+.pill-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
 
     &.online {
-        color: #10b981;
+        background: var(--green);
     }
 
     &.offline {
-        color: #ef4444;
+        background: var(--red);
     }
 }
 
-.dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    display: inline-block;
+// ─── CAMERA CARDS GRID ───────────────────────────────────────────────────────
+.cam-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 18px;
+    margin-bottom: 20px;
 }
 
-.cell-index {
+.cam-card {
+    background: rgba(30, 41, 59, 0.55);
+    border-radius: 16px;
+    border: 1px solid var(--outline);
+    border-left: 4px solid transparent;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    transition: all 0.25s ease;
+
+    &.online {
+        border-left-color: var(--green);
+    }
+
+    &.offline {
+        border-left-color: var(--red);
+    }
+
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        transform: translateY(-3px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+    }
+}
+
+// Thumbnail
+.cam-thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #060a13;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cam-thumb-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+
+    // Subtle scan line effect for "camera" feel
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(0deg,
+                transparent,
+                transparent 3px,
+                rgba(255, 255, 255, 0.01) 3px,
+                rgba(255, 255, 255, 0.01) 4px);
+        pointer-events: none;
+    }
+}
+
+.cam-live-badge {
     position: absolute;
-    top: 6px;
+    top: 8px;
     left: 8px;
-    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(16, 185, 129, 0.85);
+    color: #fff;
+    font-size: 9px;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.5);
-    background: rgba(0, 0, 0, 0.4);
-    padding: 1px 5px;
-    border-radius: 3px;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
 }
 
-.nvr-state {
+.live-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #fff;
+    display: inline-block;
+    animation: pulse-live 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-live {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.cam-offline-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(239, 68, 68, 0.8);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.cam-type-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+
+    &.cloud {
+        background: rgba(19, 127, 236, 0.75);
+        color: #fff;
+    }
+
+    &.nvr {
+        background: rgba(52, 211, 153, 0.75);
+        color: #fff;
+    }
+
+    &.sd {
+        background: rgba(245, 158, 11, 0.75);
+        color: #fff;
+    }
+}
+
+// Card body
+.cam-body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cam-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.2s;
+
+    &:hover {
+        color: var(--accent);
+    }
+}
+
+.cam-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.cam-rtsp {
+    font-size: 11px;
+    font-family: monospace;
+    color: #475569;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cam-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.cam-btn-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(52, 211, 153, 0.12);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    color: #34d399;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+
+    &:hover {
+        background: rgba(52, 211, 153, 0.22);
+    }
+}
+
+.cam-btn-rec {
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(19, 127, 236, 0.1);
+    border: 1px solid rgba(19, 127, 236, 0.25);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    display: inline-block;
+    font-family: inherit;
+
+    &:hover {
+        background: rgba(19, 127, 236, 0.2);
+    }
+}
+
+.cam-btn-more {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+}
+
+.cam-btn-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    border: 1px solid var(--outline);
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-family: inherit;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--ink);
+    }
+
+    &.danger:hover {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: var(--red);
+    }
+}
+
+// ─── EMPTY STATES ────────────────────────────────────────────────────────────
+.cam-empty {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 60px 20px;
-    grid-column: 1 / -1;
-    color: rgba(255, 255, 255, 0.4);
-}
-
-.nvr-state-icon {
-    font-size: 48px;
-    opacity: 0.4;
-}
-
-.nvr-state-title {
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.nvr-state-sub {
-    font-size: 14px;
+    gap: 12px;
+    padding: 80px 20px;
     text-align: center;
-    max-width: 300px;
+    color: var(--muted);
+
+    .empty-icon {
+        font-size: 3.5rem;
+        opacity: 0.3;
+    }
+
+    h3 {
+        font-size: 18px;
+        color: var(--muted);
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    p {
+        font-size: 14px;
+        max-width: 320px;
+        line-height: 1.6;
+    }
 }
 
-.nvr-statusbar {
+// ─── MODAL ───────────────────────────────────────────────────────────────────
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 8px 20px;
-    background: rgba(255, 255, 255, 0.02);
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    font-size: 11px;
-    color: rgba(248, 250, 252, 0.5);
+    justify-content: center;
+    padding: 24px;
+}
 
-    .dot.online {
-        background: #10b981;
-        box-shadow: 0 0 6px #10b981;
+.modal-content {
+    background: #0f172a;
+    border-radius: 18px;
+    border: 1px solid var(--outline);
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+    max-width: 580px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--outline);
+
+    h2 {
+        font-size: 17px;
+        font-weight: 600;
+    }
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--outline);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid var(--outline);
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+
+    &:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--red);
+    }
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+
+    @media (max-width: 500px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+
+    label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+}
+
+.form-control {
+    padding: 10px 12px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--outline);
+    border-radius: 9px;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s;
+
+    &:focus {
+        outline: none;
+        border-color: var(--accent);
     }
 }

@@ -1,5 +1,5 @@
-import { Component, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ElementRef, OnInit, ViewChild, inject, signal, computed } from '@angular/core';
+import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -9,7 +9,7 @@ const API_URL = '/api';
 @Component({
     selector: 'app-recordings',
     standalone: true,
-    imports: [CommonModule, RouterModule, FormsModule],
+    imports: [CommonModule, RouterModule, FormsModule, DecimalPipe, DatePipe],
     templateUrl: './recordings.component.html',
     styleUrls: ['./recordings.component.scss']
 })
@@ -20,6 +20,7 @@ export class RecordingsComponent implements OnInit {
     http = inject(HttpClient);
 
     cameraId = signal<string>('');
+    cameraName = computed(() => `Cámara #${this.cameraId()}`);
 
     // Cloud recordings
     availableDates = signal<string[]>([]);
@@ -27,6 +28,28 @@ export class RecordingsComponent implements OnInit {
     selectedDate = signal<string>('');
     currentVideoSource = signal<string | null>(null);
     loadingRecordings = signal<boolean>(false);
+
+    // Filters
+    searchRec = signal('');
+    filterType = signal<'all' | 'cloud'>('all');
+
+    // Computed
+    filteredRecordings = computed(() => {
+        let recs = this.cloudRecordings();
+        const q = this.searchRec().toLowerCase();
+        if (q) recs = recs.filter(r => (r.filename || r.name || '').toLowerCase().includes(q));
+        return recs;
+    });
+
+    totalSizeMb = computed(() =>
+        this.cloudRecordings().reduce((sum, r) => sum + (r.sizeMb || 0), 0)
+    );
+
+    // Progress bar % of total (cap at 100)
+    cloudPct = computed(() => {
+        const total = this.totalSizeMb();
+        return total > 0 ? Math.min((total / 1000) * 100, 100) : 0;
+    });
 
     ngOnInit() {
         this.cameraId.set(this.route.snapshot.paramMap.get('id') || '');
@@ -40,11 +63,8 @@ export class RecordingsComponent implements OnInit {
             next: (res) => {
                 const dates = res?.dates || [];
                 this.availableDates.set(dates);
-                if (dates && dates.length > 0) {
-                    this.selectDate(dates[0]);
-                } else {
-                    this.selectDate(new Date().toISOString().split('T')[0]);
-                }
+                const today = new Date().toISOString().split('T')[0];
+                this.selectDate(dates.length > 0 ? dates[0] : today);
             },
             error: () => {
                 this.selectDate(new Date().toISOString().split('T')[0]);
@@ -54,8 +74,8 @@ export class RecordingsComponent implements OnInit {
 
     selectDate(date: string) {
         this.selectedDate.set(date);
-        this.loadCloudRecordings(date);
         this.currentVideoSource.set(null);
+        this.loadCloudRecordings(date);
     }
 
     loadCloudRecordings(date: string) {
@@ -76,17 +96,18 @@ export class RecordingsComponent implements OnInit {
         const token = localStorage.getItem('motor_control_token') || '';
         const src = `${API_URL}/recordings/cloud/video?path=${encodeURIComponent(filePath)}&token=${encodeURIComponent(token)}`;
         this.currentVideoSource.set(src);
-        this.initVideoSrc(src);
-    }
-
-    private initVideoSrc(src: string) {
         setTimeout(() => {
-            if (this.videoPlayer && this.videoPlayer.nativeElement) {
+            if (this.videoPlayer?.nativeElement) {
                 const video = this.videoPlayer.nativeElement;
                 video.src = src;
                 video.load();
-                video.play().catch(e => console.warn("Autoplay block", e));
+                video.play().catch(e => console.warn('Autoplay block', e));
             }
         }, 100);
+    }
+
+    getDownloadUrl(filePath: string): string {
+        const token = localStorage.getItem('motor_control_token') || '';
+        return `${API_URL}/recordings/cloud/video?path=${encodeURIComponent(filePath)}&token=${encodeURIComponent(token)}`;
     }
 }

@@ -19,15 +19,26 @@ export class CamerasComponent implements OnInit {
     router = inject(Router);
 
     cameras = signal<any[]>([]);
-    clients = signal<any[]>([]); // For dropdown when creating a camera
+    clients = signal<any[]>([]);
     searchTerm = signal('');
+    filterStatus = signal<'all' | 'online' | 'offline'>('all');
     gridCols = 2;
-    filtered = computed(() =>
-        this.cameras().filter(c =>
-            c.name.toLowerCase().includes(this.searchTerm().toLowerCase()) ||
-            (c.location ?? '').toLowerCase().includes(this.searchTerm().toLowerCase())
-        )
-    );
+
+    camerasOnline = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
+
+    filtered = computed(() => {
+        let list = this.cameras();
+        const q = this.searchTerm().toLowerCase();
+        if (q) {
+            list = list.filter(c =>
+                c.name.toLowerCase().includes(q) ||
+                (c.location ?? '').toLowerCase().includes(q)
+            );
+        }
+        if (this.filterStatus() === 'online') list = list.filter(c => this.isOnline(c));
+        if (this.filterStatus() === 'offline') list = list.filter(c => !this.isOnline(c));
+        return list;
+    });
 
     showModal = signal(false);
     modalMode = signal<'create' | 'edit'>('create');
