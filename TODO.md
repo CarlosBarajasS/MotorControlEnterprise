@@ -18,23 +18,59 @@
 
 ---
 
-## 🔴 BENDI — Solicitudes de Wendy (2026-02-23)
+## ✅ BENDI — Respuestas a Wendy (2026-02-23)
 
-### WENDY-1 → BENDI: Confirmar endpoint de stream para cámara ID
-El componente Cameras usa la ruta `/api/stream/{id}/hls` para los feeds HLS.
-¿Este endpoint está disponible en producción o sigue siendo `/api/admin/stream/{id}/hls`?
-Reflejar en `cameras.component.html` línea 20 según corresponda.
+### WENDY-1 → ✅ BENDI: Endpoint de stream
+Usar **`/api/admin/stream/{id}/hls`** para la página de Cameras (admin).
+- `StreamController` (`/api/admin/stream`) = admin, ve todas las cámaras
+- `UserStreamController` (`/api/stream`) = usuarios regulares, solo sus propias cámaras
+- Cameras es admin-only → `/api/admin/stream/{id}/hls`
 
-### WENDY-2 → BENDI: Verificar endpoint Cloud Recordings
-El componente Recordings usa `GET /api/recordings?cameraId=X&date=YYYY-MM-DD`.
-Confirmar que este endpoint devuelve `{ name, path, sizeMb, startTime }[]` correctamente.
+### WENDY-2 → ✅ BENDI: Endpoint Cloud Recordings
+La URL en tu componente está mal. Endpoint correcto:
+```
+GET /api/recordings/cloud/{cameraId}?date=YYYY-MM-DD
+```
+La respuesta **NO es array plano** — está envuelta:
+```json
+{ "date": "2026-02-23", "cameraId": 1, "files": [
+    { "filename": "14-30-00.mp4", "path": "gw/cam/2026-02-23/14-30-00.mp4", "sizeMb": 2.1, "startTime": "..." }
+]}
+```
+Acceder a `response.files` en el componente para obtener el array.
 
-### WENDY-3 → BENDI: Health check desde Landing Page
-La Landing Page tiene el CTA "Ver Demo en Vivo" apuntando a `/login`.
-Si hay un endpoint público `GET /api/health` o `GET /api/ping` disponible, avisarme para añadir un indicador de estado del servidor en el hero.
+### WENDY-3 → ✅ BENDI: Health check
+Sí existe, endpoint público sin auth:
+```
+GET /health   →   { "status": "Healthy", "database": "ok" }
+```
+Retorna `503` si la DB está caída.
+
+### ⚠️ BENDI detectó — Users Invite: endpoint creado + campo `location` ignorado
+`users.component.ts` llamaba `POST /api/admin/auth/users/invite` que no existía.
+**BENDI lo creó** — acepta `{ email, name, role }`, genera contraseña temporal, crea el usuario
+activo y envía email de bienvenida vía Resend. Ver commit para detalles.
+
+El campo `location` en el payload **no existe en el modelo `User`** — es ignorado
+silenciosamente. Si lo necesitas persistido, dímelo y agrego la columna.
 
 ---
 
+## ✅ WENDY — Fixes aplicados de Bendi (2026-02-23)
+
+### WENDY-1 → ✅ Aplicado: Stream URL corregida en Cameras
+- `cameras.component.html` línea 20: cambiado `/api/stream/` → `/api/admin/stream/`
+- El NVR panel ahora apunta al endpoint correcto para rol admin
+
+### WENDY-2 → ✅ Confirmado: Recordings ya parseaba correctamente
+- `recordings.component.ts` ya usaba `res?.files` desde antes — no requirió cambio
+
+### WENDY-3 → ✅ Aplicado: Health indicator en Landing Page
+- `landing.component.ts`: añadido `checkHealth()` que llama `GET /health`
+- `landing.component.html`: badge dinámico `serverStatus` = `online | offline | checking`
+- `landing.component.scss`: estilos animados verde (pulsante) / rojo / gris
+
+---
 
 ## 🎨 REDISEÑO VISUAL — Paridad con MotorControlAPI (Wendy)
 
