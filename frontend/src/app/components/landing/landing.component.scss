@@ -791,3 +791,58 @@ $amber: #f59e0b;
         color: $muted;
     }
 }
+
+// ─── SERVER STATUS INDICATOR ───────────────────────────────────────────────────
+.lp-server-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    align-self: flex-start;
+    padding: 5px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    &.online {
+        color: $green;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+
+        .status-dot {
+            background: $green;
+            box-shadow: 0 0 6px $green;
+            animation: pulse-live 2s ease-in-out infinite;
+        }
+    }
+
+    &.offline {
+        color: #f87171;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+
+        .status-dot {
+            background: #f87171;
+        }
+    }
+
+    &.checking {
+        color: $muted;
+        background: rgba(148, 163, 184, 0.08);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+
+        .status-dot {
+            background: $muted;
+            opacity: 0.5;
+            animation: pulse-live 1s ease-in-out infinite;
+        }
+    }
+}

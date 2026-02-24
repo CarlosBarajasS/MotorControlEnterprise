@@ -17,7 +17,7 @@
         <div class="camera-grid" [style.grid-template-columns]="'repeat(' + gridCols + ', 1fr)'">
             <div class="camera-cell" *ngFor="let cam of filtered(); let i = index" (click)="openStream(cam)">
                 <!-- Video player inside cell -->
-                <app-camera-viewer [streamUrl]="'/api/stream/' + cam.id + '/hls'"
+                <app-camera-viewer [streamUrl]="'/api/admin/stream/' + cam.id + '/hls'"
                     class="cell-viewer"></app-camera-viewer>
                 <!-- Overlay con info -->
                 <div class="cell-overlay">

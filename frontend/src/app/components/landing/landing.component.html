@@ -19,6 +19,13 @@
     <section class="lp-hero" id="plataforma">
         <div class="lp-hero-left">
             <div class="lp-badge">✦ PLATAFORMA EDGE-FIRST</div>
+            <div class="lp-server-status" [class.online]="serverStatus === 'online'"
+                [class.offline]="serverStatus === 'offline'" [class.checking]="serverStatus === 'checking'">
+                <span class="status-dot"></span>
+                <span *ngIf="serverStatus === 'online'">Plataforma operativa</span>
+                <span *ngIf="serverStatus === 'offline'">Servidor no disponible</span>
+                <span *ngIf="serverStatus === 'checking'">Verificando estado...</span>
+            </div>
             <h1 class="lp-hero-h1">
                 Videovigilancia<br>
                 <span class="lp-accent">inteligente</span> al borde
