@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MotorControlEnterprise.Api.Data;
 using MotorControlEnterprise.Api.Models;
+using MotorControlEnterprise.Api.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace MotorControlEnterprise.Api.Controllers
@@ -16,15 +18,21 @@ namespace MotorControlEnterprise.Api.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _config;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(ApplicationDbContext context, IConfiguration config)
+        public AuthController(ApplicationDbContext context, IConfiguration config,
+            IEmailService emailService, ILogger<AuthController> logger)
         {
-            _context = context;
-            _config = config;
+            _context      = context;
+            _config       = config;
+            _emailService = emailService;
+            _logger       = logger;
         }
 
         public record LoginRequest(string Email, string Password);
         public record CreateUserRequest(string Email, string Password, string? Name, string Role = "client");
+        public record InviteUserRequest(string Email, string? Name, string Role = "client");
         public record UserStatusRequest(bool IsActive);
 
         [HttpPost("login")]
@@ -93,6 +101,54 @@ namespace MotorControlEnterprise.Api.Controllers
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(Verify), new { user.Id, user.Email, user.Name, user.Role });
+        }
+
+        // ─── POST /api/admin/auth/users/invite ───────────────────────────────────
+        /// <summary>
+        /// Crea un usuario con contraseña temporal y envía email de invitación.
+        /// No requiere password en el body — se genera automáticamente.
+        /// </summary>
+        [HttpPost("users/invite")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> InviteUser([FromBody] InviteUserRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Email))
+                return BadRequest(new { message = "El email es obligatorio" });
+
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+                return Conflict(new { message = "El email ya está registrado" });
+
+            // Contraseña temporal: 12 chars alfanuméricos seguros
+            var tempPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(9))
+                .Replace("+", "x").Replace("/", "y").Replace("=", "z")
+                .Substring(0, 12);
+
+            var displayName = request.Name ?? request.Email.Split('@')[0];
+
+            var user = new User
+            {
+                Email        = request.Email,
+                Name         = displayName,
+                Role         = request.Role,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(tempPassword),
+                IsActive     = true
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            // Email de invitación — best-effort (no falla el request si el email falla)
+            try
+            {
+                await _emailService.SendUserInviteAsync(user.Email, displayName, tempPassword);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo enviar email de invitación a {Email} — usuario creado igual", user.Email);
+            }
+
+            return Ok(new { user.Id, user.Email, user.Name, user.Role,
+                message = "Usuario creado. Invitación enviada por email." });
         }
 
         [HttpPatch("users/{id:int}/status")]

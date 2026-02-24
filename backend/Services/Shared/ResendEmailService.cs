@@ -60,6 +60,29 @@ namespace MotorControlEnterprise.Api.Services
             await SendAsync(to, subject, html);
         }
 
+        public async Task SendUserInviteAsync(string to, string name, string tempPassword)
+        {
+            var loginUrl = _config["App:FrontendUrl"] ?? "http://177.247.175.4:8080/login";
+            var subject  = "🔐 Invitación a MotorControl Enterprise";
+            var html     = $@"
+<div style='font-family:system-ui,sans-serif;max-width:500px;color:#0b1220'>
+  <h2 style='color:#2563eb;margin-bottom:8px'>🔐 Bienvenido a MotorControl Enterprise</h2>
+  <p>Hola <strong>{name}</strong>, has sido registrado como nuevo usuario del sistema de monitoreo.</p>
+  <p style='margin-top:20px'>Tus credenciales de acceso inicial:</p>
+  <table style='width:100%;border-collapse:collapse;margin:12px 0;background:#f8fafc;border-radius:8px;padding:12px'>
+    <tr><td style='padding:6px 12px;color:#667085;font-size:13px'>Email</td><td style='padding:6px 12px'><strong>{to}</strong></td></tr>
+    <tr><td style='padding:6px 12px;color:#667085;font-size:13px'>Contraseña temporal</td><td style='padding:6px 12px'><code style='background:#e2e8f0;padding:3px 8px;border-radius:4px;font-size:14px'>{tempPassword}</code></td></tr>
+  </table>
+  <a href='{loginUrl}' style='display:inline-block;background:#2563eb;color:#fff;padding:11px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:8px'>
+    Iniciar sesión →
+  </a>
+  <p style='margin-top:20px;color:#667085;font-size:12px'>Por seguridad, cambia tu contraseña después del primer acceso. Si no solicitaste este acceso, ignora este mensaje.</p>
+  <p style='color:#94a3b8;font-size:11px;margin-top:16px'>MotorControl Enterprise · Sistema de Monitoreo IoT</p>
+</div>";
+
+            await SendAsync(to, subject, html);
+        }
+
         private async Task SendAsync(string to, string subject, string html)
         {
             var apiKey = _config["Email:ResendApiKey"];
