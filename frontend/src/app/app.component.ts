@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 
 @Component({
@@ -12,8 +12,15 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 })
 export class AppComponent {
     title = 'MotorControlEnterprise';
+    router = inject(Router);
 
     isLoggedIn(): boolean {
         return !!localStorage.getItem('motor_control_token');
+    }
+
+    showSidebar(): boolean {
+        // No mostrar sidebar en landing ni en login, aunque tenga token
+        const noSidebarRoutes = ['/', '/login'];
+        return this.isLoggedIn() && !noSidebarRoutes.includes(this.router.url);
     }
 }

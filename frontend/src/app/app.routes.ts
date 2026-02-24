@@ -5,6 +5,7 @@ import { LoginComponent } from './components/login/login.component';
 import { LandingComponent } from './components/landing/landing.component';
 import { WizardComponent } from './components/wizard/wizard.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { GatewaysComponent } from './components/gateways/gateways.component';
 import { ClientsComponent } from './components/clients/clients.component';
 import { ClientDetailComponent } from './components/client-detail/client-detail.component';
 import { CamerasComponent } from './components/cameras/cameras.component';
@@ -45,6 +46,7 @@ export const routes: Routes = [
 
     // Admin routes
     { path: 'dashboard', component: DashboardComponent, canActivate: [adminAuthGuard] },
+    { path: 'gateways', component: GatewaysComponent, canActivate: [adminAuthGuard] },
     { path: 'clients', component: ClientsComponent, canActivate: [adminAuthGuard] },
     { path: 'clients/:id', component: ClientDetailComponent, canActivate: [adminAuthGuard] },
     { path: 'cameras', component: CamerasComponent, canActivate: [adminAuthGuard] },

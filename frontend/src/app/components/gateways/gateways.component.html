@@ -1,0 +1,100 @@
+<div class="gw-layout">
+    <!-- TOP SECTION -->
+    <div class="top-row">
+        <div class="top-content">
+            <div class="top-left">
+                <h1>Gateways Edge</h1>
+                <p>Gestión y telemetría de nodos registrados en la red</p>
+            </div>
+            <div class="top-right">
+                <div class="gw-summary">
+                    <span class="dot"></span>
+                    {{ stats().active }} / {{ stats().total }} Online
+                </div>
+                <button class="btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Añadir Gateway
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters-row">
+        <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" placeholder="Buscar gateway..." [ngModel]="searchTerm()"
+                (ngModelChange)="searchTerm.set($event)">
+        </div>
+        <div class="filter-pills">
+            <button class="pill" [class.active]="filterStatus() === 'all'"
+                (click)="filterStatus.set('all')">Todos</button>
+            <button class="pill" [class.active]="filterStatus() === 'active'"
+                (click)="filterStatus.set('active')">Online</button>
+            <button class="pill" [class.active]="filterStatus() === 'inactive'"
+                (click)="filterStatus.set('inactive')">Offline</button>
+        </div>
+    </div>
+
+    <!-- GRID -->
+    <div class="gw-grid">
+        <div class="gw-card" *ngFor="let gw of filtered()">
+            <div class="gw-left">
+                <div class="gw-header">
+                    <div class="gw-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="gw-identity">
+                        <h3>{{ gw.id }}</h3>
+                        <span>{{ gw.clientName || 'Sin asignar' }} • {{ gw.location }}</span>
+                    </div>
+                    <div class="gw-status" [class.active]="gw.status === 'active'">
+                        {{ gw.status === 'active' ? 'ONLINE' : 'OFFLINE' }}
+                    </div>
+                </div>
+            </div>
+            <div class="gw-metrics">
+                <div class="metric">
+                    <span class="m-label">Cámaras</span>
+                    <span class="m-value">{{ gw.cameras }}</span>
+                </div>
+                <div class="metric">
+                    <span class="m-label">CPU Usage</span>
+                    <span class="m-value" [style.color]="gw.cpu > 80 ? '#f87171' : 'inherit'">{{ gw.cpu }}%</span>
+                </div>
+                <div class="metric">
+                    <span class="m-label">RAM Usage</span>
+                    <span class="m-value">{{ gw.ram }}%</span>
+                </div>
+                <div class="metric">
+                    <span class="m-label">Uptime</span>
+                    <span class="m-value">{{ gw.uptime }}</span>
+                </div>
+                <button class="action-btn" title="Configurar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="empty-state" *ngIf="filtered().length === 0">
+            <p>No se encontraron gateways Edge</p>
+        </div>
+    </div>
+</div>
