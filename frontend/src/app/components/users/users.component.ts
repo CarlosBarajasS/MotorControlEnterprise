@@ -20,9 +20,9 @@ export class UsersComponent implements OnInit {
 
     newUser = signal({
         email: '',
-        password: '',
         name: '',
-        role: 'client'
+        role: 'client',
+        location: 'NIRM GROUP - Sede Principal'
     });
 
     ngOnInit() {
@@ -41,23 +41,24 @@ export class UsersComponent implements OnInit {
     }
 
     openCreate() {
-        this.newUser.set({ email: '', password: '', name: '', role: 'client' });
+        this.newUser.set({ email: '', name: '', role: 'client', location: 'NIRM GROUP - Sede Principal' });
         this.showModal.set(true);
     }
 
     saveUser() {
         const payload = this.newUser();
-        if (!payload.email || !payload.password || !payload.name) {
-            alert("Llenar todos los campos requerido");
+        if (!payload.email) {
+            alert("El correo electrónico es obligatorio para enviar la invitación.");
             return;
         }
-        this.http.post(`${API_URL}/admin/auth/users`, payload).subscribe({
+        // Simulando que el backend se encarga de crear el estatus en Pending
+        this.http.post(`${API_URL}/admin/auth/users/invite`, payload).subscribe({
             next: () => {
-                alert('Usuario creado con éxito');
+                alert('Invitación enviada con éxito');
                 this.showModal.set(false);
                 this.loadUsers();
             },
-            error: (err) => alert('Error creando usuario: ' + (err.error?.message || err.message))
+            error: (err) => alert('Error enviando invitación: ' + (err.error?.message || err.message))
         });
     }
 

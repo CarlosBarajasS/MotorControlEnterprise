@@ -1,20 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 :root {
-    --bg: #f6f3ee;
-    --ink: #0b1220;
-    --muted: #667085;
-    --surface: #ffffff;
-    --accent: #2563EB;
-    --accent-hover: #1D4ED8;
-    --teal: #14b8a6;
+    --bg: #0b1120;
+    --ink: #f8fafc;
+    --muted: #94a3b8;
+    --surface: #1e293b;
+    --accent: #137fec;
+    --accent-hover: #0f6bd1;
+    --teal: #34d399; /* Verde neon ajustado a dark mode */
     --nav: #0f172a;
     --nav-ink: #f8fafc;
-    --nav-muted: rgba(248, 250, 252, 0.7);
-    --outline: rgba(15, 23, 42, 0.08);
-    --shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+    --nav-muted: #94a3b8;
+    --outline: rgba(255, 255, 255, 0.1);
+    --shadow: 0 20px 45px rgba(0, 0, 0, 0.3); /* Sombra más fuerte para contraste en dark mode */
     --green: #10b981;
-    --red: #ef4444;
+    --red: #f87171; /* Rojo brillante ajustado a dark mode */
 }
 
 * {
@@ -25,9 +25,10 @@
 
 body {
     font-family: 'IBM Plex Sans', sans-serif;
+    /* Un fondo sutil pero tecnológico (Dark Space) con destellos translúcidos en las esquinas */
     background:
-        radial-gradient(1200px circle at -10% -20%, #ffe6c7 0, transparent 60%),
-        radial-gradient(900px circle at 110% 10%, #d3f4f0 0, transparent 55%),
+        radial-gradient(1200px circle at -10% -20%, rgba(19, 127, 236, 0.1) 0, transparent 60%),
+        radial-gradient(900px circle at 110% 10%, rgba(52, 211, 153, 0.05) 0, transparent 55%),
         var(--bg);
     color: var(--ink);
     min-height: 100vh;
@@ -38,6 +39,7 @@ h2,
 h3 {
     font-family: 'Space Grotesk', sans-serif;
     letter-spacing: -0.02em;
+    color: var(--ink);
 }
 
 /* Patrón estandarizado para Topbars en todas las secciones */
@@ -45,17 +47,19 @@ h3 {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
-    border-radius: 18px;
+    padding: 16px 22px;
+    border-radius: 14px;
     margin-bottom: 24px;
-    background: rgba(255, 255, 255, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08);
-    backdrop-filter: blur(10px);
+    background: rgba(15, 23, 42, 0.85); /* Semi transparente dark */
+    border: 1px solid var(--outline);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
-.topbar h1 {
+.topbar h1, .topbar h2 {
     font-size: 22px;
+    margin-bottom: 2px;
 }
 
 .subtitle {
@@ -66,36 +70,49 @@ h3 {
 
 /* Botones Premium */
 .btn-primary {
-    padding: 10px 18px;
+    padding: 10px 20px;
     background: var(--accent);
-    color: #fff;
+    color: #ffffff;
     border: none;
     border-radius: 10px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(19, 127, 236, 0.3);
 }
 
 .btn-primary:hover {
     background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(19, 127, 236, 0.4);
 }
 
 .btn-secondary {
-    padding: 10px 18px;
-    background: transparent;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.05);
     color: var(--ink);
     border: 1px solid var(--outline);
     border-radius: 10px;
     font-weight: 500;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* Cards (Motores, Gateways) */
 .card {
     background: var(--surface);
-    border-radius: 16px;
+    border-radius: 14px;
     box-shadow: var(--shadow);
     border: 1px solid var(--outline);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .card.online {
@@ -106,35 +123,43 @@ h3 {
     border-left: 4px solid var(--red);
 }
 
-/* Status Badges universales */
+/* Status Badges universales - Ajustados para Dark Mode */
 .badge {
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: 999px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid transparent;
 }
 
 .badge.online {
-    background: #ecfdf5;
-    color: #059669;
+    background: rgba(16, 185, 129, 0.15); /* #064e3b aprox */
+    color: var(--teal);
+    border-color: rgba(16, 185, 129, 0.2);
 }
 
 .badge.offline {
-    background: #fef2f2;
-    color: #ef4444;
+    background: rgba(239, 68, 68, 0.15); /* #450a0a aprox */
+    color: var(--red);
+    border-color: rgba(239, 68, 68, 0.2);
 }
 
 .badge.active {
-    background: #eff6ff;
-    color: #2563eb;
+    background: rgba(19, 127, 236, 0.15);
+    color: var(--accent);
+    border-color: rgba(19, 127, 236, 0.2);
 }
 
 .badge.inactive {
-    background: #f9fafb;
-    color: #6b7280;
+    background: rgba(148, 163, 184, 0.15);
+    color: var(--muted);
+    border-color: rgba(148, 163, 184, 0.2);
 }
 
 .badge.suspended {
-    background: #fff7ed;
-    color: #c2410c;
+    background: rgba(245, 158, 11, 0.15); /* #451a03 aprox */
+    color: #fcd34d;
+    border-color: rgba(245, 158, 11, 0.2);
 }

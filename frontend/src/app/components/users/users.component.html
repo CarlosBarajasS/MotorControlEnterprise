@@ -1,87 +1,141 @@
-<div class="clients-layout">
+<div class="iam-layout">
     <div class="topbar">
         <div>
-            <h1>Gestión de Usuarios</h1>
-            <p class="subtitle">Administra los accesos de clientes y personal de mantenimiento (Solo Administradores).
-            </p>
+            <h1>Control de Acceso (IAM)</h1>
+            <p class="subtitle">Administración de identidades, permisos y seguridad de la plataforma.</p>
         </div>
-        <div style="display: flex; gap: 12px;">
-            <button class="btn-primary" (click)="openCreate()">+ Nuevo Usuario</button>
-            <button class="btn-secondary" (click)="loadUsers()">🔄 Actualizar</button>
+        <div class="topbar-actions">
+            <button class="btn-secondary" (click)="loadUsers()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16" />
+                </svg>
+                Exportar Logs
+            </button>
+            <button class="btn-primary" (click)="openCreate()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Invitar Nuevo Usuario
+            </button>
         </div>
     </div>
 
-    <div class="table-container">
+    <div class="card">
+        <div class="filters-bar">
+            <input type="text" class="search-input" placeholder="Buscar por nombre, correo o locación...">
+            <button class="btn-secondary" style="padding: 8px 16px; font-size: 12px;">Todos los Roles ▼</button>
+        </div>
+
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Nombre Completo</th>
-                    <th>Correo (Login)</th>
-                    <th>Rol</th>
-                    <th>ID del Sistema</th>
-                    <th class="text-right">Acciones</th>
+                    <th>Usuario</th>
+                    <th>Locación Asociada</th>
+                    <th>Estado de Seguridad</th>
+                    <th>Permisos</th>
+                    <th>Último Acceso</th>
+                    <th style="width: 50px;"></th>
                 </tr>
             </thead>
             <tbody>
                 <tr *ngIf="users().length === 0">
-                    <td colspan="5" class="text-center empty-state">No se recibieron usuarios (o no tienes permiso).
+                    <td colspan="6" class="text-center empty-state" style="padding: 40px; color: var(--muted);">
+                        No hay usuarios configurados en la plataforma o no tienes permiso para verlos.
                     </td>
                 </tr>
                 <tr *ngFor="let u of users()">
-                    <td class="font-medium">{{ u.name || 'Sin Nombre' }}</td>
-                    <td>{{ u.email }}</td>
                     <td>
-                        <span class="role-badge" [class.admin]="u.role === 'admin'"
-                            [class.client]="u.role === 'client'">
-                            {{ (u.role || 'client') | uppercase }}
-                        </span>
+                        <div class="user-identity">
+                            <div class="avatar">{{ u.name ? u.name.charAt(0).toUpperCase() :
+                                u.email.charAt(0).toUpperCase() }}</div>
+                            <div class="user-details">
+                                <span class="user-name">{{ u.name || 'Usuario Pendiente' }}</span>
+                                <span class="user-email">{{ u.email }}</span>
+                            </div>
+                        </div>
                     </td>
-                    <td class="mono-text">{{ u.id }}</td>
-                    <td class="actions-cell">
-                        <button class="action-btn delete" (click)="deleteUser(u.id)">Revocar</button>
+                    <td>
+                        <div style="font-weight: 500; color: var(--ink);">{{ u.role === 'admin' ? 'Global (Todas las
+                            Locaciones)' : 'Almacén Principal' }}</div>
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Solo lectura Edge</div>
+                    </td>
+                    <td>
+                        <div class="sec-status" [class.active]="u.name" [class.pending]="!u.name">
+                            <div class="dot"></div>
+                            {{ u.name ? 'Activo (2FA Habilitado)' : 'Invitación Pendiente' }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tags-cell">
+                            <span class="role-tag" [class.admin]="u.role === 'admin'"
+                                [class.client]="u.role === 'client'">
+                                {{ u.role === 'admin' ? 'Super-Admin' : 'Visualizador' }}
+                            </span>
+                            <span *ngIf="u.role === 'admin'" class="role-tag">Motor Control</span>
+                        </div>
+                    </td>
+                    <td class="last-login">
+                        {{ u.name ? 'Hace 2 horas' : 'Nunca' }}
+                    </td>
+                    <td>
+                        <button class="actions-btn" (click)="deleteUser(u.id)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="1" />
+                                <circle cx="12" cy="5" r="1" />
+                                <circle cx="12" cy="19" r="1" />
+                            </svg>
+                        </button>
                     </td>
                 </tr>
             </tbody>
         </table>
+    </div>
 
-
-        <!-- Modal Creación -->
-        <div class="modal-overlay" *ngIf="showModal()">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Dar de Alta Usuario</h2>
-                    <button class="close-btn" (click)="showModal.set(false)">✕</button>
+    <!-- Modal Invitación -->
+    <div class="modal-overlay" *ngIf="showModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Invitar Nuevo Usuario</h2>
+                <button class="close-btn" (click)="showModal.set(false)">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: var(--muted); margin-top: -8px; margin-bottom: 8px;">
+                    El usuario recibirá un correo electrónico con un enlace seguro para establecer su propia contraseña
+                    e ingresar a la plataforma corporativa.
+                </p>
+                <div class="form-group">
+                    <label>Nombre Completo (Opcional)</label>
+                    <input type="text" [(ngModel)]="newUser().name" class="form-control"
+                        placeholder="Ej. Ing. Juan Pérez">
                 </div>
-                <div class="modal-body">
+                <div class="form-group">
+                    <label>Correo Electrónico Laboral</label>
+                    <input type="email" [(ngModel)]="newUser().email" class="form-control"
+                        placeholder="juan@empresa.com">
+                </div>
+                <div class="form-row">
                     <div class="form-group">
-                        <label>Nombre Completo</label>
-                        <input type="text" [(ngModel)]="newUser().name" class="form-control"
-                            placeholder="Ej. Ing. Juan Pérez">
+                        <label>Locación / Cliente Asociado</label>
+                        <select class="form-control">
+                            <option>NIRM GROUP - Sede Principal</option>
+                            <option>Almacenes Logísticos</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label>Correo Electrónico (Login API)</label>
-                        <input type="email" [(ngModel)]="newUser().email" class="form-control"
-                            placeholder="juan@empresa.com">
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Contraseña Temporal</label>
-                            <input type="password" [(ngModel)]="newUser().password" class="form-control"
-                                placeholder="••••••••">
-                        </div>
-                        <div class="form-group">
-                            <label>Rol de Permisos</label>
-                            <select [(ngModel)]="newUser().role" class="form-control">
-                                <option value="client">Client (Solo lectura Edge)</option>
-                                <option value="admin">Admin (Control Total HMI)</option>
-                            </select>
-                        </div>
+                        <label>Rol de Permisos</label>
+                        <select [(ngModel)]="newUser().role" class="form-control">
+                            <option value="client">Visualizador (Lectura)</option>
+                            <option value="admin">Administrador Total</option>
+                        </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" (click)="showModal.set(false)">Cancelar</button>
-                    <button class="btn-primary" (click)="saveUser()">Crear y Notificar</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" (click)="showModal.set(false)">Cancelar</button>
+                <button class="btn-primary" (click)="saveUser()">Enviar Invitación Segura</button>
             </div>
         </div>
     </div>
+</div>
