@@ -19,15 +19,27 @@ export class CamerasComponent implements OnInit {
     router = inject(Router);
 
     cameras = signal<any[]>([]);
-    clients = signal<any[]>([]);
+    clients = signal<any[]>([]); // gateways/clients
     searchTerm = signal('');
     filterStatus = signal<'all' | 'online' | 'offline'>('all');
+    filterGateway = signal<string>('all');
     gridCols = 2;
 
     camerasOnline = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
 
     filtered = computed(() => {
         let list = this.cameras();
+
+        // Filter by Status
+        if (this.filterStatus() === 'online') list = list.filter(c => this.isOnline(c));
+        if (this.filterStatus() === 'offline') list = list.filter(c => !this.isOnline(c));
+
+        // Filter by Gateway
+        if (this.filterGateway() !== 'all') {
+            list = list.filter(c => c.clientId === this.filterGateway());
+        }
+
+        // Filter by Search Term
         const q = this.searchTerm().toLowerCase();
         if (q) {
             list = list.filter(c =>
@@ -35,8 +47,7 @@ export class CamerasComponent implements OnInit {
                 (c.location ?? '').toLowerCase().includes(q)
             );
         }
-        if (this.filterStatus() === 'online') list = list.filter(c => this.isOnline(c));
-        if (this.filterStatus() === 'offline') list = list.filter(c => !this.isOnline(c));
+
         return list;
     });
 
@@ -63,7 +74,7 @@ export class CamerasComponent implements OnInit {
     }
 
     openCreate() {
-        this.currentCamera.set({ name: '', location: '', rtspUrl: '', clientId: '' });
+        this.currentCamera.set({ name: '', location: '', rtspUrl: '', clientId: '', streamType: 'nvr' });
         this.modalMode.set('create');
         this.showModal.set(true);
     }
@@ -103,10 +114,12 @@ export class CamerasComponent implements OnInit {
     }
 
     isOnline(cam: any): boolean {
+        // Mock online check for UX representation
         return cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 60000;
     }
 
-    openStream(cam: any) {
-        this.router.navigate(['/cameras', cam.id]);
+    getGatewayName(clientId: string): string {
+        const gw = this.clients().find(c => c.id === clientId);
+        return gw ? gw.name : 'Sin Gateway';
     }
 }

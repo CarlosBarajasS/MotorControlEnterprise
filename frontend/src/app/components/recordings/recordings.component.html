@@ -1,114 +1,145 @@
-<!-- TOPBAR -->
-<div class="topbar">
-  <div>
-    <a routerLink="/cameras" class="back-link">← Volver a Cámaras</a>
-    <h1>Grabaciones · <span style="color:var(--accent);font-size:20px;">{{ cameraName() }}</span></h1>
-    <p class="subtitle">Grabaciones cloud NAS para esta cámara — acceso con token autenticado</p>
-  </div>
-  <div style="display:flex;gap:12px;align-items:center;">
-    <span class="badge active">{{ cloudRecordings().length }} grabaciones hoy</span>
-    <button class="btn-secondary" (click)="loadCloudRecordings(selectedDate())">🔄 Actualizar</button>
-  </div>
-</div>
+<div class="clients-layout drive-layout">
 
-<!-- STAT CARDS -->
-<div class="rec-stats">
-  <div class="rec-stat">
-    <div class="rec-stat-val">{{ cloudRecordings().length }}</div>
-    <div class="rec-stat-lbl">Total Hoy</div>
-  </div>
-  <div class="rec-stat">
-    <div class="rec-stat-val blue">{{ totalSizeMb() | number:'1.0-1' }} MB</div>
-    <div class="rec-stat-lbl">Cloud NAS</div>
-    <div class="rec-stat-bar">
-      <div class="rec-stat-bar-fill blue" [style.width.%]="cloudPct()"></div>
+  <!-- DRIVE SIDEBAR (Tree Navigation) -->
+  <div class="drive-sidebar">
+    <div class="drive-section">
+      <h3 class="drive-title">Explorador NAS</h3>
+
+      <ul class="drive-tree">
+        <li class="tree-item">
+          <span class="tree-icon">📂</span>
+          <a routerLink="/cameras" style="color:inherit;text-decoration:none;">Cámaras Edge</a>
+        </li>
+        <ul class="tree-sub">
+          <li class="tree-item expanded">
+            <span class="tree-icon">📹</span> <span class="text-truncate">{{ cameraName() || 'Cámara Seleccionada'
+              }}</span>
+          </li>
+
+          <!-- Sub-carpeta: Fechas -->
+          <ul class="tree-sub">
+            <li class="tree-item date-item" *ngFor="let d of availableDates()" [class.active]="d === selectedDate()"
+              (click)="selectDate(d)">
+              <span class="tree-icon">📁</span> {{ d }}
+            </li>
+            <li class="tree-item empty" *ngIf="availableDates().length === 0">
+              <span class="tree-icon" style="opacity:0">└</span> Sin carpetas de fecha
+            </li>
+          </ul>
+        </ul>
+      </ul>
+    </div>
+
+    <div style="flex:1"></div>
+
+    <div class="drive-storage">
+      <div class="storage-text">Almacenamiento Cloud NAS</div>
+      <div class="storage-bar">
+        <div class="storage-fill" [style.width.%]="cloudPct()"></div>
+      </div>
+      <div class="storage-meta">{{ totalSizeMb() | number:'1.0-1' }} MB en uso actual</div>
     </div>
   </div>
-  <div class="rec-stat">
-    <div class="rec-stat-val teal">0</div>
-    <div class="rec-stat-lbl">NVR Local</div>
-    <div class="rec-stat-bar">
-      <div class="rec-stat-bar-fill teal" style="width:0%"></div>
+
+  <!-- DRIVE MAIN CONTENT -->
+  <div class="drive-main">
+
+    <!-- Topbar Breadcrumbs & Search -->
+    <div class="drive-topbar">
+      <div class="breadcrumbs">
+        <a routerLink="/cameras" class="crumb-link">Mi Unidad VMS</a>
+        <span class="crumb-sep">›</span>
+        <span class="crumb-link">{{ cameraName() }}</span>
+        <span class="crumb-sep">›</span>
+        <span class="crumb-current">{{ selectedDate() || 'Seleccione una fecha' }}</span>
+      </div>
+
+      <div class="drive-actions">
+        <div class="drive-search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="search-icon">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" class="drive-search" placeholder="Buscar en carpeta..." [ngModel]="searchRec()"
+            (ngModelChange)="searchRec.set($event)">
+        </div>
+        <button class="btn-icon-drive" (click)="loadCloudRecordings(selectedDate())" title="Actualizar">🔄</button>
+      </div>
     </div>
-  </div>
-  <div class="rec-stat" [class.has-value]="0 > 0">
-    <div class="rec-stat-val amber">0</div>
-    <div class="rec-stat-lbl">Procesando</div>
-  </div>
+
+    <!-- Loading / Empty States -->
+    <div class="drive-empty" *ngIf="loadingRecordings()">
+      <div class="spinner"></div>
+      <p>Cargando directorio de grabaciones...</p>
+    </div>
+
+    <div class="drive-empty" *ngIf="!loadingRecordings() && filteredRecordings().length === 0">
+      <div class="empty-folder-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <h3>Carpeta Vacía</h3>
+      <p>Esta ruta NAS no contiene archivos MP4 grabados.</p>
+    </div>
+
+    <!-- Drive Files View (Grid Header) -->
+    <div class="drive-grid-header" *ngIf="!loadingRecordings() && filteredRecordings().length > 0">
+      <span>Nombre del archivo</span>
+      <span>Tamaño</span>
+      <span>Modificado</span>
+    </div>
+
+    <!-- Drive Files Grid -->
+    <div class="drive-files-container" *ngIf="!loadingRecordings() && filteredRecordings().length > 0">
+
+      <div class="drive-file-row" *ngFor="let file of filteredRecordings()" (click)="playCloudVideo(file.path)">
+        <div class="file-name-col">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"
+            class="file-icon">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+            <line x1="7" y1="2" x2="7" y2="22"></line>
+            <line x1="17" y1="2" x2="17" y2="22"></line>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <line x1="2" y1="7" x2="7" y2="7"></line>
+            <line x1="2" y1="17" x2="7" y2="17"></line>
+            <line x1="17" y1="17" x2="22" y2="17"></line>
+            <line x1="17" y1="7" x2="22" y2="7"></line>
+          </svg>
+          <span class="f-name">{{ file.filename || file.name }}</span>
+        </div>
+        <div class="file-size-col text-muted">{{ file.sizeMb | number:'1.1-1' }} MB</div>
+        <div class="file-date-col text-muted">{{ file.startTime | date:'HH:mm:ss' }}</div>
+
+        <div class="file-actions-hover">
+          <button class="hover-btn" (click)="playCloudVideo(file.path); $event.stopPropagation()"
+            title="Reproducir">▶</button>
+          <a class="hover-btn dl" [href]="getDownloadUrl(file.path)" target="_blank" (click)="$event.stopPropagation()"
+            title="Descargar">⬇</a>
+        </div>
+      </div>
+
+    </div>
+
+  </div> <!-- /drive-main -->
+
 </div>
 
-<!-- FILTERS ROW -->
-<div class="rec-filters">
-  <div class="rec-date-group">
-    <label>Fecha</label>
-    <input type="date" class="form-control date-input" [ngModel]="selectedDate()" (ngModelChange)="selectDate($event)">
+<!-- VIDEO PLAYER OVERLAY MODAL -->
+<div class="rec-player-overlay" *ngIf="currentVideoSource()">
+  <div class="rec-player-wrap">
+    <div class="rec-player-header">
+      <div class="now-playing-label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="10 8 16 12 10 16 10 8"></polygon>
+        </svg>
+        Reproduciendo Video NVR
+      </div>
+      <button class="close-btn" (click)="currentVideoSource.set(null)">✕ Cerrar</button>
+    </div>
+    <video #videoPlayer controls autoplay class="rec-player-video"></video>
   </div>
-  <input type="text" class="rec-search" placeholder="🔍 Buscar grabación..." [ngModel]="searchRec()"
-    (ngModelChange)="searchRec.set($event)">
-  <div class="filter-pills">
-    <button class="filter-pill" [class.active]="filterType() === 'all'" (click)="filterType.set('all')">Todas</button>
-    <button class="filter-pill" [class.active]="filterType() === 'cloud'" (click)="filterType.set('cloud')">☁
-      Cloud</button>
-  </div>
-</div>
-
-<!-- QUICK DATE PILLS -->
-<div class="quick-dates" *ngIf="availableDates().length > 0">
-  <small>Fechas con grabaciones disponibles:</small>
-  <div class="date-pills">
-    <span *ngFor="let d of availableDates()" class="date-pill" [class.active]="d === selectedDate()"
-      (click)="selectDate(d)">{{ d }}</span>
-  </div>
-</div>
-
-<!-- RECORDINGS TABLE -->
-<div class="rec-table-wrap">
-  <!-- Loading -->
-  <div class="rec-loading" *ngIf="loadingRecordings()">
-    <div class="spinner"></div>
-    <span>Cargando grabaciones...</span>
-  </div>
-
-  <!-- Table -->
-  <table class="rec-table" *ngIf="!loadingRecordings() && filteredRecordings().length > 0">
-    <thead>
-      <tr>
-        <th>Cámara / Archivo</th>
-        <th>Fecha·Hora Inicio</th>
-        <th>Tamaño</th>
-        <th>Tipo</th>
-        <th>Estado</th>
-        <th class="text-right">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let file of filteredRecordings(); let i = index" [class.even]="i % 2 === 0">
-        <td class="font-medium">{{ file.filename || file.name }}</td>
-        <td class="text-muted">{{ file.startTime | date:'yyyy-MM-dd HH:mm:ss' }}</td>
-        <td class="text-muted">{{ file.sizeMb | number:'1.1-1' }} MB</td>
-        <td><span class="badge active" style="font-size:10px;">Cloud NAS</span></td>
-        <td><span class="badge online">Lista</span></td>
-        <td class="text-right">
-          <button class="rec-btn-play" (click)="playCloudVideo(file.path)">▶ Reproducir</button>
-          <a class="rec-btn-dl" [href]="getDownloadUrl(file.path)" target="_blank">⬇ Descargar</a>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Empty state -->
-  <div class="rec-empty" *ngIf="!loadingRecordings() && filteredRecordings().length === 0">
-    <div class="empty-icon">🎞️</div>
-    <h3>Sin grabaciones</h3>
-    <p>No hay grabaciones cloud para la fecha seleccionada. Elige otro día con el selector o las pills superiores.</p>
-  </div>
-</div>
-
-<!-- VIDEO PLAYER -->
-<div class="rec-player-wrap" *ngIf="currentVideoSource()">
-  <div class="rec-player-header">
-    <div class="now-playing-label">▶ Reproduciendo</div>
-    <button class="close-btn" (click)="currentVideoSource.set(null)">✕ Cerrar</button>
-  </div>
-  <video #videoPlayer controls class="rec-player-video"></video>
 </div>

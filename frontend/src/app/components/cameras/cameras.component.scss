@@ -1,342 +1,329 @@
-// ─── FILTER BAR ──────────────────────────────────────────────────────────────
-.cam-filters {
+// ─── FILTER ROW (Pencil ref) ──────────────────────────────────────────────────
+.filter-row {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
     margin-bottom: 20px;
     flex-wrap: wrap;
+    background: rgba(15, 23, 42, 0.4);
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.cam-search {
-    flex: 1;
-    min-width: 220px;
-    max-width: 360px;
-    padding: 10px 14px;
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid var(--outline);
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--ink);
-    font-size: 14px;
-    font-family: inherit;
-    transition: border-color 0.2s;
-    backdrop-filter: blur(8px);
+    padding: 8px 14px;
+    flex: 1;
+    min-width: 200px;
+    max-width: 320px;
 
-    &::placeholder {
+    .search-icon {
         color: var(--muted);
     }
 
-    &:focus {
+    .search-input {
+        background: transparent;
+        border: none;
+        color: var(--ink);
+        font-size: 13px;
+        width: 100%;
         outline: none;
-        border-color: var(--accent);
+
+        &::placeholder {
+            color: var(--muted);
+        }
     }
 }
 
-.filter-pills {
-    display: flex;
-    gap: 8px;
-}
-
-.filter-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 999px;
-    border: 1px solid var(--outline);
-    background: transparent;
+.filter-btn {
+    padding: 9px 16px;
+    border-radius: 9px;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     color: var(--muted);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.15s;
-    font-family: inherit;
-
-    &:hover {
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--ink);
-    }
-
-    &.active {
-        background: rgba(19, 127, 236, 0.15);
-        border-color: rgba(19, 127, 236, 0.4);
-        color: #60a5fa;
-    }
-}
-
-.pill-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
-
-    &.online {
-        background: var(--green);
-    }
-
-    &.offline {
-        background: var(--red);
-    }
-}
-
-// ─── CAMERA CARDS GRID ───────────────────────────────────────────────────────
-.cam-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 18px;
-    margin-bottom: 20px;
-}
-
-.cam-card {
-    background: rgba(30, 41, 59, 0.55);
-    border-radius: 16px;
-    border: 1px solid var(--outline);
-    border-left: 4px solid transparent;
-    overflow: hidden;
-    backdrop-filter: blur(12px);
-    transition: all 0.25s ease;
-
-    &.online {
-        border-left-color: var(--green);
-    }
-
-    &.offline {
-        border-left-color: var(--red);
-    }
-
-    &:hover {
-        border-color: rgba(255, 255, 255, 0.18);
-        transform: translateY(-3px);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
-    }
-}
-
-// Thumbnail
-.cam-thumb {
-    position: relative;
-    aspect-ratio: 16 / 9;
-    background: #060a13;
-    cursor: pointer;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.cam-thumb-inner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-
-    // Subtle scan line effect for "camera" feel
-    &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: repeating-linear-gradient(0deg,
-                transparent,
-                transparent 3px,
-                rgba(255, 255, 255, 0.01) 3px,
-                rgba(255, 255, 255, 0.01) 4px);
-        pointer-events: none;
-    }
-}
-
-.cam-live-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: rgba(16, 185, 129, 0.85);
-    color: #fff;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    padding: 3px 8px;
-    border-radius: 4px;
-    backdrop-filter: blur(4px);
-}
-
-.live-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #fff;
-    display: inline-block;
-    animation: pulse-live 1.4s ease-in-out infinite;
-}
-
-@keyframes pulse-live {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.3;
-    }
-}
-
-.cam-offline-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    background: rgba(239, 68, 68, 0.8);
-    color: #fff;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    padding: 3px 8px;
-    border-radius: 4px;
-}
-
-.cam-type-badge {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    padding: 3px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-
-    &.cloud {
-        background: rgba(19, 127, 236, 0.75);
-        color: #fff;
-    }
-
-    &.nvr {
-        background: rgba(52, 211, 153, 0.75);
-        color: #fff;
-    }
-
-    &.sd {
-        background: rgba(245, 158, 11, 0.75);
-        color: #fff;
-    }
-}
-
-// Card body
-.cam-body {
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.cam-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--ink);
-    cursor: pointer;
-    text-decoration: none;
-    transition: color 0.2s;
-
-    &:hover {
-        color: var(--accent);
-    }
-}
-
-.cam-meta {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    font-size: 12px;
-    color: var(--muted);
-}
-
-.cam-rtsp {
-    font-size: 11px;
-    font-family: monospace;
-    color: #475569;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.cam-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-top: 4px;
-    flex-wrap: wrap;
-}
-
-.cam-btn-live {
+    transition: all 0.2s;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 6px 12px;
-    border-radius: 8px;
-    background: rgba(52, 211, 153, 0.12);
-    border: 1px solid rgba(52, 211, 153, 0.3);
-    color: #34d399;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: inherit;
-
-    &:hover {
-        background: rgba(52, 211, 153, 0.22);
-    }
-}
-
-.cam-btn-rec {
-    padding: 6px 12px;
-    border-radius: 8px;
-    background: rgba(19, 127, 236, 0.1);
-    border: 1px solid rgba(19, 127, 236, 0.25);
-    color: var(--accent);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s;
-    text-decoration: none;
-    display: inline-block;
-    font-family: inherit;
-
-    &:hover {
-        background: rgba(19, 127, 236, 0.2);
-    }
-}
-
-.cam-btn-more {
-    margin-left: auto;
-    display: flex;
-    gap: 4px;
-}
-
-.cam-btn-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 7px;
-    border: 1px solid var(--outline);
-    background: transparent;
-    color: var(--muted);
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    font-family: inherit;
+    gap: 6px;
 
     &:hover {
         background: rgba(255, 255, 255, 0.08);
         color: var(--ink);
     }
 
-    &.danger:hover {
-        background: rgba(239, 68, 68, 0.12);
-        border-color: rgba(239, 68, 68, 0.3);
-        color: var(--red);
+    &.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+    }
+}
+
+.dot-online {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #10b981;
+}
+
+.dot-offline {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #ef4444;
+}
+
+.gw-selector {
+    padding: 9px 14px;
+    border-radius: 9px;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    margin-left: auto;
+
+    &:focus {
+        border-color: var(--accent);
+    }
+}
+
+// ─── CAMERA GRID ─────────────────────────────────────────────────────────────
+.cam-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.cam-card {
+    background: rgba(30, 41, 59, 0.6);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, border-color 0.2s;
+
+    &:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* THUMBNAIL */
+.cam-thumb {
+    position: relative;
+    aspect-ratio: 16/9;
+    background: #0f172a;
+    width: 100%;
+    cursor: pointer;
+    overflow: hidden;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+
+    .cam-thumb-overlay {
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 255, 255, 0.02) 2px,
+            rgba(255, 255, 255, 0.02) 3px
+        );
+        pointer-events: none;
+        z-index: 10;
+    }
+
+    .play-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 36px;
+        height: 36px;
+        color: rgba(248, 250, 252, 0.85);
+        z-index: 11;
+        transition: transform 0.2s;
+    }
+
+    &:hover .play-icon {
+        transform: translate(-50%, -50%) scale(1.1);
+        color: #fff;
+    }
+
+    .thumb-status-badge {
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        background: rgba(15, 23, 42, 0.85);
+        padding: 4px 10px;
+        border-radius: 99px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        z-index: 12;
+
+        .live-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: #10b981;
+            &.offline { background: #ef4444; }
+            &.pulse { animation: pulse 1.5s infinite ease-in-out; }
+        }
+
+        .badge-text {
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+    }
+
+    .iot-telemetry {
+        position: absolute;
+        bottom: 10px;
+        left: 12px;
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 4px 8px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #f8fafc;
+        font-size: 11px;
+        font-weight: 600;
+        z-index: 12;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* BODY */
+.cam-body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cam-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    .cam-name {
+        color: #f8fafc;
+        font-size: 14px;
+        font-weight: 700;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .cam-type {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 3px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        background: rgba(245, 158, 11, 0.15); /* amber as default/SD */
+        color: #f59e0b;
+
+        &.cloud { background: rgba(19, 127, 236, 0.15); color: #60a5fa; }
+        &.nvr { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+    }
+}
+
+.cam-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .meta-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 12px;
+
+        svg {
+            opacity: 0.7;
+        }
+
+        .mono {
+            font-family: monospace;
+            font-size: 11px;
+            color: rgba(248, 250, 252, 0.7);
+        }
+    }
+}
+
+.cam-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+
+    .btn-live {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        flex: 1;
+        transition: background 0.2s;
+
+        &:hover { background: var(--accent-hover); }
+        &[disabled] { 
+            background: rgba(255,255,255,0.05); 
+            color: rgba(255,255,255,0.3); 
+            cursor: not-allowed; 
+        }
+    }
+
+    .btn-rec {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #f8fafc;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        flex: 1;
+        transition: all 0.2s;
+        text-align: center;
+        text-decoration: none;
+
+        &:hover { background: rgba(255, 255, 255, 0.05); }
+    }
+
+    .btn-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+
+        &:hover { background: rgba(255,255,255,0.05); color: #fff; }
     }
 }
 

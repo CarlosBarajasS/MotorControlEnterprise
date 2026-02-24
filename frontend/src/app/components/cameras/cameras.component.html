@@ -1,146 +1,180 @@
-<!-- TOPBAR -->
-<div class="topbar">
-    <div>
-        <h1>Cámaras IP</h1>
-        <p class="subtitle">Administra feeds RTSP, NVR y SD en el sistema Edge</p>
-    </div>
-    <div style="display:flex;gap:12px;align-items:center;">
-        <span class="badge active" style="font-size:13px;padding:7px 14px;">
-            {{ camerasOnline() }}/{{ filtered().length }} en línea
-        </span>
-        <button class="btn-secondary" (click)="loadData()">🔄 Actualizar</button>
-        <button class="btn-primary" (click)="openCreate()">+ Añadir Cámara</button>
-    </div>
-</div>
-
-<!-- FILTERS -->
-<div class="cam-filters">
-    <input class="cam-search" type="text" placeholder="🔍 Buscar cámara o ubicación..." [ngModel]="searchTerm()"
-        (ngModelChange)="searchTerm.set($event)">
-    <div class="filter-pills">
-        <button class="filter-pill" [class.active]="filterStatus() === 'all'"
-            (click)="filterStatus.set('all')">Todas</button>
-        <button class="filter-pill" [class.active]="filterStatus() === 'online'" (click)="filterStatus.set('online')">
-            <span class="pill-dot online"></span>Online
-        </button>
-        <button class="filter-pill" [class.active]="filterStatus() === 'offline'" (click)="filterStatus.set('offline')">
-            <span class="pill-dot offline"></span>Offline
-        </button>
-    </div>
-</div>
-
-<!-- CAMERA GRID CARDS -->
-<div class="cam-grid" *ngIf="filtered().length > 0">
-    <div class="cam-card" *ngFor="let cam of filtered()" [class.online]="isOnline(cam)"
-        [class.offline]="!isOnline(cam)">
-
-        <!-- Thumbnail / preview placeholder -->
-        <div class="cam-thumb" (click)="isOnline(cam) && viewStream(cam.id)">
-            <div class="cam-thumb-inner">
-                <svg *ngIf="!isOnline(cam)" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"
-                    viewBox="0 0 24 24" style="color:#f87171;opacity:0.5;">
-                    <path
-                        d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
-                </svg>
-                <svg *ngIf="isOnline(cam)" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"
-                    viewBox="0 0 24 24" style="color:#34d399;opacity:0.5;">
-                    <path d="M23 7l-7 5 7 5V7z" />
-                    <rect x="1" y="5" width="15" height="14" rx="2" />
-                </svg>
-            </div>
-
-            <!-- Live badge -->
-            <div class="cam-live-badge" *ngIf="isOnline(cam)">
-                <span class="live-dot"></span>EN VIVO
-            </div>
-            <div class="cam-offline-badge" *ngIf="!isOnline(cam)">SIN SEÑAL</div>
-
-            <!-- Stream type badge -->
-            <div class="cam-type-badge" [class.cloud]="cam.streamType === 'cloud'"
-                [class.nvr]="cam.streamType === 'nvr'" [class.sd]="cam.streamType === 'sd'">
-                {{ cam.streamType === 'cloud' ? 'Cloud NAS' : cam.streamType === 'nvr' ? 'NVR' : 'SD Card' }}
-            </div>
+<div class="clients-layout">
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div>
+            <h1>Cámaras IP</h1>
+            <p class="subtitle">Administra feeds RTSP, NVR y SD en el sistema Edge</p>
         </div>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <button class="btn-primary" (click)="openCreate()">+ Añadir Cámara</button>
+        </div>
+    </div>
 
-        <!-- Card body -->
-        <div class="cam-body">
-            <div class="cam-name" [routerLink]="['/cameras', cam.id]">{{ cam.name }}</div>
-            <div class="cam-meta">
-                <span class="cam-location">📍 {{ cam.location || 'Sin ubicación' }}</span>
-                <span class="cam-gw">Gateway: <span class="mono">{{ cam.clientId ? 'Asignado' : '—' }}</span></span>
-            </div>
-            <div class="cam-rtsp" [title]="cam.rtspUrl">{{ cam.rtspUrl }}</div>
+    <!-- FILTER ROW -->
+    <div class="filter-row">
+        <!-- Búsqueda -->
+        <div class="search-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input class="search-input" type="text" placeholder="Buscar cámara o ubicación..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
+        </div>
+        
+        <!-- Status Pills -->
+        <button class="filter-btn" [class.active]="filterStatus() === 'all'" (click)="filterStatus.set('all')">
+            Todas
+        </button>
+        <button class="filter-btn" [class.active]="filterStatus() === 'online'" (click)="filterStatus.set('online')">
+            <span class="dot-online"></span>EN VIVO
+        </button>
+        <button class="filter-btn" [class.active]="filterStatus() === 'offline'" (click)="filterStatus.set('offline')">
+            <span class="dot-offline"></span>OFFLINE
+        </button>
 
-            <!-- Actions -->
-            <div class="cam-actions">
-                <button class="cam-btn-live" *ngIf="isOnline(cam)" (click)="viewStream(cam.id)">
-                    <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M23 7l-7 5 7 5V7z" />
-                        <rect x="1" y="5" width="15" height="14" rx="2" fill="none" stroke="currentColor"
-                            stroke-width="2" />
+        <!-- Gateway Selector -->
+        <select class="gw-selector" [ngModel]="filterGateway()" (ngModelChange)="filterGateway.set($event)">
+            <option value="all">Todos los Gateways</option>
+            <option *ngFor="let client of clients()" [value]="client.id">
+                {{ client.name }}
+            </option>
+        </select>
+    </div>
+
+    <!-- CAMERA GRID CARDS -->
+    <div class="cam-grid" *ngIf="filtered().length > 0">
+        <div class="cam-card" *ngFor="let cam of filtered()">
+            
+            <!-- Thumbnail Section (16:9 ratio) -->
+            <div class="cam-thumb" (click)="viewStream(cam.id)">
+                <!-- Scan-line overlay -->
+                <div class="cam-thumb-overlay"></div>
+                
+                <!-- Play Icon (Center) -->
+                <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                </svg>
+
+                <!-- Top Left Status Badge -->
+                <div class="thumb-status-badge">
+                    <span class="live-dot" [class.pulse]="isOnline(cam)" [class.offline]="!isOnline(cam)"></span>
+                    <span class="badge-text">{{ isOnline(cam) ? 'EN VIVO' : 'SIN SEÑAL' }}</span>
+                </div>
+
+                <!-- Bottom Telemetry (fake IoT sensor) -->
+                <div class="iot-telemetry">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2">
+                        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
                     </svg>
-                    Ver en Vivo
-                </button>
-                <button class="cam-btn-rec" [routerLink]="['/recordings', cam.id]">🎞 Grabaciones</button>
-                <div class="cam-btn-more">
-                    <button class="cam-btn-icon" (click)="openEdit(cam)" title="Editar">✏️</button>
-                    <button class="cam-btn-icon danger" (click)="deleteCamera(cam.id)" title="Eliminar">🗑️</button>
+                    24°C
                 </div>
             </div>
+
+            <!-- Body Section -->
+            <div class="cam-body">
+                <div class="cam-head">
+                    <div class="cam-name">{{ cam.name }}</div>
+                    <div class="cam-type" [class.cloud]="cam.streamType === 'cloud'" [class.nvr]="cam.streamType === 'nvr'">
+                        {{ cam.streamType === 'cloud' ? 'Cloud NAS' : (cam.streamType === 'nvr' ? 'NVR Local' : 'SD Card') }}
+                    </div>
+                </div>
+
+                <div class="cam-meta">
+                    <div class="meta-row">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span>{{ cam.location || 'Sin ubicación' }}</span>
+                    </div>
+                    <div class="meta-row">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line>
+                        </svg>
+                        <span class="mono">{{ getGatewayName(cam.clientId) }}</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="cam-actions">
+                    <button class="btn-live" [disabled]="!isOnline(cam)" (click)="viewStream(cam.id)">
+                        Ver en Vivo
+                    </button>
+                    <button class="btn-rec" [routerLink]="['/recordings', cam.id]">
+                        Recordings
+                    </button>
+                    
+                    <button class="btn-icon" (click)="openEdit(cam)" title="Configuración">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>
+                    <!-- Eliminacion movida dentro de Editar Modal para no llenar la UI -->
+                </div>
+            </div>
+
         </div>
     </div>
-</div>
 
-<!-- EMPTY STATE -->
-<div class="cam-empty" *ngIf="filtered().length === 0 && !cameras().length">
-    <div class="empty-icon">📷</div>
-    <h3>Sin cámaras registradas</h3>
-    <p>Añade una cámara IP con el botón de arriba para comenzar el streaming.</p>
-    <button class="btn-primary" (click)="openCreate()">+ Añadir Primera Cámara</button>
-</div>
-<div class="cam-empty" *ngIf="filtered().length === 0 && cameras().length > 0">
-    <div class="empty-icon">🔍</div>
-    <h3>Sin resultados</h3>
-    <p>No hay cámaras que coincidan con los filtros seleccionados.</p>
-</div>
+    <!-- EMPTY STATE -->
+    <div class="cam-empty" *ngIf="filtered().length === 0 && !cameras().length">
+        <div class="empty-icon">📷</div>
+        <h3>Sin cámaras registradas</h3>
+        <p>Añade una cámara IP con el botón de arriba para comenzar el streaming.</p>
+        <button class="btn-primary" (click)="openCreate()">+ Añadir Primera Cámara</button>
+    </div>
+    <div class="cam-empty" *ngIf="filtered().length === 0 && cameras().length > 0">
+        <div class="empty-icon">🔍</div>
+        <h3>Sin resultados</h3>
+        <p>No hay cámaras que coincidan con los filtros seleccionados.</p>
+    </div>
 
-<!-- MODAL FORMULARIO -->
-<div class="modal-overlay" *ngIf="showModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-            <h2>{{ modalMode() === 'create' ? 'Añadir Cámara IP' : 'Editar Cámara IP' }}</h2>
-            <button class="close-btn" (click)="showModal.set(false)">✕</button>
-        </div>
-        <div class="modal-body" style="padding:24px;">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Alias / Nombre</label>
-                    <input type="text" [(ngModel)]="currentCamera().name" class="form-control"
-                        placeholder="Cámara Frontal">
+    <!-- MODAL FORMULARIO -->
+    <div class="modal-overlay" *ngIf="showModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>{{ modalMode() === 'create' ? 'Añadir Cámara IP' : 'Editar Cámara IP' }}</h2>
+                <button class="close-btn" (click)="showModal.set(false)">✕</button>
+            </div>
+            <div class="modal-body" style="padding:24px;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Alias / Nombre</label>
+                        <input type="text" [(ngModel)]="currentCamera().name" class="form-control" placeholder="Cámara Frontal">
+                    </div>
+                    <div class="form-group">
+                        <label>Ubicación Física</label>
+                        <input type="text" [(ngModel)]="currentCamera().location" class="form-control" placeholder="Pasillo A">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Ubicación Física</label>
-                    <input type="text" [(ngModel)]="currentCamera().location" class="form-control"
-                        placeholder="Pasillo A">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo de Grabación</label>
+                        <select [(ngModel)]="currentCamera().streamType" class="form-control">
+                            <option value="cloud">Cloud NAS</option>
+                            <option value="nvr">NVR Local</option>
+                            <option value="sd">Memoria SD (Edge)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Asignar a Gateway / Cliente</label>
+                        <select [(ngModel)]="currentCamera().clientId" class="form-control">
+                            <option value="">-- Sin Asignar --</option>
+                            <option *ngFor="let client of clients()" [value]="client.id">{{ client.name }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label>URL RTSP</label>
+                    <input type="text" [(ngModel)]="currentCamera().rtspUrl" class="form-control" placeholder="rtsp://admin:pass@192.168.1.100:554/stream1">
                 </div>
             </div>
-            <div class="form-group">
-                <label>URL RTSP</label>
-                <input type="text" [(ngModel)]="currentCamera().rtspUrl" class="form-control"
-                    placeholder="rtsp://admin:pass@192.168.1.100:554/stream1">
+            <div class="modal-footer" style="display: flex; justify-content: space-between;">
+                <button class="btn-secondary" style="border-color: #ef4444; color: #ef4444;" *ngIf="modalMode() === 'edit'" (click)="deleteCamera(currentCamera().id)">
+                    Eliminar Cámara
+                </button>
+                <div style="flex:1"></div>
+                <button class="btn-secondary" (click)="showModal.set(false)">Cancelar</button>
+                <button class="btn-primary" (click)="saveCamera()">Guardar Cámara</button>
             </div>
-            <div class="form-group">
-                <label>Asignar a Gateway / Cliente</label>
-                <select [(ngModel)]="currentCamera().clientId" class="form-control">
-                    <option value="">-- Sin Asignar --</option>
-                    <option *ngFor="let client of clients()" [value]="client.id">{{ client.name }} ({{ client.gatewayId
-                        }})</option>
-                </select>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-secondary" (click)="showModal.set(false)">Cancelar</button>
-            <button class="btn-primary" (click)="saveCamera()">Guardar Cámara</button>
         </div>
     </div>
 </div>
