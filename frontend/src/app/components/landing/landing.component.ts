@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -8,8 +8,11 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, RouterModule],
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss'],
-  encapsulation: ViewEncapsulation.None
 })
 export class LandingComponent {
-  // Scripts for smooth scrolling can go here, but pure CSS scroll-behavior: smooth handles most of it.
+  mockStats = [
+    { val: '12', lbl: 'Gateways', color: '#137fec' },
+    { val: '48', lbl: 'Cámaras', color: '#10b981' },
+    { val: '99%', lbl: 'Uptime', color: '#8b5cf6' },
+  ];
 }

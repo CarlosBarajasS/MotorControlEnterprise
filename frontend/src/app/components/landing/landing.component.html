@@ -1,393 +1,192 @@
-<div class="landing-page-wrapper">
-    <!-- NAV -->
-    <nav class="navbar">
-        <a routerLink="/" class="nav-brand">
-            <div class="nav-shield">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-            </div>
-            <span class="nav-name">NIRM <span>GROUP</span></span>
+<div class="lp-root">
+
+    <!-- ═══ NAVBAR ═══ -->
+    <nav class="lp-nav">
+        <a routerLink="/" class="lp-brand">
+            <div class="lp-brand-icon">m</div>
+            <span class="lp-brand-name">MotorControl <strong>Enterprise</strong></span>
         </a>
-        <div class="nav-links">
-            <a href="#nosotros" class="nav-link">Nosotros</a>
-            <a href="#vision" class="nav-link">Visión</a>
-            <a href="#servicios" class="nav-link">Servicios</a>
-            <a href="#politica" class="nav-link">Política</a>
-            <a href="#contacto" class="nav-link">Contacto</a>
+        <div class="lp-nav-links">
+            <a href="#plataforma" class="lp-nav-link">Plataforma</a>
+            <a href="#edge" class="lp-nav-link">Edge</a>
+            <a href="#seguridad" class="lp-nav-link">Seguridad</a>
+            <a href="#precios" class="lp-nav-link">Precios</a>
         </div>
-        <a routerLink="/login" class="nav-cta">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M23 7l-7 5 7 5V7z" />
-                <rect x="1" y="5" width="15" height="14" rx="2" />
-            </svg>
-            Portal de Cliente
-        </a>
+        <a routerLink="/login" class="lp-nav-cta">Solicitar Demo →</a>
     </nav>
 
-    <!-- HERO -->
-    <section class="hero">
-        <div class="hero-badge">
-            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Seguridad y Vigilancia Profesional
+    <!-- ═══ HERO ═══ -->
+    <section class="lp-hero" id="plataforma">
+        <div class="lp-hero-left">
+            <div class="lp-badge">✦ PLATAFORMA EDGE-FIRST</div>
+            <h1 class="lp-hero-h1">
+                Videovigilancia<br>
+                <span class="lp-accent">inteligente</span> al borde
+            </h1>
+            <p class="lp-hero-sub">
+                Unifica tus flujos RTSP, gestiona gateways distribuidos y blinda el
+                acceso con IAM de confianza cero. Todo en un solo panel de cristal.
+            </p>
+            <div class="lp-hero-ctas">
+                <a routerLink="/login" class="lp-btn-primary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M23 7l-7 5 7 5V7z" />
+                        <rect x="1" y="5" width="15" height="14" rx="2" />
+                    </svg>
+                    Ver Demo en Vivo
+                </a>
+                <a href="#plataforma" class="lp-btn-ghost">Explorar Plataforma</a>
+            </div>
+            <div class="lp-trust-line">
+                <span>✓ Sin instalación en nube</span>
+                <span>✓ Edge-first</span>
+                <span>✓ 99.9% uptime</span>
+            </div>
         </div>
-        <h1>Protegemos lo que<br>más <span class="blue">te importa</span></h1>
-        <p class="hero-sub">
-            NIRM GROUP es tu aliado en seguridad electrónica. Diseñamos e implementamos
-            soluciones de videovigilancia de clase empresarial para proteger tu negocio, instalaciones
-            y activos con tecnología de vanguardia.
-        </p>
-        <div class="hero-actions">
-            <a routerLink="/login" class="btn-hero-primary">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M23 7l-7 5 7 5V7z" />
-                    <rect x="1" y="5" width="15" height="14" rx="2" />
-                </svg>
-                Acceder a mi Portal
+        <div class="lp-hero-right">
+            <div class="lp-dashboard-mock">
+                <!-- NVR panel mockup inside hero -->
+                <div class="mock-nav">
+                    <span class="mock-dot red"></span><span class="mock-dot yellow"></span><span
+                        class="mock-dot green"></span>
+                    <span class="mock-url">motorcontrol.enterprise / dashboard</span>
+                </div>
+                <div class="mock-body">
+                    <div class="mock-grid">
+                        <div class="mock-cell" *ngFor="let i of [1,2,3,4]">
+                            <div class="mock-cell-overlay">
+                                <span class="mock-cell-status online">
+                                    <span class="dot-live"></span>EN VIVO
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mock-sidebar">
+                        <div class="mock-stat" *ngFor="let s of mockStats">
+                            <div class="mock-stat-val" [style.color]="s.color">{{ s.val }}</div>
+                            <div class="mock-stat-lbl">{{ s.lbl }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ TRUST BAR ═══ -->
+    <div class="lp-trust-bar">
+        <p class="lp-trust-label">LA INFRAESTRUCTURA ELEGIDA POR LÍDERES INDUSTRIALES</p>
+        <div class="lp-trust-logos">
+            <span>ACME Corp</span>
+            <span>GlobalLogistics</span>
+            <span>TechFab</span>
+            <span>NIRM Systems</span>
+            <span>IndustrialX</span>
+        </div>
+    </div>
+
+    <!-- ═══ FEATURES ═══ -->
+    <section class="lp-features" id="edge">
+        <div class="lp-section-hdr">
+            <p class="lp-section-label">ARQUITECTURA MODULAR</p>
+            <h2>Arquitectura de Próxima Generación</h2>
+            <p class="lp-section-sub">Tres pilares diseñados para operar donde la conexión cloud no llega.</p>
+        </div>
+        <div class="lp-features-grid">
+            <div class="lp-feature-card">
+                <div class="lp-feat-icon blue">🎥</div>
+                <h3>NVR Nativo en HLS</h3>
+                <p>Transcodifica feeds RTSP a HLS directamente en el edge. Sin retraso, sin latencia cloud.
+                    Visualización en vivo integrada al dashboard.</p>
+                <div class="lp-feat-tag">Video Edge</div>
+            </div>
+            <div class="lp-feature-card">
+                <div class="lp-feat-icon green">⚡</div>
+                <h3>Gateways Distribuidos</h3>
+                <p>Administra múltiples nodos edge desde un panel central. Monitoreo de salud, conectividad y alertas en
+                    tiempo real por gateway.</p>
+                <div class="lp-feat-tag">Edge Computing</div>
+            </div>
+            <div class="lp-feature-card" id="seguridad">
+                <div class="lp-feat-icon purple">🔐</div>
+                <h3>IAM de Confianza Cero</h3>
+                <p>Roles granulares por planta, 2FA obligatorio y auditoría completa de accesos por operario. Control de
+                    identidad que no negocia.</p>
+                <div class="lp-feat-tag">Seguridad IAM</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ METRICS STRIP ═══ -->
+    <div class="lp-metrics">
+        <div class="lp-metric">
+            <div class="lp-metric-val blue">12ms</div>
+            <div class="lp-metric-lbl">LATENCIA EDGE PROMEDIO</div>
+        </div>
+        <div class="lp-metric-divider"></div>
+        <div class="lp-metric">
+            <div class="lp-metric-val green">99.9%</div>
+            <div class="lp-metric-lbl">UPTIME GARANTIZADO</div>
+        </div>
+        <div class="lp-metric-divider"></div>
+        <div class="lp-metric">
+            <div class="lp-metric-val purple">90k+</div>
+            <div class="lp-metric-lbl">CÁMARAS SOPORTADAS</div>
+        </div>
+        <div class="lp-metric-divider"></div>
+        <div class="lp-metric">
+            <div class="lp-metric-val amber">AES-256</div>
+            <div class="lp-metric-lbl">ENCRIPTACIÓN EN TRÁNSITO</div>
+        </div>
+    </div>
+
+    <!-- ═══ FINAL CTA ═══ -->
+    <section class="lp-cta-section" id="precios">
+        <div class="lp-cta-card">
+            <p class="lp-section-label">ACCESO A LA PLATAFORMA</p>
+            <h2>¿Listo para ver tu red<br>en tiempo real?</h2>
+            <p>Empieza a monitorear tu infraestructura de videovigilancia distribuida con capacidades edge el mismo día.
+            </p>
+            <a routerLink="/login" class="lp-btn-primary lp-btn-lg">
+                Solicitar una Demo Técnica
             </a>
-            <a href="#servicios" class="btn-hero-outline">Conocer nuestros servicios</a>
-        </div>
-        <div class="hero-stats">
-            <div class="hstat">
-                <div class="hstat-val">+500</div>
-                <div class="hstat-label">Cámaras instaladas</div>
-            </div>
-            <div class="hstat">
-                <div class="hstat-val">24/7</div>
-                <div class="hstat-label">Monitoreo continuo</div>
-            </div>
-            <div class="hstat">
-                <div class="hstat-val">99.9%</div>
-                <div class="hstat-label">Uptime garantizado</div>
-            </div>
-            <div class="hstat">
-                <div class="hstat-val">+5 años</div>
-                <div class="hstat-label">De experiencia</div>
-            </div>
+            <p class="lp-cta-note">Sin tarjeta de crédito · Onboarding guiado · Soporte técnico incluido</p>
         </div>
     </section>
 
-    <!-- ABOUT -->
-    <section class="section section-light" id="nosotros">
-        <div class="container">
-            <div class="section-label blue">Nuestra Empresa</div>
-            <h2 class="section-title">¿Quiénes somos?</h2>
-            <div class="about-grid">
-                <div>
-                    <div class="divider-blue"></div>
-                    <p class="section-desc muted" style="margin-bottom:16px;">
-                        NIRM GROUP es una empresa especializada en seguridad electrónica y videovigilancia profesional,
-                        con presencia en el sector residencial, comercial e industrial. Nacimos con el propósito
-                        de ofrecer soluciones tecnológicas integrales que brinden paz y tranquilidad a nuestros
-                        clientes.
-                    </p>
-                    <p class="section-desc muted" style="margin-bottom:24px;">
-                        Contamos con un equipo de ingenieros y técnicos certificados en las principales marcas del
-                        mercado, respaldados por una infraestructura de monitoreo centralizado que opera las
-                        24 horas del día, los 365 días del año.
-                    </p>
-                    <div class="about-pills">
-                        <span class="pill">Hikvision Certified</span>
-                        <span class="pill">Monitoreo 24/7</span>
-                        <span class="pill">Instalación profesional</span>
-                        <span class="pill">Soporte técnico</span>
-                        <span class="pill">Grabación en nube</span>
-                    </div>
+    <!-- ═══ FOOTER ═══ -->
+    <footer class="lp-footer">
+        <div class="lp-footer-inner">
+            <div class="lp-footer-brand">
+                <div class="lp-brand-sm">
+                    <div class="lp-brand-icon sm">m</div>
+                    <span>MotorControl</span>
                 </div>
-                <div class="about-img" style="background:var(--dark);">
-                    <div class="about-img-bg"></div>
-                    <div class="about-img-icon">
-                        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        </svg>
-                    </div>
-                </div>
+                <p>Plataforma de videovigilancia IoT y monitoreo edge distribuido.</p>
+            </div>
+            <div class="lp-footer-col">
+                <h4>PLATAFORMA</h4>
+                <a href="#plataforma">Dashboard</a>
+                <a href="#edge">Edge Gateway</a>
+                <a href="#edge">NVR en Vivo</a>
+                <a href="#seguridad">Seguridad IAM</a>
+            </div>
+            <div class="lp-footer-col">
+                <h4>COMPAÑÍA</h4>
+                <a href="#">Nosotros</a>
+                <a href="#">Blog</a>
+                <a href="#">Carreras</a>
+            </div>
+            <div class="lp-footer-col">
+                <h4>LEGAL</h4>
+                <a href="#">Privacidad</a>
+                <a href="#">Términos</a>
+                <a href="#">SLA</a>
             </div>
         </div>
-    </section>
-
-    <!-- VISION -->
-    <section class="section section-navy" id="vision">
-        <div class="container">
-            <div class="section-label light">Nuestra Identidad</div>
-            <h2 class="section-title" style="color:#E2EAF5;">Visión, Misión y Valores</h2>
-            <p class="section-desc muted2">Los principios que guían cada decisión, cada instalación y cada servicio que
-                brindamos.</p>
-            <div class="vmv-grid">
-                <!-- Visión -->
-                <div class="vmv-card">
-                    <div class="vmv-num">01 — Visión</div>
-                    <div class="vmv-icon">
-                        <svg width="24" height="24" fill="none" stroke="#60A5FA" stroke-width="1.8" viewBox="0 0 24 24"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="3" />
-                            <path d="M2 12s3.27-7 10-7 10 7 10 7-3.27 7-10 7S2 12 2 12z" />
-                        </svg>
-                    </div>
-                    <h3>Líderes en seguridad</h3>
-                    <p>Ser la empresa de seguridad electrónica más confiable y reconocida en México, distinguiéndonos
-                        por la calidad de nuestras soluciones, la satisfacción de nuestros clientes y la innovación
-                        tecnológica constante en cada uno de nuestros proyectos.</p>
-                </div>
-                <!-- Misión -->
-                <div class="vmv-card">
-                    <div class="vmv-num">02 — Misión</div>
-                    <div class="vmv-icon">
-                        <svg width="24" height="24" fill="none" stroke="#60A5FA" stroke-width="1.8" viewBox="0 0 24 24"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <polygon
-                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                        </svg>
-                    </div>
-                    <h3>Proteger con tecnología</h3>
-                    <p>Diseñar, instalar y administrar soluciones de videovigilancia y seguridad electrónica a la medida
-                        de las necesidades de cada cliente, garantizando la protección de sus instalaciones, activos y
-                        personas con la más alta tecnología disponible en el mercado.</p>
-                </div>
-                <!-- Valores -->
-                <div class="vmv-card">
-                    <div class="vmv-num">03 — Valores</div>
-                    <div class="vmv-icon">
-                        <svg width="24" height="24" fill="none" stroke="#60A5FA" stroke-width="1.8" viewBox="0 0 24 24"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path
-                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                        </svg>
-                    </div>
-                    <h3>Compromiso e integridad</h3>
-                    <p><strong style="color:#93C5FD;">Confianza</strong> — Construimos relaciones duraderas basadas en
-                        la transparencia.<br><br>
-                        <strong style="color:#93C5FD;">Compromiso</strong> — Cumplimos lo que prometemos,
-                        siempre.<br><br>
-                        <strong style="color:#93C5FD;">Innovación</strong> — Adoptamos la mejor tecnología para nuestros
-                        clientes.<br><br>
-                        <strong style="color:#93C5FD;">Respeto</strong> — Tratamos a cada cliente y colaborador con
-                        dignidad.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- SERVICES -->
-    <section class="section section-soft" id="servicios">
-        <div class="container">
-            <div class="section-label blue">Lo que ofrecemos</div>
-            <h2 class="section-title">Nuestros Servicios</h2>
-            <p class="section-desc muted">Soluciones integrales de seguridad diseñadas para proteger tu negocio desde el
-                primer día.</p>
-            <div class="services-grid">
-                <div class="srv-card">
-                    <div class="srv-icon">
-                        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M23 7l-7 5 7 5V7z" />
-                            <rect x="1" y="5" width="15" height="14" rx="2" />
-                        </svg>
-                    </div>
-                    <h3>Videovigilancia HD</h3>
-                    <p>Instalación de sistemas de cámaras de alta definición (4K, Full HD) para interiores y exteriores,
-                        con visualización remota en tiempo real desde cualquier dispositivo.</p>
-                </div>
-                <div class="srv-card">
-                    <div class="srv-icon">
-                        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
-                        </svg>
-                    </div>
-                    <h3>Grabación en Nube</h3>
-                    <p>Almacenamiento seguro y encriptado de grabaciones en la nube. Acceso a historial de video de
-                        hasta 30 días con búsqueda por fecha y hora desde tu portal privado.</p>
-                </div>
-                <div class="srv-card">
-                    <div class="srv-icon">
-                        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10" />
-                            <polyline points="12 6 12 12 16 14" />
-                        </svg>
-                    </div>
-                    <h3>Monitoreo 24/7</h3>
-                    <p>Centro de monitoreo activo las 24 horas del día, los 365 días del año. Nuestro equipo responde de
-                        inmediato ante cualquier alerta o incidente detectado.</p>
-                </div>
-                <div class="srv-card">
-                    <div class="srv-icon">
-                        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                        </svg>
-                    </div>
-                    <h3>Control PTZ Remoto</h3>
-                    <p>Cámaras motorizadas con control de paneo, inclinación y zoom operables desde tu portal web. Cubre
-                        ángulos amplios sin puntos ciegos en tu instalación.</p>
-                </div>
-                <div class="srv-card">
-                    <div class="srv-icon">
-                        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="2" width="20" height="20" rx="2.18" />
-                            <line x1="7" y1="2" x2="7" y2="13" />
-                            <line x1="12" y1="2" x2="12" y2="13" />
-                            <line x1="17" y1="2" x2="17" y2="13" />
-                        </svg>
-                    </div>
-                    <h3>Respaldo en Tarjeta SD</h3>
-                    <p>Grabación local en la memoria interna de la cámara como respaldo ante cortes de internet. Acceso
-                        al historial de la SD directamente desde tu portal de cliente.</p>
-                </div>
-                <div class="srv-card">
-                    <div class="srv-icon">
-                        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path
-                                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                        </svg>
-                    </div>
-                    <h3>Mantenimiento Preventivo</h3>
-                    <p>Programa de mantenimiento periódico para garantizar el óptimo funcionamiento de tu sistema.
-                        Limpieza de lentes, actualización de firmware y revisión de configuraciones.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- POLICY -->
-    <section class="section section-dark" id="politica">
-        <div class="container">
-            <div class="section-label light">Nuestros compromisos</div>
-            <h2 class="section-title" style="color:#E2EAF5;">Política Empresarial</h2>
-            <p class="section-desc muted2" style="margin-bottom:0;">Nos regimos por estándares claros de calidad,
-                privacidad y ética en cada uno de nuestros servicios.</p>
-            <div class="policy-grid">
-                <div class="pol-card">
-                    <h4>
-                        <svg width="18" height="18" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        </svg>
-                        Política de Privacidad y Datos
-                    </h4>
-                    <p>Toda la información de video, datos personales e información de acceso de nuestros clientes es
-                        tratada con estricta confidencialidad. Los registros de video son propiedad exclusiva del
-                        cliente y únicamente son accesibles por el titular de la cuenta. NIRM GROUP no comparte ni vende
-                        información a terceros bajo ninguna circunstancia.</p>
-                </div>
-                <div class="pol-card">
-                    <h4>
-                        <svg width="18" height="18" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24">
-                            <polyline points="9 11 12 14 22 4" />
-                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                        </svg>
-                        Política de Calidad
-                    </h4>
-                    <p>Nos comprometemos a instalar únicamente equipos de marcas certificadas y a cumplir con los
-                        estándares más altos de instalación. Todos nuestros proyectos cuentan con garantía de
-                        instalación y soporte técnico post-venta para asegurar la plena satisfacción del cliente.</p>
-                </div>
-                <div class="pol-card">
-                    <h4>
-                        <svg width="18" height="18" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="12" y1="8" x2="12" y2="12" />
-                            <line x1="12" y1="16" x2="12.01" y2="16" />
-                        </svg>
-                        Política de Transparencia
-                    </h4>
-                    <p>Informamos a nuestros clientes de manera clara y oportuna sobre el funcionamiento de su sistema,
-                        los servicios contratados, costos, renovaciones y cualquier cambio relevante. No existen costos
-                        ocultos ni cláusulas abusivas en nuestros contratos de servicio.</p>
-                </div>
-                <div class="pol-card">
-                    <h4>
-                        <svg width="18" height="18" fill="none" stroke="#60A5FA" stroke-width="2" viewBox="0 0 24 24">
-                            <path
-                                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8a16 16 0 0 0 6 6l.27-.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21 16z" />
-                        </svg>
-                        Política de Atención
-                    </h4>
-                    <p>Nos comprometemos a responder a cualquier reporte o solicitud de soporte técnico en un plazo
-                        máximo de 4 horas hábiles. Para emergencias de seguridad contamos con una línea de atención
-                        disponible las 24 horas del día para nuestros clientes activos.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA PORTAL -->
-    <section class="cta-wrap" id="contacto">
-        <div class="container">
-            <div
-                style="display:inline-flex;align-items:center;gap:8px;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.3);border-radius:20px;padding:6px 16px;margin-bottom:20px;font-size:12px;font-weight:600;color:#93C5FD;letter-spacing:0.06em;text-transform:uppercase;">
-                <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23 7l-7 5 7 5V7z" />
-                    <rect x="1" y="5" width="15" height="14" rx="2" fill="currentColor" stroke="none" />
-                </svg>
-                Portal exclusivo para clientes
-            </div>
-            <h2>¿Ya eres cliente de NIRM GROUP?</h2>
-            <p>Accede a tu portal privado para ver tus cámaras en vivo, revisar grabaciones y gestionar tu sistema de
-                videovigilancia.</p>
-            <a routerLink="/login" class="btn-hero-primary" style="display:inline-flex;">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
-                </svg>
-                Ingresar al Portal
-            </a>
-            <p style="margin-top:20px;font-size:13px;color:rgba(226,234,245,0.4);">¿No tienes acceso aún? Contáctanos
-                para contratar nuestros servicios.</p>
-        </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer>
-        <div class="footer-inner">
-            <div class="footer-brand">
-                <div class="fb-logo">
-                    <div class="nav-shield">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        </svg>
-                    </div>
-                    <span class="fb-name">NIRM <span>GROUP</span></span>
-                </div>
-                <p>Empresa especializada en seguridad electrónica y videovigilancia profesional. Protegemos lo que más
-                    te importa.</p>
-            </div>
-            <div class="footer-col">
-                <h4>Navegación</h4>
-                <a href="#nosotros">Quiénes somos</a>
-                <a href="#vision">Visión y Misión</a>
-                <a href="#servicios">Servicios</a>
-                <a href="#politica">Política Empresarial</a>
-            </div>
-            <div class="footer-col">
-                <h4>Contacto</h4>
-                <p>📧 contacto&#64;nirmgroup.com</p>
-                <p>📞 +52 (55) 0000-0000</p>
-                <p>📍 México</p>
-                <a routerLink="/login"
-                    style="margin-top:12px;display:inline-flex;align-items:center;gap:6px;color:#93C5FD;font-weight:600;">Portal
-                    de Cliente →</a>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <span>© 2026 NIRM GROUP · Todos los derechos reservados</span>
-            <span>Seguridad Electrónica y Videovigilancia Profesional</span>
-            <a routerLink="/login" title="Acceso institucional"
-                style="color:rgba(226,234,245,0.12);transition:color 0.2s;text-decoration:none;font-size:11px;"
-                onmouseover="this.style.color='rgba(226,234,245,0.4)'"
-                onmouseout="this.style.color='rgba(226,234,245,0.12)'">
-                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-            </a>
+        <div class="lp-footer-bottom">
+            <span>© 2026 MotorControl Enterprise · Todos los derechos reservados</span>
+            <a routerLink="/login" class="lp-footer-login">Portal →</a>
         </div>
     </footer>
+
 </div>
