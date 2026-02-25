@@ -68,8 +68,31 @@
             </div>
         </div>
         <div class="lp-hero-right">
-            <div class="lp-nvr-illustration">
-                <img src="/nvr-illustration.png" alt="NIRM GROUP NVR System Illustration">
+            <div class="lp-dashboard-mock">
+                <!-- NVR panel mockup inside hero -->
+                <div class="mock-nav">
+                    <div class="mac-dots">
+                        <span class="mock-dot red"></span><span class="mock-dot yellow"></span><span
+                            class="mock-dot green"></span>
+                    </div>
+                    <span class="mock-url">nirm.group / dashboard</span>
+                </div>
+                <div class="mock-body">
+                    <div class="mock-grid">
+                        <div class="mock-cell" *ngFor="let i of [1,2,3,4,5,6]">
+                            <img [src]="'assets/cctv-' + i + '.png'" alt="Cam live feed" class="cctv-feed">
+                            <div class="mock-cell-overlay top-right">
+                                <span class="mock-cell-status online">
+                                    <span class="dot-live"></span>LIVE
+                                </span>
+                            </div>
+                            <div class="mock-cell-overlay bottom-left">
+                                <span class="mock-cam-name">CAM 0{{ i }} - SECTOR {{ ['A', 'D', 'B', 'Z', 'C', 'X'][i-1]
+                                    }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
