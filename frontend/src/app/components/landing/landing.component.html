@@ -66,37 +66,10 @@
                 </a>
                 <a href="#plataforma" class="lp-btn-ghost">Explorar Plataforma</a>
             </div>
-            <div class="lp-trust-line">
-                <span>✓ Sin instalación en nube</span>
-                <span>✓ Edge-first</span>
-                <span>✓ 99.9% uptime</span>
-            </div>
         </div>
         <div class="lp-hero-right">
-            <div class="lp-dashboard-mock">
-                <!-- NVR panel mockup inside hero -->
-                <div class="mock-nav">
-                    <span class="mock-dot red"></span><span class="mock-dot yellow"></span><span
-                        class="mock-dot green"></span>
-                    <span class="mock-url">nirm.group / dashboard</span>
-                </div>
-                <div class="mock-body">
-                    <div class="mock-grid">
-                        <div class="mock-cell" *ngFor="let i of [1,2,3,4]">
-                            <div class="mock-cell-overlay">
-                                <span class="mock-cell-status online">
-                                    <span class="dot-live"></span>EN VIVO
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mock-sidebar">
-                        <div class="mock-stat" *ngFor="let s of mockStats">
-                            <div class="mock-stat-val" [style.color]="s.color">{{ s.val }}</div>
-                            <div class="mock-stat-lbl">{{ s.lbl }}</div>
-                        </div>
-                    </div>
-                </div>
+            <div class="lp-nvr-illustration">
+                <img src="/nvr-illustration.png" alt="NIRM GROUP NVR System Illustration">
             </div>
         </div>
     </section>
@@ -221,5 +194,13 @@
             <a routerLink="/login" class="lp-footer-login">Portal →</a>
         </div>
     </footer>
+
+    <!-- ═══ SCROLL TO TOP ═══ -->
+    <button class="lp-scroll-top" [class.visible]="showScrollTop" (click)="scrollToTop()" aria-label="Volver arriba">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 15l-6-6-6 6" />
+        </svg>
+    </button>
 
 </div>
