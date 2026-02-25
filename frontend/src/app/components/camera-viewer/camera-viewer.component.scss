@@ -25,14 +25,14 @@
 .loading-state,
 .error-state {
     text-align: center;
-    color: #94a3b8;
+    color: var(--muted);
 
     p {
         margin: 1rem 0 0.25rem;
     }
 
     small {
-        color: #64748b;
+        color: var(--muted);
         font-family: monospace;
     }
 
@@ -43,15 +43,15 @@
 
     button {
         margin-top: 1rem;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(var(--ink-rgb), 0.1);
+        border: 1px solid rgba(var(--ink-rgb), 0.2);
         color: white;
         padding: 0.5rem 1rem;
         border-radius: 0.25rem;
         cursor: pointer;
 
         &:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(var(--ink-rgb), 0.2);
         }
     }
 }
@@ -84,7 +84,7 @@
         letter-spacing: 0.05em;
 
         &.live {
-            color: #ef4444;
+            color: var(--red);
         }
 
         &.live::before {
@@ -92,7 +92,7 @@
             display: inline-block;
             width: 6px;
             height: 6px;
-            background: #ef4444;
+            background: var(--red);
             border-radius: 50%;
             margin-right: 6px;
             animation: pulse 2s infinite;

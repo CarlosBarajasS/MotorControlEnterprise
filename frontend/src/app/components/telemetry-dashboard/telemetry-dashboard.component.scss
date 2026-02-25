@@ -1,6 +1,6 @@
 .telemetry-dashboard-container {
     font-family: 'IBM Plex Sans', sans-serif;
-    color: #1e293b;
+    color: var(--surface);
     margin-top: 20px;
 
     .stats-grid {
@@ -23,7 +23,7 @@
         }
 
         h3 {
-            color: #64748b;
+            color: var(--muted);
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -33,11 +33,11 @@
         .value {
             font-size: 2rem;
             font-weight: 700;
-            color: #0f172a;
+            color: var(--nav);
         }
 
         .subtitle {
-            color: #94a3b8;
+            color: var(--muted);
             font-size: 0.75rem;
             margin-top: 4px;
         }
@@ -67,11 +67,11 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 
         &.online {
-            border-left: 4px solid #10b981;
+            border-left: 4px solid var(--green);
         }
 
         &.offline {
-            border-left: 4px solid #ef4444;
+            border-left: 4px solid var(--red);
         }
 
         .device-header {
@@ -83,7 +83,7 @@
             .device-id {
                 font-weight: 600;
                 font-size: 1rem;
-                color: #0f172a;
+                color: var(--nav);
             }
 
             .status-badge {
@@ -110,7 +110,7 @@
             gap: 12px;
 
             .telemetry-item {
-                background: #f8fafc;
+                background: var(--ink);
                 padding: 10px;
                 border-radius: 8px;
                 border: 1px solid #f1f5f9;
@@ -118,14 +118,14 @@
                 label {
                     display: block;
                     font-size: 0.75rem;
-                    color: #64748b;
+                    color: var(--muted);
                     margin-bottom: 4px;
                 }
 
                 .value {
                     font-size: 1.1rem;
                     font-weight: 600;
-                    color: #1e293b;
+                    color: var(--surface);
                 }
             }
         }
@@ -133,18 +133,18 @@
         .device-footer {
             margin-top: 14px;
             font-size: 0.75rem;
-            color: #94a3b8;
+            color: var(--muted);
             text-align: right;
         }
     }
 
     .no-devices {
         text-align: center;
-        background: #f8fafc;
+        background: var(--ink);
         border: 1px dashed #cbd5e1;
         padding: 40px;
         border-radius: 12px;
-        color: #64748b;
+        color: var(--muted);
         margin-bottom: 30px;
     }
 
@@ -158,7 +158,7 @@
         h3 {
             font-size: 1.1rem;
             font-weight: 600;
-            color: #1e293b;
+            color: var(--surface);
             margin-top: 0;
             margin-bottom: 20px;
         }

@@ -17,7 +17,7 @@
             display: block;
             font-size: 0.85rem;
             font-weight: 600;
-            color: #475569;
+            color: var(--nav-muted);
             margin-bottom: 6px;
         }
 
@@ -56,7 +56,7 @@
     border-radius: 12px;
     border: 1px dashed #cbd5e1;
     text-align: center;
-    color: #64748b;
+    color: var(--muted);
 
     .icon {
         font-size: 3rem;

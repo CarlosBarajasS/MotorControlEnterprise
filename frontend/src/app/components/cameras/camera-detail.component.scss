@@ -1,7 +1,7 @@
 .layout-container {
   padding: 30px;
   font-family: 'IBM Plex Sans', sans-serif;
-  color: #1e293b;
+  color: var(--surface);
 
   .back-link {
     color: var(--accent);
@@ -47,7 +47,7 @@
   }
 
   .video-card {
-    background: #0f172a; // Darker logic for video
+    background: var(--nav); // Darker logic for video
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -68,7 +68,7 @@
 
     .video-footer {
       padding: 12px 18px;
-      background: #1e293b;
+      background: var(--surface);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -112,7 +112,7 @@
     h3 {
       font-size: 1.15rem;
       margin: 0 0 16px 0;
-      color: #0f172a;
+      color: var(--nav);
       display: flex;
       align-items: center;
 
@@ -126,7 +126,7 @@
   .ptz-panel {
     .help-text {
       font-size: 0.85rem;
-      color: #64748b;
+      color: var(--muted);
       margin-top: -8px;
       margin-bottom: 20px;
       line-height: 1.4;
@@ -145,7 +145,7 @@
         border: 1px solid #cbd5e1;
         border-radius: 12px;
         font-size: 1.5rem;
-        color: #475569;
+        color: var(--nav-muted);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -205,7 +205,7 @@
         gap: 4px;
 
         strong {
-          color: #475569;
+          color: var(--nav-muted);
         }
 
         &:last-child {

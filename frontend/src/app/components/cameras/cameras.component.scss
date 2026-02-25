@@ -5,18 +5,18 @@
     gap: 10px;
     margin-bottom: 20px;
     flex-wrap: wrap;
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(var(--nav-rgb), 0.4);
     padding: 10px 14px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(var(--ink-rgb), 0.05);
 }
 
 .search-box {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(var(--nav-rgb), 0.6);
+    border: 1px solid rgba(var(--ink-rgb), 0.08);
     border-radius: 10px;
     padding: 8px 14px;
     flex: 1;
@@ -44,8 +44,8 @@
 .filter-btn {
     padding: 9px 16px;
     border-radius: 9px;
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(var(--surface-rgb), 0.6);
+    border: 1px solid rgba(var(--ink-rgb), 0.08);
     color: var(--muted);
     font-size: 13px;
     font-weight: 500;
@@ -56,7 +56,7 @@
     gap: 6px;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(var(--ink-rgb), 0.08);
         color: var(--ink);
     }
 
@@ -69,19 +69,19 @@
 
 .dot-online {
     width: 6px; height: 6px; border-radius: 50%;
-    background: #10b981;
+    background: var(--green);
 }
 
 .dot-offline {
     width: 6px; height: 6px; border-radius: 50%;
-    background: #ef4444;
+    background: var(--red);
 }
 
 .gw-selector {
     padding: 9px 14px;
     border-radius: 9px;
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(var(--surface-rgb), 0.6);
+    border: 1px solid rgba(var(--ink-rgb), 0.08);
     color: var(--muted);
     font-size: 13px;
     font-weight: 500;
@@ -103,9 +103,9 @@
 }
 
 .cam-card {
-    background: rgba(30, 41, 59, 0.6);
+    background: rgba(var(--surface-rgb), 0.6);
     border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(var(--ink-rgb), 0.08);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -113,7 +113,7 @@
 
     &:hover {
         transform: translateY(-2px);
-        border-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(var(--ink-rgb), 0.2);
     }
 }
 
@@ -121,7 +121,7 @@
 .cam-thumb {
     position: relative;
     aspect-ratio: 16/9;
-    background: #0f172a;
+    background: var(--nav);
     width: 100%;
     cursor: pointer;
     overflow: hidden;
@@ -135,8 +135,8 @@
             0deg,
             transparent,
             transparent 2px,
-            rgba(255, 255, 255, 0.02) 2px,
-            rgba(255, 255, 255, 0.02) 3px
+            rgba(var(--ink-rgb), 0.02) 2px,
+            rgba(var(--ink-rgb), 0.02) 3px
         );
         pointer-events: none;
         z-index: 10;
@@ -149,7 +149,7 @@
         transform: translate(-50%, -50%);
         width: 36px;
         height: 36px;
-        color: rgba(248, 250, 252, 0.85);
+        color: rgba(var(--ink-rgb), 0.85);
         z-index: 11;
         transition: transform 0.2s;
     }
@@ -163,7 +163,7 @@
         position: absolute;
         top: 10px;
         left: 12px;
-        background: rgba(15, 23, 42, 0.85);
+        background: rgba(var(--nav-rgb), 0.85);
         padding: 4px 10px;
         border-radius: 99px;
         display: inline-flex;
@@ -173,8 +173,8 @@
 
         .live-dot {
             width: 5px; height: 5px; border-radius: 50%;
-            background: #10b981;
-            &.offline { background: #ef4444; }
+            background: var(--green);
+            &.offline { background: var(--red); }
             &.pulse { animation: pulse 1.5s infinite ease-in-out; }
         }
 
@@ -190,14 +190,14 @@
         position: absolute;
         bottom: 10px;
         left: 12px;
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(var(--nav-rgb), 0.85);
+        border: 1px solid rgba(var(--ink-rgb), 0.1);
         padding: 4px 8px;
         border-radius: 8px;
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        color: #f8fafc;
+        color: var(--ink);
         font-size: 11px;
         font-weight: 600;
         z-index: 12;
@@ -223,7 +223,7 @@
     align-items: flex-start;
 
     .cam-name {
-        color: #f8fafc;
+        color: var(--ink);
         font-size: 14px;
         font-weight: 700;
         font-family: 'Space Grotesk', sans-serif;
@@ -235,10 +235,10 @@
         padding: 3px 6px;
         border-radius: 4px;
         text-transform: uppercase;
-        background: rgba(245, 158, 11, 0.15); /* amber as default/SD */
-        color: #f59e0b;
+        background: rgba(var(--amber-rgb), 0.15); /* amber as default/SD */
+        color: var(--amber);
 
-        &.cloud { background: rgba(19, 127, 236, 0.15); color: #60a5fa; }
+        &.cloud { background: rgba(var(--accent-rgb), 0.15); color: var(--accent); }
         &.nvr { background: rgba(52, 211, 153, 0.15); color: #34d399; }
     }
 }
@@ -262,7 +262,7 @@
         .mono {
             font-family: monospace;
             font-size: 11px;
-            color: rgba(248, 250, 252, 0.7);
+            color: rgba(var(--ink-rgb), 0.7);
         }
     }
 }
@@ -286,16 +286,16 @@
 
         &:hover { background: var(--accent-hover); }
         &[disabled] { 
-            background: rgba(255,255,255,0.05); 
-            color: rgba(255,255,255,0.3); 
+            background: rgba(var(--ink-rgb), 0.05); 
+            color: rgba(var(--ink-rgb), 0.3); 
             cursor: not-allowed; 
         }
     }
 
     .btn-rec {
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #f8fafc;
+        background: rgba(var(--nav-rgb), 0.85);
+        border: 1px solid rgba(var(--ink-rgb), 0.1);
+        color: var(--ink);
         border-radius: 8px;
         padding: 8px 12px;
         font-size: 12px;
@@ -306,7 +306,7 @@
         text-align: center;
         text-decoration: none;
 
-        &:hover { background: rgba(255, 255, 255, 0.05); }
+        &:hover { background: rgba(var(--ink-rgb), 0.05); }
     }
 
     .btn-icon {
@@ -314,7 +314,7 @@
         height: 34px;
         border-radius: 8px;
         background: transparent;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid rgba(var(--ink-rgb), 0.1);
         color: var(--muted);
         display: flex;
         align-items: center;
@@ -323,7 +323,7 @@
         transition: all 0.2s;
         flex-shrink: 0;
 
-        &:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        &:hover { background: rgba(var(--ink-rgb), 0.05); color: #fff; }
     }
 }
 
@@ -370,7 +370,7 @@
 }
 
 .modal-content {
-    background: #0f172a;
+    background: var(--nav);
     border-radius: 18px;
     border: 1px solid var(--outline);
     box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
@@ -384,7 +384,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 18px 24px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(var(--ink-rgb), 0.03);
     border-bottom: 1px solid var(--outline);
 
     h2 {
@@ -399,7 +399,7 @@
     gap: 12px;
     padding: 16px 24px;
     border-top: 1px solid var(--outline);
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(var(--ink-rgb), 0.02);
 }
 
 .close-btn {
@@ -416,7 +416,7 @@
     transition: all 0.15s;
 
     &:hover {
-        background: rgba(239, 68, 68, 0.15);
+        background: rgba(var(--red-rgb), 0.15);
         color: var(--red);
     }
 }
@@ -449,7 +449,7 @@
 
 .form-control {
     padding: 10px 12px;
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(var(--nav-rgb), 0.6);
     border: 1px solid var(--outline);
     border-radius: 9px;
     color: var(--ink);

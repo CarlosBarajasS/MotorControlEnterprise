@@ -6,9 +6,9 @@
 
 // ─── PANELES BASE (GLASSMORPHISM) ──────────────────────────────────────────
 %glass-panel {
-    background: rgba(30, 41, 59, 0.45);
+    background: rgba(var(--surface-rgb), 0.45);
     border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(var(--ink-rgb), 0.05);
     backdrop-filter: blur(12px);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
 }
@@ -52,7 +52,7 @@
     left: 0;
     right: 0;
     height: 3px;
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(var(--ink-rgb), 0.04);
     z-index: 0;
     border-radius: 3px;
 }
@@ -81,8 +81,8 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: rgba(15, 23, 42, 0.8);
-    border: 2px solid rgba(255, 255, 255, 0.08);
+    background: rgba(var(--nav-rgb), 0.8);
+    border: 2px solid rgba(var(--ink-rgb), 0.08);
     display: grid;
     place-items: center;
     font-weight: 600;
@@ -96,7 +96,7 @@
     border-color: var(--accent);
     color: white;
     transform: scale(1.1);
-    box-shadow: 0 0 15px rgba(19, 127, 236, 0.4);
+    box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.4);
 }
 
 .step.completed .step-circle {
@@ -171,7 +171,7 @@
         font-size: 13px;
         font-weight: 600;
         margin-bottom: 8px;
-        color: rgba(248, 250, 252, 0.9);
+        color: rgba(var(--ink-rgb), 0.9);
 
         .required {
             color: var(--red);
@@ -183,27 +183,27 @@
     textarea {
         width: 100%;
         padding: 12px 14px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(var(--ink-rgb), 0.08);
         border-radius: 10px;
         font-size: 14px;
         font-family: inherit;
-        background: rgba(15, 23, 42, 0.6);
+        background: rgba(var(--nav-rgb), 0.6);
         transition: all 0.2s;
         color: var(--ink);
 
         &:focus {
             outline: none;
             border-color: var(--accent);
-            background: rgba(15, 23, 42, 0.8);
-            box-shadow: 0 0 0 3px rgba(19, 127, 236, 0.15);
+            background: rgba(var(--nav-rgb), 0.8);
+            box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
         }
 
         &::placeholder {
-            color: rgba(248, 250, 252, 0.3);
+            color: rgba(var(--ink-rgb), 0.3);
         }
 
         &[readonly] {
-            background: rgba(30, 41, 59, 0.4);
+            background: rgba(var(--surface-rgb), 0.4);
             color: var(--muted);
             cursor: not-allowed;
             border-color: transparent;
@@ -239,7 +239,7 @@
 /* Password strength */
 .password-strength {
     height: 4px;
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(var(--ink-rgb), 0.04);
     border-radius: 4px;
     margin-top: 8px;
     overflow: hidden;
@@ -255,7 +255,7 @@
         }
 
         &.medium {
-            background: #f59e0b;
+            background: var(--amber);
         }
 
         &.strong {
@@ -273,35 +273,35 @@
     border: 1px solid transparent;
 
     &.error {
-        background: rgba(239, 68, 68, 0.08);
-        color: #f87171;
-        border-color: rgba(239, 68, 68, 0.2);
+        background: rgba(var(--red-rgb), 0.08);
+        color: var(--red);
+        border-color: rgba(var(--red-rgb), 0.2);
     }
 
     &.success {
-        background: rgba(16, 185, 129, 0.08);
+        background: rgba(var(--green-rgb), 0.08);
         color: #34d399;
-        border-color: rgba(16, 185, 129, 0.2);
+        border-color: rgba(var(--green-rgb), 0.2);
     }
 
     &.info {
-        background: rgba(19, 127, 236, 0.08);
-        color: #60a5fa;
-        border-color: rgba(19, 127, 236, 0.2);
+        background: rgba(var(--accent-rgb), 0.08);
+        color: var(--accent);
+        border-color: rgba(var(--accent-rgb), 0.2);
     }
 }
 
 /* Camera cards */
 .camera-card {
-    background: rgba(15, 23, 42, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(var(--nav-rgb), 0.5);
+    border: 1px solid rgba(var(--ink-rgb), 0.05);
     border-radius: 14px;
     padding: 20px;
     margin-bottom: 16px;
     transition: border-color 0.2s;
 
     &:hover {
-        border-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(var(--ink-rgb), 0.1);
     }
 
     .camera-card-header {
@@ -320,8 +320,8 @@
 
 .btn-remove {
     background: transparent;
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #f87171;
+    border: 1px solid rgba(var(--red-rgb), 0.3);
+    color: var(--red);
     padding: 6px 12px;
     border-radius: 8px;
     cursor: pointer;
@@ -330,7 +330,7 @@
     transition: all 0.2s;
 
     &:hover {
-        background: rgba(239, 68, 68, 0.15);
+        background: rgba(var(--red-rgb), 0.15);
         color: var(--red);
     }
 }
@@ -344,9 +344,9 @@
     .tab-btn {
         padding: 10px 18px;
         border-radius: 10px 10px 0 0;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(var(--ink-rgb), 0.05);
         border-bottom: none;
-        background: rgba(15, 23, 42, 0.4);
+        background: rgba(var(--nav-rgb), 0.4);
         font-size: 13px;
         cursor: pointer;
         font-weight: 600;
@@ -354,15 +354,15 @@
         transition: all 0.2s;
 
         &:hover:not(.active) {
-            background: rgba(255, 255, 255, 0.03);
-            color: rgba(248, 250, 252, 0.9);
+            background: rgba(var(--ink-rgb), 0.03);
+            color: rgba(var(--ink-rgb), 0.9);
         }
 
         &.active {
-            background: #0f172a;
+            background: var(--nav);
             color: var(--accent);
-            border-color: rgba(255, 255, 255, 0.08);
-            border-bottom: 1px solid #0f172a; // overlaps the base
+            border-color: rgba(var(--ink-rgb), 0.08);
+            border-bottom: 1px solid var(--nav); // overlaps the base
             margin-bottom: -1px;
             z-index: 2;
             position: relative;
@@ -371,11 +371,11 @@
 }
 
 .code-block {
-    background: #0f172a;
+    background: var(--nav);
     color: #93c5fd;
     padding: 24px;
     border-radius: 0 12px 12px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(var(--ink-rgb), 0.08);
     font-family: 'JetBrains Mono', 'Courier New', monospace;
     font-size: 13px;
     overflow: auto;
@@ -402,18 +402,18 @@
     display: flex;
     gap: 16px;
     padding: 20px;
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(var(--nav-rgb), 0.4);
     border-radius: 14px;
     margin-bottom: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(var(--ink-rgb), 0.05);
 }
 
 .deploy-step-num {
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: rgba(19, 127, 236, 0.15);
-    border: 1px solid rgba(19, 127, 236, 0.3);
+    background: rgba(var(--accent-rgb), 0.15);
+    border: 1px solid rgba(var(--accent-rgb), 0.3);
     color: var(--accent);
     display: grid;
     place-items: center;
@@ -449,7 +449,7 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     display: block;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(var(--ink-rgb), 0.05);
 }
 
 /* Nav */
@@ -507,14 +507,14 @@
     align-items: center;
     gap: 12px;
     padding: 14px 18px;
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(var(--nav-rgb), 0.6);
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(var(--ink-rgb), 0.08);
     margin-bottom: 20px;
     transition: border-color 0.2s;
 
     &:hover {
-        border-color: rgba(255, 255, 255, 0.15);
+        border-color: rgba(var(--ink-rgb), 0.15);
     }
 }
 
@@ -534,8 +534,8 @@
     gap: 12px;
     padding: 16px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(var(--ink-rgb), 0.08);
+    background: rgba(var(--nav-rgb), 0.5);
     cursor: pointer;
     transition: all 0.2s;
 
@@ -552,8 +552,8 @@
 
     &.selected {
         border-color: var(--accent);
-        background: rgba(19, 127, 236, 0.1);
-        box-shadow: 0 0 0 2px rgba(19, 127, 236, 0.15);
+        background: rgba(var(--accent-rgb), 0.1);
+        box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
     }
 }
 
@@ -576,9 +576,9 @@
 
 .nvr-fields {
     padding: 20px;
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(var(--nav-rgb), 0.4);
     border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(var(--ink-rgb), 0.05);
 }
 
 @media (max-width: 600px) {

@@ -18,6 +18,12 @@ export class AppComponent {
         return !!localStorage.getItem('motor_control_token');
     }
 
+    ngOnInit() {
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('theme-light');
+        }
+    }
+
     showSidebar(): boolean {
         // No mostrar sidebar en landing ni en login, aunque tenga token
         const noSidebarRoutes = ['/', '/login'];
