@@ -51,6 +51,7 @@ export const routes: Routes = [
     { path: 'clients/:id', component: ClientDetailComponent, canActivate: [adminAuthGuard] },
     { path: 'cameras', component: CamerasComponent, canActivate: [adminAuthGuard] },
     { path: 'cameras/:id', component: CameraDetailComponent, canActivate: [adminAuthGuard] },
+    { path: 'recordings', component: RecordingsComponent, canActivate: [adminAuthGuard] },
     { path: 'recordings/:id', component: RecordingsComponent, canActivate: [adminAuthGuard] },
     { path: 'motors', component: MotorsComponent, canActivate: [adminAuthGuard] },
     { path: 'users', component: UsersComponent, canActivate: [adminAuthGuard] },
@@ -69,6 +70,7 @@ export const routes: Routes = [
                 children: [
                     { path: 'cameras', component: ClientCamerasComponent },
                     { path: 'cameras/:id', component: ClientCameraDetailComponent },
+                    { path: 'recordings', component: ClientRecordingsComponent },
                     { path: 'recordings/:id', component: ClientRecordingsComponent },
                     { path: '', redirectTo: 'cameras', pathMatch: 'full' }
                 ]

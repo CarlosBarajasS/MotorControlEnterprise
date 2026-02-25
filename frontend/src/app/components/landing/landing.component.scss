@@ -447,12 +447,12 @@ $amber: var(--amber);
         font-size: 20px;
         font-weight: 700;
         color: $ink;
-        opacity: 0.28;
+        opacity: 0.45;
         transition: opacity 0.2s;
         cursor: default;
 
         &:hover {
-            opacity: 0.5;
+            opacity: 0.7;
         }
     }
 }
@@ -645,6 +645,83 @@ $amber: var(--amber);
     border-radius: 16px;
     border: 1px solid rgba(var(--accent-rgb), 0.2);
     margin-bottom: 8px;
+}
+
+// ─── THEME TOGGLE (WENDY) ────────────────────────────────────────────────────
+.lp-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+}
+
+.theme-pill {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(var(--surface-rgb), 0.1);
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+    transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &:hover {
+        transform: scale(1.1) rotate(20deg);
+        background: rgba(var(--surface-rgb), 0.2);
+    }
+
+    &.light {
+        border-color: rgba(15, 23, 42, 0.15);
+        background: rgba(15, 23, 42, 0.06);
+        color: #475569;
+
+        .sun {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.4);
+        }
+
+        .moon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+    }
+}
+
+.theme-pill-track {
+    position: relative;
+    width: 20px;
+    height: 20px;
+}
+
+.t-icon {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    stroke: currentColor;
+    transition: opacity 0.35s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+// Estado oscuro (default): sol visible, luna oculta
+.theme-pill {
+    color: var(--ink);
+
+    .sun {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
+
+    .moon {
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.4);
+    }
 }
 
 // ─── FINAL CTA ────────────────────────────────────────────────────────────────

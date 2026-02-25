@@ -1,27 +1,36 @@
 import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [ReactiveFormsModule, CommonModule],
+    imports: [CommonModule, ReactiveFormsModule, RouterModule],
     templateUrl: './login.component.html',
-    styleUrl: './login.component.scss'
+    styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
+    loginForm: FormGroup;
+    loading = false;
+    errorMsg = '';
+    showPassword = false;
+
     private fb = inject(FormBuilder);
     private authService = inject(AuthService);
+    private router = inject(Router);
 
-    loginForm = this.fb.group({
-        email: ['', [Validators.required, Validators.email]],
-        password: ['', Validators.required]
-    });
+    constructor() {
+        this.loginForm = this.fb.group({
+            email: ['', [Validators.required, Validators.email]],
+            password: ['', Validators.required]
+        });
+    }
 
-    errorMsg = '';
-    loading = false;
+    togglePassword() {
+        this.showPassword = !this.showPassword;
+    }
 
     onSubmit() {
         if (this.loginForm.invalid) return;
@@ -30,9 +39,18 @@ export class LoginComponent {
         this.errorMsg = '';
 
         this.authService.login(this.loginForm.value).subscribe({
-            error: (err) => {
-                this.errorMsg = 'Credenciales inválidas. Intente de nuevo.';
+            next: (res) => {
                 this.loading = false;
+                // The auth service saves the token
+                if (res.role === 'client') {
+                    this.router.navigate(['/client/cameras']);
+                } else {
+                    this.router.navigate(['/dashboard']);
+                }
+            },
+            error: (err) => {
+                this.loading = false;
+                this.errorMsg = err.error?.message || 'Error de conexión / Credenciales inválidas';
             }
         });
     }
