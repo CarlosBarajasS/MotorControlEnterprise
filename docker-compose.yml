@@ -31,6 +31,7 @@ services:
       - "9002:9001"
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto-passwd:/mosquitto/config/passwd:ro
     networks:
       - mce-net
       - shared-edge-network
@@ -74,7 +75,9 @@ services:
       Mediamtx__HlsBaseUrl:    "http://central-mediamtx:8888"
       Mediamtx__HlsPublicUrl:  ""
       Mediamtx__User:          "edge"
-      Mediamtx__Password:      "edge123"
+      Mediamtx__Password:      "${MEDIAMTX_EDGE_PASS:-CHANGE_THIS}"
+      Mqtt__Username:          "enterprise-server"
+      Mqtt__Password:          "${MQTT_BACKEND_PASS:-CHANGE_THIS}"
       # Stream Recorder — graba streams a NAS
       StreamRecorder__MediamtxHost: "central-mediamtx"
       StreamRecorder__MediamtxPort: "8554"
