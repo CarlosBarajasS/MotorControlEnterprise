@@ -50,6 +50,7 @@ namespace MotorControlEnterprise.Api.Controllers
 
             return Ok(new {
                 token,
+                mustChangePassword = user.MustChangePassword,
                 user = new { user.Id, user.Email, user.Name, user.Role }
             });
         }
@@ -127,20 +128,21 @@ namespace MotorControlEnterprise.Api.Controllers
 
             var user = new User
             {
-                Email        = request.Email,
-                Name         = displayName,
-                Role         = request.Role,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(tempPassword),
-                IsActive     = true
+                Email               = request.Email,
+                Name                = displayName,
+                Role                = request.Role,
+                PasswordHash        = BCrypt.Net.BCrypt.HashPassword(tempPassword),
+                IsActive            = true,
+                MustChangePassword  = true
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // Email de invitación — best-effort (no falla el request si el email falla)
+            // Email de invitación — enlaza al portal admin (/login), best-effort
             try
             {
-                await _emailService.SendUserInviteAsync(user.Email, displayName, tempPassword);
+                await _emailService.SendUserInviteAsync(user.Email, displayName, tempPassword, "/login");
             }
             catch (Exception ex)
             {
