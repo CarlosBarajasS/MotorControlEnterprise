@@ -126,6 +126,19 @@ services:
     networks:
       - mce-net
 
+  # ─── Portainer — Docker UI web ───────────────────────────────
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: mce-portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    networks:
+      - mce-net
+
   # ─── Frontend Angular ────────────────────────────────────────
   # Imagen multi-stage: node compila Angular → nginx sirve dist/
   frontend:
@@ -162,3 +175,4 @@ networks:
 
 volumes:
   postgres-data:
+  portainer-data:
