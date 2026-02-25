@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotorControlEnterprise.Api.Data;
 using MotorControlEnterprise.Api.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace MotorControlEnterprise.Api.Controllers
 {
@@ -20,6 +21,7 @@ namespace MotorControlEnterprise.Api.Controllers
         public async Task<IActionResult> GetAll()
         {
             var clients = await _db.Clients
+                .Include(c => c.User)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
@@ -37,7 +39,11 @@ namespace MotorControlEnterprise.Api.Controllers
                 c.GatewayId, c.Status, c.CloudStorageActive,
                 c.LocalStorageType, c.NvrIp, c.NvrPort, c.NvrBrand,
                 c.CreatedAt,
-                CameraCount = cameraCountMap.GetValueOrDefault(c.Id, 0)
+                CameraCount = cameraCountMap.GetValueOrDefault(c.Id, 0),
+                UserId    = c.UserId,
+                UserEmail = c.User != null ? c.User.Email : null,
+                UserName  = c.User != null ? c.User.Name  : null,
+                UserActive = c.User != null ? c.User.IsActive : (bool?)null
             }));
         }
 
@@ -190,7 +196,69 @@ namespace MotorControlEnterprise.Api.Controllers
             });
         }
 
+        // POST api/clients/{id}/create-user — crea cuenta de acceso para el cliente
+        [HttpPost("{id:int}/create-user")]
+        public async Task<IActionResult> CreateUser(int id, [FromBody] CreateUserRequest req)
+        {
+            var client = await _db.Clients.FindAsync(id);
+            if (client == null) return NotFound();
+
+            if (client.UserId != null)
+                return Conflict(new { message = "Este cliente ya tiene una cuenta de acceso vinculada." });
+
+            if (await _db.Users.AnyAsync(u => u.Email == req.Email.Trim().ToLowerInvariant()))
+                return Conflict(new { message = "El email ya está registrado en el sistema." });
+
+            var user = new User
+            {
+                Email        = req.Email.Trim().ToLowerInvariant(),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+                Name         = req.Name,
+                Role         = "client",
+                IsActive     = true,
+                CreatedAt    = DateTime.UtcNow,
+                UpdatedAt    = DateTime.UtcNow
+            };
+
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+
+            client.UserId    = user.Id;
+            client.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { user.Id, user.Email, user.Name, user.Role, user.IsActive });
+        }
+
+        // DELETE api/clients/{id}/user — desvincula (y desactiva) la cuenta del cliente
+        [HttpDelete("{id:int}/user")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            var client = await _db.Clients.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == id);
+            if (client == null) return NotFound();
+
+            if (client.UserId == null)
+                return BadRequest(new { message = "Este cliente no tiene cuenta de acceso vinculada." });
+
+            if (client.User != null)
+            {
+                client.User.IsActive  = false;
+                client.User.UpdatedAt = DateTime.UtcNow;
+            }
+
+            client.UserId    = null;
+            client.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Acceso revocado correctamente." });
+        }
+
         public record StatusRequest(string Status);
         public record CloudStorageRequest(bool Active);
+        public record CreateUserRequest(
+            [Required] string Email,
+            [Required] string Password,
+            string? Name
+        );
     }
 }
