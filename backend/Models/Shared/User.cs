@@ -27,6 +27,12 @@ namespace MotorControlEnterprise.Api.Models
 
         public bool IsActive { get; set; } = true;
 
+        /// <summary>
+        /// True cuando el usuario fue creado por un instalador y debe cambiar su contraseña en el primer inicio de sesión.
+        /// </summary>
+        [Column("must_change_password")]
+        public bool MustChangePassword { get; set; } = false;
+
         [Column("last_login")]
         public DateTime? LastLogin { get; set; }
 

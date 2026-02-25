@@ -29,6 +29,7 @@ namespace MotorControlEnterprise.Api.Controllers
 
         public record SignupRequest(string Email, string Password, string? Name);
         public record LoginRequest(string Email, string Password);
+        public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
         // ─── POST /api/auth/signup ────────────────────────────────────────────
         [HttpPost("signup")]
@@ -77,8 +78,35 @@ namespace MotorControlEnterprise.Api.Controllers
             return Ok(new
             {
                 token,
+                mustChangePassword = user.MustChangePassword,
                 user = new { user.Id, user.Email, user.Name, user.Role }
             });
+        }
+
+        // ─── POST /api/auth/change-password ──────────────────────────────────
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
+        {
+            var userIdStr = User.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub);
+            _ = int.TryParse(userIdStr, out var userId);
+
+            var user = await _db.Users.FindAsync(userId);
+            if (user == null || !user.IsActive)
+                return Unauthorized(new { message = "Usuario no encontrado o inactivo." });
+
+            if (!BCrypt.Net.BCrypt.Verify(req.CurrentPassword, user.PasswordHash))
+                return BadRequest(new { message = "La contraseña actual es incorrecta." });
+
+            if (req.NewPassword.Length < 8)
+                return BadRequest(new { message = "La nueva contraseña debe tener al menos 8 caracteres." });
+
+            user.PasswordHash       = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+            user.MustChangePassword = false;
+            user.UpdatedAt          = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Contraseña actualizada correctamente." });
         }
 
         // ─── GET /api/auth/verify ─────────────────────────────────────────────

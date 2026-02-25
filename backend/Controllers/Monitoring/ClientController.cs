@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MotorControlEnterprise.Api.Data;
 using MotorControlEnterprise.Api.Models;
 using System.ComponentModel.DataAnnotations;
+using MotorControlEnterprise.Api.Services;
 
 namespace MotorControlEnterprise.Api.Controllers
 {
@@ -13,8 +14,13 @@ namespace MotorControlEnterprise.Api.Controllers
     public class ClientController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
+        private readonly IEmailService _email;
 
-        public ClientController(ApplicationDbContext db) => _db = db;
+        public ClientController(ApplicationDbContext db, IEmailService email)
+        {
+            _db    = db;
+            _email = email;
+        }
 
         // GET api/clients
         [HttpGet]
@@ -209,15 +215,17 @@ namespace MotorControlEnterprise.Api.Controllers
             if (await _db.Users.AnyAsync(u => u.Email == req.Email.Trim().ToLowerInvariant()))
                 return Conflict(new { message = "El email ya está registrado en el sistema." });
 
+            var plainPassword = req.Password;
             var user = new User
             {
-                Email        = req.Email.Trim().ToLowerInvariant(),
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
-                Name         = req.Name,
-                Role         = "client",
-                IsActive     = true,
-                CreatedAt    = DateTime.UtcNow,
-                UpdatedAt    = DateTime.UtcNow
+                Email              = req.Email.Trim().ToLowerInvariant(),
+                PasswordHash       = BCrypt.Net.BCrypt.HashPassword(plainPassword),
+                Name               = req.Name ?? client.ContactName ?? client.Name,
+                Role               = "client",
+                IsActive           = true,
+                MustChangePassword = true,
+                CreatedAt          = DateTime.UtcNow,
+                UpdatedAt          = DateTime.UtcNow
             };
 
             _db.Users.Add(user);
@@ -227,7 +235,10 @@ namespace MotorControlEnterprise.Api.Controllers
             client.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
-            return Ok(new { user.Id, user.Email, user.Name, user.Role, user.IsActive });
+            // Enviar credenciales por email (no bloquea si falla)
+            _ = _email.SendUserInviteAsync(user.Email, user.Name ?? client.Name, plainPassword);
+
+            return Ok(new { user.Id, user.Email, user.Name, user.Role, user.IsActive, user.MustChangePassword });
         }
 
         // DELETE api/clients/{id}/user — desvincula (y desactiva) la cuenta del cliente
