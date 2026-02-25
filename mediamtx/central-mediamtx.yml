@@ -12,12 +12,12 @@ apiAddress: 0.0.0.0:9997
 # Si cambias MEDIAMTX_PUSH_PASS en .env, actualiza también este archivo.
 authInternalUsers:
   - user: "edge"
-    pass: "edge123"
+    pass: "l0Wp3-nhj47_75r2XySoGxZX"
     permissions:
       - action: read
       - action: api
   - user: "edge-relay"
-    pass: "relay-secret-2026"
+    pass: "LYLmjg1kvbPXqHCI5B5eHUwD"
     permissions:
       - action: publish
       - action: read

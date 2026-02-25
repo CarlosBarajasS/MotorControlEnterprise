@@ -55,11 +55,18 @@ namespace MotorControlEnterprise.Api.Services
         {
             try
             {
-                var options = new MqttClientOptionsBuilder()
+                var username = _config["Mqtt:Username"];
+                var password = _config["Mqtt:Password"];
+
+                var builder = new MqttClientOptionsBuilder()
                     .WithTcpServer(host, port)
                     .WithClientId(clientId)
-                    .WithKeepAlivePeriod(TimeSpan.FromSeconds(30))
-                    .Build();
+                    .WithKeepAlivePeriod(TimeSpan.FromSeconds(30));
+
+                if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                    builder = builder.WithCredentials(username, password);
+
+                var options = builder.Build();
 
                 await _mqttClient!.ConnectAsync(options, ct);
 

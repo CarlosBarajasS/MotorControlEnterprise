@@ -30,11 +30,18 @@ namespace MotorControlEnterprise.Api.Services
             var port     = int.TryParse(_config["Mqtt:Port"], out var p) ? p : 1885;
             var clientId = $"EnterprisePublisher_{Guid.NewGuid():N}";
 
-            _options = new MqttClientOptionsBuilder()
+            var username = _config["Mqtt:Username"];
+            var password = _config["Mqtt:Password"];
+
+            var builder = new MqttClientOptionsBuilder()
                 .WithTcpServer(host, port)
                 .WithClientId(clientId)
-                .WithKeepAlivePeriod(TimeSpan.FromSeconds(30))
-                .Build();
+                .WithKeepAlivePeriod(TimeSpan.FromSeconds(30));
+
+            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                builder = builder.WithCredentials(username, password);
+
+            _options = builder.Build();
 
             _client = new MqttClientFactory().CreateMqttClient();
 
