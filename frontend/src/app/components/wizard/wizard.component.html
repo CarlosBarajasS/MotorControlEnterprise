@@ -15,19 +15,19 @@
             </div>
             <div class="step" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2">
                 <div class="step-circle">2</div>
-                <div class="step-label">Usuario</div>
+                <div class="step-label">Cámaras</div>
             </div>
             <div class="step" [class.active]="currentStep() === 3" [class.completed]="currentStep() > 3">
                 <div class="step-circle">3</div>
-                <div class="step-label">Cámaras</div>
+                <div class="step-label">Archivos</div>
             </div>
             <div class="step" [class.active]="currentStep() === 4" [class.completed]="currentStep() > 4">
                 <div class="step-circle">4</div>
-                <div class="step-label">Archivos</div>
+                <div class="step-label">Despliegue</div>
             </div>
             <div class="step" [class.active]="currentStep() === 5" [class.completed]="currentStep() > 5">
                 <div class="step-circle">5</div>
-                <div class="step-label">Despliegue</div>
+                <div class="step-label">Acceso Web</div>
             </div>
         </div>
     </div>
@@ -188,56 +188,15 @@
         </div>
         }
 
-        <!-- Step 2: Usuario de acceso -->
+
+        <!-- Step 2: Cámaras -->
         @if (currentStep() === 2) {
-        <div class="wizard-step">
-            <h2 class="step-title">Usuario de Acceso</h2>
-            <p class="step-description">Crea las credenciales con las que el cliente podrá ver sus cámaras</p>
-
-            @if (alerts()[2]) {
-            <div class="alert" [ngClass]="alerts()[2].type">{{ alerts()[2].message }}</div>
-            }
-
-            <div class="alert info" style="display:block">
-                El usuario se crea en el sistema inmediatamente en este paso. El cliente usará estas credenciales para
-                iniciar sesión y ver sus cámaras.
-            </div>
-
-            <div class="form-row full">
-                <div class="form-group" [class.error]="userErrors().email">
-                    <label>Email de acceso <span class="required">*</span></label>
-                    <input type="email" [(ngModel)]="userData.email" placeholder="cliente&#64;empresa.com">
-                    <div class="error-message">Ingresa un email válido</div>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group" [class.error]="userErrors().password">
-                    <label>Contraseña <span class="required">*</span></label>
-                    <input type="password" [(ngModel)]="userData.password" placeholder="Mínimo 8 caracteres">
-                    <div class="password-strength">
-                        <div class="password-strength-bar" [style.width.%]="calculatePasswordStrength()"
-                            [ngClass]="{'weak': calculatePasswordStrength() <= 33, 'medium': calculatePasswordStrength() > 33 && calculatePasswordStrength() <= 66, 'strong': calculatePasswordStrength() > 66}">
-                        </div>
-                    </div>
-                    <div class="error-message">Mínimo 8 caracteres</div>
-                </div>
-                <div class="form-group" [class.error]="userErrors().confirmPassword">
-                    <label>Confirmar contraseña <span class="required">*</span></label>
-                    <input type="password" [(ngModel)]="userData.confirmPassword" placeholder="Repite la contraseña">
-                    <div class="error-message">Las contraseñas no coinciden</div>
-                </div>
-            </div>
-        </div>
-        }
-
-        <!-- Step 3: Cámaras -->
-        @if (currentStep() === 3) {
         <div class="wizard-step">
             <h2 class="step-title">Cámaras IP</h2>
             <p class="step-description">Define las cámaras que se van a conectar en la red local del cliente</p>
 
-            @if (alerts()[3]) {
-            <div class="alert" [ngClass]="alerts()[3].type">{{ alerts()[3].message }}</div>
+            @if (alerts()[2]) {
+            <div class="alert" [ngClass]="alerts()[2].type">{{ alerts()[2].message }}</div>
             }
 
             <div class="alert info" style="display:block">
@@ -286,8 +245,8 @@
         </div>
         }
 
-        <!-- Step 4: Archivos generados -->
-        @if (currentStep() === 4) {
+        <!-- Step 3: Archivos generados -->
+        @if (currentStep() === 3) {
         <div class="wizard-step">
             <h2 class="step-title">Archivos de Configuración</h2>
             <p class="step-description">Revisa y descarga los archivos que debes copiar al dispositivo edge (Raspberry
@@ -315,8 +274,8 @@
         </div>
         }
 
-        <!-- Step 5: Instrucciones de despliegue -->
-        @if (currentStep() === 5) {
+        <!-- Step 4: Instrucciones de despliegue -->
+        @if (currentStep() === 4) {
         <div class="wizard-step">
             <h2 class="step-title">Instrucciones de Instalación</h2>
             <p class="step-description">Pasos para instalar el equipo en la ubicación de
@@ -368,11 +327,64 @@
                 </div>
             </div>
 
-            <div style="margin-top: 24px; text-align: center;">
-                <button class="btn btn-secondary" routerLink="/clients">Ver gateways de clientes →</button>
-                <button class="btn btn-secondary" routerLink="/cameras" style="margin-left: 12px;">Ver cámaras
-                    →</button>
+            <div style="margin-top: 24px;">
+                <button class="btn btn-secondary" routerLink="/clients">Ir a lista de Clientes</button>
             </div>
+        </div>
+        }
+
+        <!-- Step 5: Acceso Web (Nuevo final) -->
+        @if (currentStep() === 5) {
+        <div class="wizard-step">
+            <h2 class="step-title">Crear acceso web del cliente</h2>
+            <p class="step-description">Genera la cuenta administrativa para el cliente (requerirá cambio obligatorio
+                tras el primer login)</p>
+
+            @if (alerts()[5]) {
+            <div class="alert" [ngClass]="alerts()[5].type">{{ alerts()[5].message }}</div>
+            }
+
+            @if (userCreated()) {
+            <div class="alert success"
+                style="display:block; color: rgb(21, 128, 61); border: 1px solid rgba(21, 128, 61, 0.2);">
+                <div style="font-weight: 600; margin-bottom: 8px;">✅ Acceso ya configurado</div>
+                El usuario <strong>{{ userData.email }}</strong> fue creado exitosamente. <br><br>
+                El cliente puede ingresar al portal web ahora mismo; nuestro sistema le pedirá que asigne una nueva
+                contraseña en su primer inicio de sesión por motivos de seguridad.
+            </div>
+            <div style="margin-top: 24px; text-align: center;">
+                <button class="btn btn-primary" routerLink="/clients" style="margin-right: 12px;">Finalizar e ir a
+                    Clientes</button>
+                <button class="btn btn-secondary" routerLink="/cameras">Ver cámaras →</button>
+            </div>
+            } @else {
+            <div class="form-row">
+                <div class="form-group" [class.error]="userErrors().email">
+                    <label>Email de acceso <span class="required">*</span></label>
+                    <input type="email" [(ngModel)]="userData.email" placeholder="cliente@empresa.com">
+                    <div class="error-message">Ingresa un email válido</div>
+                </div>
+                <div class="form-group" [class.error]="userErrors().name">
+                    <label>Nombre del Responsable <span class="required">*</span></label>
+                    <input type="text" [(ngModel)]="userData.name" placeholder="Ej: Administrador General">
+                    <div class="error-message">Este campo es requerido</div>
+                </div>
+            </div>
+            <div class="form-row full">
+                <div class="form-group" [class.error]="userErrors().password">
+                    <label>Contraseña Temporal <span class="required">*</span></label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" [(ngModel)]="userData.password" placeholder="Mínimo 8 caracteres"
+                            style="flex: 1;">
+                        <button class="btn btn-secondary" (click)="generateRandomPassword()"
+                            style="white-space: nowrap;">Generar automáticamente</button>
+                    </div>
+                    <div class="error-message">Mínimo 8 caracteres</div>
+                    <div class="hint" style="margin-top: 6px;">Esta contraseña será enviada por correo al cliente como
+                        clave de un solo uso.</div>
+                </div>
+            </div>
+            }
         </div>
         }
 
@@ -387,7 +399,9 @@
             @if (isCreatingUser()) {
             Procesando...
             } @else {
-            @if (currentStep() === 5) { ✓ Finalizar } @else { Siguiente → }
+            @if (currentStep() === 5 && !userCreated()) { Crear acceso y enviar email }
+            @else if (currentStep() === 5 && userCreated()) { Terminado }
+            @else { Siguiente → }
             }
         </button>
     </div>

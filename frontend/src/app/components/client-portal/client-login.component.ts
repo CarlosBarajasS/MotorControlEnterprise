@@ -5,10 +5,10 @@ import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
 @Component({
-    selector: 'app-client-login',
-    standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule],
-    template: `
+  selector: 'app-client-login',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterModule],
+  template: `
     <div class="login-container">
       <div class="login-card">
         <div class="login-header">
@@ -41,7 +41,7 @@ import { HttpClient } from '@angular/common/http';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .login-container {
       display: flex;
       align-items: center;
@@ -115,47 +115,53 @@ import { HttpClient } from '@angular/common/http';
   `]
 })
 export class ClientLoginComponent {
-    private http = inject(HttpClient);
-    private router = inject(Router);
+  private http = inject(HttpClient);
+  private router = inject(Router);
 
-    email = '';
-    password = '';
-    error = signal('');
-    loading = signal(false);
+  email = '';
+  password = '';
+  error = signal('');
+  loading = signal(false);
 
-    constructor() {
-        // If already logged in as client, redirect
-        const token = localStorage.getItem('motor_control_token');
-        if (token) {
-            try {
-                const p = JSON.parse(atob(token.split('.')[1]));
-                if (p.role === 'client') this.router.navigate(['/client/cameras']);
-                else if (p.role === 'admin') this.router.navigate(['/dashboard']);
-            } catch { }
+  constructor() {
+    // If already logged in as client, redirect
+    const token = localStorage.getItem('motor_control_token');
+    if (token) {
+      try {
+        const p = JSON.parse(atob(token.split('.')[1]));
+        if (p.role === 'client') this.router.navigate(['/client/cameras']);
+        else if (p.role === 'admin') this.router.navigate(['/dashboard']);
+      } catch { }
+    }
+  }
+
+  onLogin() {
+    this.error.set('');
+    this.loading.set(true);
+
+    this.http.post<any>('/api/auth/login', {
+      email: this.email,
+      password: this.password
+    }).subscribe({
+      next: (res) => {
+        if (res.token) {
+          localStorage.setItem('motor_control_token', res.token);
+          if (res.mustChangePassword) {
+            localStorage.setItem('motor_control_client_must_change', 'true');
+            this.router.navigate(['/client/change-password']);
+          } else {
+            localStorage.setItem('motor_control_client_must_change', 'false');
+            this.router.navigate(['/client/cameras']);
+          }
+        } else {
+          this.error.set('Respuesta inesperada del servidor');
         }
-    }
-
-    onLogin() {
-        this.error.set('');
-        this.loading.set(true);
-
-        this.http.post<any>('/api/auth/login', {
-            email: this.email,
-            password: this.password
-        }).subscribe({
-            next: (res) => {
-                if (res.token) {
-                    localStorage.setItem('motor_control_token', res.token);
-                    this.router.navigate(['/client/cameras']);
-                } else {
-                    this.error.set('Respuesta inesperada del servidor');
-                }
-                this.loading.set(false);
-            },
-            error: (err) => {
-                this.error.set(err.error?.error || err.error?.message || 'Credenciales inválidas');
-                this.loading.set(false);
-            }
-        });
-    }
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.error.set(err.error?.error || err.error?.message || 'Credenciales inválidas');
+        this.loading.set(false);
+      }
+    });
+  }
 }

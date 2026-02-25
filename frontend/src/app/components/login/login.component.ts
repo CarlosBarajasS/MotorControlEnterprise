@@ -45,7 +45,13 @@ export class LoginComponent {
                 if (res.role === 'client') {
                     this.router.navigate(['/client/cameras']);
                 } else {
-                    this.router.navigate(['/dashboard']);
+                    if (res.mustChangePassword) {
+                        localStorage.setItem('motor_control_must_change', 'true');
+                        this.router.navigate(['/change-password']);
+                    } else {
+                        localStorage.setItem('motor_control_must_change', 'false');
+                        this.router.navigate(['/dashboard']);
+                    }
                 }
             },
             error: (err) => {

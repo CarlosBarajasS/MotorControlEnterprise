@@ -41,14 +41,15 @@ export class WizardComponent implements OnInit {
   };
   clientErrors = signal<any>({});
 
-  // Step 2: User
+  // Step 5: Acceso Web (antes User)
   userData = {
     email: '',
-    password: '',
-    confirmPassword: ''
+    name: '',
+    password: ''
   };
   userErrors = signal<any>({});
   isCreatingUser = signal<boolean>(false);
+  userCreated = signal<boolean>(false);
 
   // Step 3: Cameras
   cameras = signal<any[]>([{ id: 'cam1', ip: '', user: 'admin', password: '', rtspPath: '/Streaming/Channels/101' }]);
@@ -71,23 +72,20 @@ export class WizardComponent implements OnInit {
     });
   }
 
-  nextStep() {
+  async nextStep() {
     if (this.currentStep() === 1) {
       if (!this.validateStep1()) return;
+      const created = await this.createClientInApi();
+      if (!created) return;
       this.clearAlert(1);
     } else if (this.currentStep() === 2) {
-      this.validateStep2().then(isValid => {
-        if (isValid) {
-          this.currentStep.set(3);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      });
-      return;
-    } else if (this.currentStep() === 3) {
-      if (!this.validateStep3()) return;
-      this.createCamerasInApi();
+      if (!this.validateStep2()) return;
+      await this.createCamerasInApi();
       this.generateFiles();
-      this.clearAlert(3);
+      this.clearAlert(2);
+    } else if (this.currentStep() === 5) {
+      this.createUserInApi();
+      return;
     }
 
     if (this.currentStep() < this.totalSteps) {
@@ -97,13 +95,15 @@ export class WizardComponent implements OnInit {
   }
 
   prevStep() {
-    if (this.currentStep() > 1) {
+    if (this.currentStep() > 1 && this.currentStep() !== 5) {
       this.currentStep.update(v => v - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
   // --- Step 1 ---
+  clientId = signal<number | null>(null);
+
   validateStep1(): boolean {
     const err: any = {};
     if (!this.clientData.name.trim()) err.name = true;
@@ -112,52 +112,14 @@ export class WizardComponent implements OnInit {
     if (!this.clientData.location.trim()) err.location = true;
     if (!this.clientData.gatewayId.trim()) err.gatewayId = true;
 
-
     this.clientErrors.set(err);
     return Object.keys(err).length === 0;
   }
 
-  updateGatewayId() {
-    if (!this.clientData.gatewayId && this.clientData.name) {
-      const gId = 'edge-gateway-' + this.clientData.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      this.clientData.gatewayId = gId;
-    }
-  }
+  async createClientInApi(): Promise<boolean> {
+    if (this.clientId()) return true; // Ya creado
 
-  // --- Step 2 ---
-  async validateStep2(): Promise<boolean> {
-    this.clearAlert(2);
-    const err: any = {};
-    const emailStr = this.userData.email.trim();
-    const passStr = this.userData.password;
-
-    if (!emailStr || !emailStr.includes('@')) err.email = true;
-    if (passStr.length < 8) err.password = true;
-    if (passStr !== this.userData.confirmPassword) err.confirmPassword = true;
-
-    this.userErrors.set(err);
-    if (Object.keys(err).length > 0) return false;
-
-    this.isCreatingUser.set(true);
     try {
-      // Create User
-      const userRes = await fetch(`${this.API_URL}/admin/auth/users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
-        },
-        body: JSON.stringify({ email: emailStr, password: passStr, name: this.clientData.contactName, role: 'client' })
-      });
-      const userBody = await userRes.json();
-
-      if (!userRes.ok) {
-        this.showAlert(2, 'error', userBody.error || 'Error al crear el usuario. ' + (userBody.errors ? JSON.stringify(userBody.errors) : ''));
-        this.isCreatingUser.set(false);
-        return false;
-      }
-
-      // Create Client
       const clientRes = await fetch(`${this.API_URL}/clients`, {
         method: 'POST',
         headers: {
@@ -170,8 +132,6 @@ export class WizardComponent implements OnInit {
           contactName: this.clientData.contactName,
           contactPhone: this.clientData.contactPhone,
           address: this.clientData.location,
-          contactEmail: emailStr,
-          userId: userBody.user.id || userBody.user.Id, // Fallback if capitalization changes
           gatewayId: this.clientData.gatewayId,
           cloudStorageActive: this.clientData.cloudStorageActive,
           localStorageType: this.clientData.localStorageType,
@@ -185,19 +145,28 @@ export class WizardComponent implements OnInit {
 
       if (!clientRes.ok) {
         const clientBody = await clientRes.json();
-        this.showAlert(2, 'error', clientBody.error || 'Error al registrar el cliente. ' + (clientBody.errors ? JSON.stringify(clientBody.errors) : ''));
-        this.isCreatingUser.set(false);
+        this.showAlert(1, 'error', clientBody.error || clientBody.message || 'Error al registrar el cliente.');
         return false;
       }
 
-      this.isCreatingUser.set(false);
+      const body = await clientRes.json();
+      this.clientId.set(body.id);
+      this.userData.name = this.clientData.contactName;
       return true;
     } catch (e: any) {
-      this.showAlert(2, 'error', 'Error de conexión con el servidor: ' + e.message);
-      this.isCreatingUser.set(false);
+      this.showAlert(1, 'error', 'Error de conexión: ' + e.message);
       return false;
     }
   }
+
+  updateGatewayId() {
+    if (!this.clientData.gatewayId && this.clientData.name) {
+      const gId = 'edge-gateway-' + this.clientData.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      this.clientData.gatewayId = gId;
+    }
+  }
+
+  // --- Step 2 (Cámaras) ---
 
   calculatePasswordStrength(): number {
     const p = this.userData.password;
@@ -217,14 +186,14 @@ export class WizardComponent implements OnInit {
     this.cameras.update(c => c.filter((_, i) => i !== index));
   }
 
-  validateStep3(): boolean {
+  validateStep2(): boolean {
     if (this.cameras().length === 0) {
-      this.showAlert(3, 'error', 'Agrega al menos una cámara');
+      this.showAlert(2, 'error', 'Agrega al menos una cámara');
       return false;
     }
     for (const cam of this.cameras()) {
       if (!cam.id || !cam.ip || !cam.rtspPath) {
-        this.showAlert(3, 'error', 'Completa el nombre, IP y ruta RTSP de todas las cámaras');
+        this.showAlert(2, 'error', 'Completa el nombre, IP y ruta RTSP de todas las cámaras');
         return false;
       }
     }
@@ -254,7 +223,7 @@ export class WizardComponent implements OnInit {
     }
   }
 
-  // --- Step 4 ---
+  // --- Step 3: Archivos ---
   generateFiles() {
     const env = this.buildEnv();
     const compose = this.buildDockerCompose();
@@ -450,6 +419,55 @@ ${camPaths}
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+  }
+
+  // --- Step 5: Acceso Web ---
+  generateRandomPassword() {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let pass = "";
+    for (let i = 0; i < 12; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    this.userData.password = pass;
+  }
+
+  async createUserInApi() {
+    this.clearAlert(5);
+    const err: any = {};
+    if (!this.userData.email.includes('@')) err.email = true;
+    if (!this.userData.name.trim()) err.name = true;
+    if (this.userData.password.length < 8) err.password = true;
+
+    this.userErrors.set(err);
+    if (Object.keys(err).length > 0) return;
+
+    this.isCreatingUser.set(true);
+    try {
+      const res = await fetch(`${this.API_URL}/clients/${this.clientId()}/create-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
+        },
+        body: JSON.stringify({
+          email: this.userData.email,
+          name: this.userData.name,
+          password: this.userData.password
+        })
+      });
+
+      const body = await res.json();
+      this.isCreatingUser.set(false);
+
+      if (!res.ok) {
+        this.showAlert(5, 'error', body.message || 'Error al crear el acceso web');
+        return;
+      }
+
+      this.userCreated.set(true);
+      this.showAlert(5, 'success', `Acceso creado y credenciales enviadas a ${this.userData.email}`);
+    } catch (e: any) {
+      this.isCreatingUser.set(false);
+      this.showAlert(5, 'error', 'Error de conexión: ' + e.message);
+    }
   }
 
 }
