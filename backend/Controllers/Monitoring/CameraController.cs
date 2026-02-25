@@ -54,9 +54,19 @@ namespace MotorControlEnterprise.Api.Controllers
 
             var query = _db.Cameras.Include(c => c.Client).AsQueryable();
 
-            // Si no es admin, filtrar por userId
+            // Si no es admin, filtrar por clientId del cliente vinculado al usuario
             if (role != "admin")
-                query = query.Where(c => c.UserId == userId);
+            {
+                var clientId = await _db.Clients
+                    .Where(c => c.UserId == userId)
+                    .Select(c => (int?)c.Id)
+                    .FirstOrDefaultAsync();
+
+                if (clientId == null)
+                    return Ok(Array.Empty<object>());
+
+                query = query.Where(c => c.ClientId == clientId);
+            }
 
             // Excluir cámaras de solo grabación (NAS/cloud) — no se muestran en la UI
             query = query.Where(c => !c.IsRecordingOnly);
