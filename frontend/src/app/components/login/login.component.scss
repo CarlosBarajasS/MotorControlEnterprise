@@ -1,13 +1,15 @@
 .login-wrapper {
   display: grid;
   grid-template-columns: 1fr 1.4fr;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: var(--bg);
   color: var(--ink);
   font-family: 'Inter', sans-serif;
 
   @media (max-width: 900px) {
     grid-template-columns: 1fr;
+    overflow-y: auto; // permitir si en mobile se rompe
   }
 }
 
