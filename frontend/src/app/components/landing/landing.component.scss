@@ -48,7 +48,7 @@ $amber: var(--amber);
     justify-content: space-between;
     padding: 0 80px;
     height: 72px;
-    background: rgba(11, 17, 32, 0.92);
+    background: rgba(var(--nav-rgb), 0.92);
     border-bottom: 1px solid rgba(var(--ink-rgb), 0.05);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -257,7 +257,7 @@ $amber: var(--amber);
     }
 }
 
-// ─── HERO DASHBOARD MOCKUP ────────────────────────────────────────────────────
+// ─── HERO DASHBOARD ILLUSTRATION ──────────────────────────────────────────────
 .lp-hero-right {
     position: relative;
 
@@ -272,145 +272,21 @@ $amber: var(--amber);
     }
 }
 
-.lp-dashboard-mock {
+.lp-nvr-illustration {
     border-radius: 16px;
     overflow: hidden;
     border: 1px solid rgba(var(--accent-rgb), 0.2);
-    background: rgba(var(--nav-rgb), 0.8);
+    background: rgba(var(--surface-rgb), 0.8);
     box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(10px);
-}
-
-.mock-nav {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 16px;
-    background: rgba(var(--ink-rgb), 0.03);
-    border-bottom: 1px solid rgba(var(--ink-rgb), 0.06);
-}
 
-.mock-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
-
-    &.red {
-        background: var(--red);
+    img {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: cover;
     }
-
-    &.yellow {
-        background: var(--amber);
-    }
-
-    &.green {
-        background: var(--green);
-    }
-}
-
-.mock-url {
-    font-size: 11px;
-    color: rgba(var(--ink-rgb), 0.35);
-    font-family: monospace;
-    margin-left: 8px;
-}
-
-.mock-body {
-    display: grid;
-    grid-template-columns: 1fr 140px;
-    height: 340px;
-}
-
-.mock-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2px;
-    background: var(--bg);
-    padding: 2px;
-}
-
-.mock-cell {
-    background: var(--nav);
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-    padding: 8px;
-    aspect-ratio: 16/9;
-
-    // Fake camera gradient
-    &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(160deg, rgba(var(--accent-rgb), 0.05) 0%, transparent 60%);
-    }
-}
-
-.mock-cell-overlay {
-    position: absolute;
-    bottom: 6px;
-    left: 8px;
-    z-index: 1;
-}
-
-.mock-cell-status {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-
-    &.online {
-        color: var(--green);
-    }
-}
-
-.dot-live {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    display: inline-block;
-    animation: pulse-live 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-live {
-
-    0%,
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.5;
-        transform: scale(0.8);
-    }
-}
-
-.mock-sidebar {
-    background: rgba(var(--nav-rgb), 0.9);
-    border-left: 1px solid rgba(var(--ink-rgb), 0.06);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 20px;
-    padding: 16px;
-}
-
-.mock-stat-val {
-    font-size: 22px;
-    font-weight: 700;
-    font-family: 'Space Grotesk', sans-serif;
-}
-
-.mock-stat-lbl {
-    font-size: 9px;
-    color: var(--nav-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 
 // ─── TRUST BAR ────────────────────────────────────────────────────────────────
@@ -779,7 +655,7 @@ $amber: var(--amber);
 
 // ─── FOOTER ───────────────────────────────────────────────────────────────────
 .lp-footer {
-    background: var(--bg);
+    background: var(--surface);
     border-top: 1px solid rgba(var(--ink-rgb), 0.05);
     position: relative;
     z-index: 1;
@@ -795,6 +671,45 @@ $amber: var(--amber);
         grid-template-columns: 1fr 1fr;
         padding: 48px 24px;
         gap: 32px;
+    }
+}
+
+// ─── SCROLL TO TOP ────────────────────────────────────────────────────────────
+.lp-scroll-top {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: $accent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 90;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.3);
+    border: none;
+
+    &.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    &:hover {
+        background: var(--accent-hover);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        bottom: 24px;
+        right: 24px;
     }
 }
 
