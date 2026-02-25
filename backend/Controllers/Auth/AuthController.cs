@@ -153,6 +153,36 @@ namespace MotorControlEnterprise.Api.Controllers
                 message = "Usuario creado. Invitación enviada por email." });
         }
 
+        // ─── POST /api/admin/auth/users/{id}/resend-invite ───────────────────────
+        /// <summary>Genera nueva contraseña temporal y reenvía el email de invitación.</summary>
+        [HttpPost("users/{id:int}/resend-invite")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> ResendInvite(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound(new { message = "Usuario no encontrado" });
+
+            var tempPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(9))
+                .Replace("+", "x").Replace("/", "y").Replace("=", "z")
+                .Substring(0, 12);
+
+            user.PasswordHash       = BCrypt.Net.BCrypt.HashPassword(tempPassword);
+            user.MustChangePassword = true;
+            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _emailService.SendUserInviteAsync(user.Email, user.Name ?? user.Email, tempPassword, "/login");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo reenviar invitación a {Email}", user.Email);
+                return Ok(new { message = "Contraseña restablecida pero el email no pudo enviarse.", tempPassword });
+            }
+
+            return Ok(new { message = $"Invitación reenviada a {user.Email}" });
+        }
+
         [HttpPatch("users/{id:int}/status")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> ToggleUserStatus(int id, [FromBody] UserStatusRequest req)
