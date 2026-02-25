@@ -10,7 +10,6 @@ import { ClientsComponent } from './components/clients/clients.component';
 import { ClientDetailComponent } from './components/client-detail/client-detail.component';
 import { CamerasComponent } from './components/cameras/cameras.component';
 import { CameraDetailComponent } from './components/cameras/camera-detail.component';
-import { MotorsComponent } from './components/motors/motors.component';
 import { RecordingsComponent } from './components/recordings/recordings.component';
 import { UsersComponent } from './components/users/users.component';
 import { TelemetryHistoryComponent } from './components/telemetry-history/telemetry-history.component';
@@ -53,7 +52,6 @@ export const routes: Routes = [
     { path: 'cameras/:id', component: CameraDetailComponent, canActivate: [adminAuthGuard] },
     { path: 'recordings', component: RecordingsComponent, canActivate: [adminAuthGuard] },
     { path: 'recordings/:id', component: RecordingsComponent, canActivate: [adminAuthGuard] },
-    { path: 'motors', component: MotorsComponent, canActivate: [adminAuthGuard] },
     { path: 'users', component: UsersComponent, canActivate: [adminAuthGuard] },
     { path: 'telemetry-history', component: TelemetryHistoryComponent, canActivate: [adminAuthGuard] },
     { path: 'wizard', component: WizardComponent, canActivate: [adminAuthGuard] },

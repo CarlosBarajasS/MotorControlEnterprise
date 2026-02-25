@@ -3,17 +3,15 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 
 @Component({
-    selector: 'app-client-shell',
-    standalone: true,
-    imports: [CommonModule, RouterModule],
-    template: `
+  selector: 'app-client-shell',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  template: `
     <div class="client-app">
       <header class="client-topbar">
         <div class="brand">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2">
-            <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
-          </svg>
-          <span class="brand-name">MotorControl <strong>Monitor</strong></span>
+          <div class="brand-icon">m</div>
+          <span class="brand-name">NIRM GROUP <strong>Monitor</strong></span>
         </div>
         <div class="topbar-right">
           <span class="user-greeting">{{ userName() }}</span>
@@ -30,7 +28,7 @@ import { RouterModule, Router } from '@angular/router';
       </main>
     </div>
   `,
-    styles: [`
+  styles: [`
     .client-app {
       min-height: 100vh;
       background: #060a14;
@@ -90,22 +88,22 @@ import { RouterModule, Router } from '@angular/router';
   `]
 })
 export class ClientShellComponent {
-    private router = inject(Router);
+  private router = inject(Router);
 
-    userName = signal('Cliente');
+  userName = signal('Cliente');
 
-    constructor() {
-        try {
-            const token = localStorage.getItem('motor_control_token');
-            if (token) {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                this.userName.set(payload.name || payload.email || 'Cliente');
-            }
-        } catch { }
-    }
+  constructor() {
+    try {
+      const token = localStorage.getItem('motor_control_token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        this.userName.set(payload.name || payload.email || 'Cliente');
+      }
+    } catch { }
+  }
 
-    logout() {
-        localStorage.removeItem('motor_control_token');
-        this.router.navigate(['/client/login']);
-    }
+  logout() {
+    localStorage.removeItem('motor_control_token');
+    this.router.navigate(['/client/login']);
+  }
 }

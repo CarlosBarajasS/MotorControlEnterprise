@@ -11,7 +11,7 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
     styleUrl: './app.component.scss'
 })
 export class AppComponent {
-    title = 'MotorControlEnterprise';
+    title = 'NirmGroup';
     router = inject(Router);
 
     isLoggedIn(): boolean {
