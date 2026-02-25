@@ -11,6 +11,18 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./landing.component.scss'],
 })
 export class LandingComponent implements OnInit {
+  isLightMode = document.body.classList.contains('theme-light');
+
+  toggleTheme() {
+    this.isLightMode = !this.isLightMode;
+    if (this.isLightMode) {
+      document.body.classList.add('theme-light');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.body.classList.remove('theme-light');
+      localStorage.setItem('theme', 'dark');
+    }
+  }
   private http = inject(HttpClient);
 
   mockStats = [

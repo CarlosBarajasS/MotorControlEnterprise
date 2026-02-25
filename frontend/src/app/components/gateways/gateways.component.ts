@@ -52,7 +52,7 @@ export class GatewaysComponent implements OnInit {
           clientName: c.name,
           location: c.city || 'Ubicación local',
           status: c.status,
-          cameras: Math.floor(Math.random() * 8) + 1, // Mock data for UI 
+          cameras: c.cameraCount ?? 0,
           cpu: Math.floor(Math.random() * 40) + 10,
           ram: Math.floor(Math.random() * 60) + 20,
           uptime: '99.9%'
