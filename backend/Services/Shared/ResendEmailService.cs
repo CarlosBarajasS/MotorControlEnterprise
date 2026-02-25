@@ -60,10 +60,10 @@ namespace MotorControlEnterprise.Api.Services
             await SendAsync(to, subject, html);
         }
 
-        public async Task SendUserInviteAsync(string to, string name, string tempPassword)
+        public async Task SendUserInviteAsync(string to, string name, string tempPassword, string loginPath = "/client/login")
         {
             var baseUrl  = _config["App:FrontendUrl"] ?? "http://177.247.175.4:8080";
-            var loginUrl = $"{baseUrl.TrimEnd('/')}/client/login";
+            var loginUrl = $"{baseUrl.TrimEnd('/')}{loginPath}";
             var subject  = "🔐 Acceso a tu portal de monitoreo — NIRM GROUP";
             var html     = $@"
 <div style='font-family:system-ui,sans-serif;max-width:500px;color:#0b1220'>
