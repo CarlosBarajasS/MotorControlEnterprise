@@ -18,8 +18,8 @@
         <video #videoElement controls autoplay muted playsinline class="video-player"></video>
       </div>
       <div class="video-footer">
-        <p class="source-url" title="Stream URL">{{ camera().rtspUrl }}</p>
-        <span class="badge hls-badge">HLS Stream Edge</span>
+        <p class="source-url" title="URL del Stream">{{ camera().rtspUrl }}</p>
+        <span class="badge hls-badge">HLS en Vivo (Edge)</span>
       </div>
     </div>
 
@@ -53,9 +53,9 @@
 
         <div class="zoom-controls">
           <button class="ptz-btn zoom" (mousedown)="ptzMove(0, 0, 100)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">➕
-            Zoom In</button>
+            Acercar</button>
           <button class="ptz-btn zoom" (mousedown)="ptzMove(0, 0, -100)" (mouseup)="ptzStop()"
-            (mouseleave)="ptzStop()">➖ Zoom Out</button>
+            (mouseleave)="ptzStop()">➖ Alejar</button>
         </div>
 
         <div class="presets-section" *ngIf="presets().length > 0">

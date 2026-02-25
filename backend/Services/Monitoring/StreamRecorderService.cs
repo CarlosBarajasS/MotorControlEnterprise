@@ -66,10 +66,12 @@ namespace MotorControlEnterprise.Api.Services
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            // Cámaras activas de clientes con cloud storage habilitado
+            // Solo cámaras marcadas como IsRecordingOnly (baja calidad para NAS/cloud)
+            // Las cámaras de alta calidad (IsRecordingOnly=false) son exclusivamente para streaming en vivo
             var cameras = await db.Cameras
                 .Include(c => c.Client)
                 .Where(c => c.Status == "active"
+                         && c.IsRecordingOnly
                          && c.Client != null
                          && c.Client.CloudStorageActive
                          && c.CameraId != null

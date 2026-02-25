@@ -47,6 +47,13 @@ namespace MotorControlEnterprise.Api.Models
 
         public bool Ptz { get; set; } = false;
 
+        /// <summary>
+        /// Si es true, la cámara se usa SOLO para grabación (NAS/cloud).
+        /// No aparece en la vista de cámaras del panel de administración.
+        /// </summary>
+        [Column("is_recording_only")]
+        public bool IsRecordingOnly { get; set; } = false;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }

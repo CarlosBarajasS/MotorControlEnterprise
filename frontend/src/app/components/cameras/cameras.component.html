@@ -76,7 +76,7 @@
                 <div class="cam-head">
                     <div class="cam-name">{{ cam.name }}</div>
                     <div class="cam-type" [class.cloud]="cam.streamType === 'cloud'" [class.nvr]="cam.streamType === 'nvr'">
-                        {{ cam.streamType === 'cloud' ? 'Cloud NAS' : (cam.streamType === 'nvr' ? 'NVR Local' : 'SD Card') }}
+                        {{ cam.streamType === 'cloud' ? 'Cloud NAS' : (cam.streamType === 'nvr' ? 'NVR Local' : 'Tarjeta SD') }}
                     </div>
                 </div>
 
@@ -101,7 +101,7 @@
                         Ver en Vivo
                     </button>
                     <button class="btn-rec" [routerLink]="['/recordings', cam.id]">
-                        Recordings
+                        Grabaciones
                     </button>
                     
                     <button class="btn-icon" (click)="openEdit(cam)" title="Configuración">

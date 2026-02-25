@@ -24,7 +24,8 @@ namespace MotorControlEnterprise.Api.Controllers
             string? Location,
             string? RtspUrl,
             int? ClientId,
-            bool Ptz = false
+            bool Ptz = false,
+            bool IsRecordingOnly = false
         );
 
         // Extrae la URL RTSP del campo Streams (jsonb { "rtsp": "...", "hls": "..." })
@@ -57,6 +58,9 @@ namespace MotorControlEnterprise.Api.Controllers
             if (role != "admin")
                 query = query.Where(c => c.UserId == userId);
 
+            // Excluir cámaras de solo grabación (NAS/cloud) — no se muestran en la UI
+            query = query.Where(c => !c.IsRecordingOnly);
+
             var cameras = await query
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
@@ -64,7 +68,7 @@ namespace MotorControlEnterprise.Api.Controllers
             return Ok(cameras.Select(c => new
             {
                 c.Id, c.Name, c.Location, c.Status,
-                c.CameraId, c.CameraKey, c.Ptz,
+                c.CameraId, c.CameraKey, c.Ptz, c.IsRecordingOnly,
                 c.LastSeen, c.ClientId, c.Streams, c.CreatedAt,
                 GatewayId = c.Client != null ? c.Client.GatewayId : null,
                 RtspUrl = ExtractRtspUrl(c.Streams),
@@ -85,7 +89,7 @@ namespace MotorControlEnterprise.Api.Controllers
             return Ok(new
             {
                 camera.Id, camera.Name, camera.Location, camera.Status,
-                camera.CameraId, camera.CameraKey, camera.Ptz,
+                camera.CameraId, camera.CameraKey, camera.Ptz, camera.IsRecordingOnly,
                 camera.LastSeen, camera.ClientId, camera.Streams, camera.CreatedAt,
                 GatewayId = camera.Client != null ? camera.Client.GatewayId : null,
                 RtspUrl = ExtractRtspUrl(camera.Streams),
@@ -123,15 +127,16 @@ namespace MotorControlEnterprise.Api.Controllers
 
             var camera = new Camera
             {
-                Name      = dto.Name,
-                Location  = dto.Location,
-                Ptz       = dto.Ptz,
-                ClientId  = dto.ClientId,
-                UserId    = userId,
-                Streams   = dto.RtspUrl != null ? BuildStreams(dto.RtspUrl) : null,
-                Status    = "active",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                Name            = dto.Name,
+                Location        = dto.Location,
+                Ptz             = dto.Ptz,
+                IsRecordingOnly = dto.IsRecordingOnly,
+                ClientId        = dto.ClientId,
+                UserId          = userId,
+                Streams         = dto.RtspUrl != null ? BuildStreams(dto.RtspUrl) : null,
+                Status          = "active",
+                CreatedAt       = DateTime.UtcNow,
+                UpdatedAt       = DateTime.UtcNow
             };
 
             _db.Cameras.Add(camera);
@@ -140,7 +145,7 @@ namespace MotorControlEnterprise.Api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = camera.Id }, new
             {
                 camera.Id, camera.Name, camera.Location, camera.Status,
-                camera.Ptz, camera.ClientId, camera.Streams, camera.CreatedAt,
+                camera.Ptz, camera.IsRecordingOnly, camera.ClientId, camera.Streams, camera.CreatedAt,
                 RtspUrl = ExtractRtspUrl(camera.Streams)
             });
         }
@@ -153,11 +158,12 @@ namespace MotorControlEnterprise.Api.Controllers
             var camera = await _db.Cameras.FindAsync(id);
             if (camera == null) return NotFound();
 
-            camera.Name      = dto.Name;
-            camera.Location  = dto.Location;
-            camera.Ptz       = dto.Ptz;
-            camera.ClientId  = dto.ClientId;
-            camera.UpdatedAt = DateTime.UtcNow;
+            camera.Name            = dto.Name;
+            camera.Location        = dto.Location;
+            camera.Ptz             = dto.Ptz;
+            camera.IsRecordingOnly = dto.IsRecordingOnly;
+            camera.ClientId        = dto.ClientId;
+            camera.UpdatedAt       = DateTime.UtcNow;
 
             if (dto.RtspUrl != null)
                 camera.Streams = BuildStreams(dto.RtspUrl);
@@ -167,7 +173,7 @@ namespace MotorControlEnterprise.Api.Controllers
             return Ok(new
             {
                 camera.Id, camera.Name, camera.Location, camera.Status,
-                camera.Ptz, camera.ClientId, camera.Streams, camera.CreatedAt,
+                camera.Ptz, camera.IsRecordingOnly, camera.ClientId, camera.Streams, camera.CreatedAt,
                 RtspUrl = ExtractRtspUrl(camera.Streams)
             });
         }
