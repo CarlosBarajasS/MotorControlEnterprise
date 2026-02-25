@@ -20,6 +20,8 @@ import { ClientShellComponent } from './components/client-portal/client-shell.co
 import { ClientCamerasComponent } from './components/client-portal/client-cameras.component';
 import { ClientCameraDetailComponent } from './components/client-portal/client-camera-detail.component';
 import { ClientRecordingsComponent } from './components/client-portal/client-recordings.component';
+import { ClientChangePasswordComponent } from './components/client-change-password/client-change-password.component';
+import { ChangePasswordComponent } from './components/change-password/change-password.component';
 import { clientAuthGuard } from './guards/client-auth.guard';
 
 const adminAuthGuard = () => {
@@ -35,6 +37,13 @@ const adminAuthGuard = () => {
             inject(Router).navigate(['/client/cameras']);
             return false;
         }
+
+        // ADMIN FORCED PASSWORD CHANGE
+        const mustChange = localStorage.getItem('motor_control_must_change');
+        if (mustChange === 'true') {
+            inject(Router).navigate(['/change-password']);
+            return false;
+        }
     } catch { }
     return true;
 };
@@ -42,6 +51,7 @@ const adminAuthGuard = () => {
 export const routes: Routes = [
     { path: '', component: LandingComponent, pathMatch: 'full' },
     { path: 'login', component: LoginComponent },
+    { path: 'change-password', component: ChangePasswordComponent },
 
     // Admin routes
     { path: 'dashboard', component: DashboardComponent, canActivate: [adminAuthGuard] },
@@ -61,6 +71,7 @@ export const routes: Routes = [
         path: 'client',
         children: [
             { path: 'login', component: ClientLoginComponent },
+            { path: 'change-password', component: ClientChangePasswordComponent },
             {
                 path: '',
                 component: ClientShellComponent,
