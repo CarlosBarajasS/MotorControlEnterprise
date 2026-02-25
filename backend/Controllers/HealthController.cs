@@ -36,17 +36,17 @@ namespace MotorControlEnterprise.Api.Controllers
                 : StatusCode(503, new { status, services = new { database = "error" } });
         }
 
-        // GET /health/test-email  — envía un email de prueba al AdminAlertEmail configurado
+        // GET /health/test-email?to=correo@ejemplo.com  — envía un email de prueba
         [HttpGet("test-email")]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> TestEmail([FromServices] IEmailService emailService)
+        public async Task<IActionResult> TestEmail([FromQuery] string? to, [FromServices] IEmailService emailService)
         {
-            var to = _config["Email:AdminAlertEmail"];
-            if (string.IsNullOrWhiteSpace(to))
-                return BadRequest(new { message = "Email:AdminAlertEmail no está configurado en appsettings." });
+            var recipient = to ?? _config["Email:AdminAlertEmail"];
+            if (string.IsNullOrWhiteSpace(recipient))
+                return BadRequest(new { message = "Pasa ?to=correo@ejemplo.com o configura Email:AdminAlertEmail en .env" });
 
-            await emailService.SendTestEmailAsync(to);
-            return Ok(new { message = $"Email de prueba enviado a {to}" });
+            await emailService.SendTestEmailAsync(recipient);
+            return Ok(new { message = $"Email de prueba enviado a {recipient}" });
         }
     }
 }
