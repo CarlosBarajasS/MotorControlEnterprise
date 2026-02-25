@@ -42,6 +42,7 @@ namespace MotorControlEnterprise.Api.Services
                 ALTER TABLE ""Clients"" ADD COLUMN IF NOT EXISTS nvr_password VARCHAR(255);
                 ALTER TABLE ""Clients"" ADD COLUMN IF NOT EXISTS nvr_brand VARCHAR(50);
                 ALTER TABLE ""Cameras"" ADD COLUMN IF NOT EXISTS is_recording_only BOOLEAN NOT NULL DEFAULT FALSE;
+                ALTER TABLE ""Users""   ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT FALSE;
             ", cancellationToken);
 
             // Si ya existe al menos un admin, no hacer nada

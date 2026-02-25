@@ -86,6 +86,11 @@ services:
       # Storage path compartido con el volumen NAS
       Storage__NasRecordingsPath: "/mnt/nas/recordings"
       TZ: "America/Mexico_City"
+      # Email (Resend.dev) — credenciales de clientes y alertas de cámaras
+      Email__ResendApiKey:    ${Email__ResendApiKey:-}
+      Email__AdminAlertEmail: ${Email__AdminAlertEmail:-}
+      Email__From:            ${Email__From:-}
+      App__FrontendUrl:       ${App__FrontendUrl:-http://177.247.175.4:8080}
       # Primer admin — eliminar del .env después del primer login
       Seed__AdminEmail:    ${Seed__AdminEmail:-}
       Seed__AdminPassword: ${Seed__AdminPassword:-}
