@@ -17,7 +17,6 @@ export class AuthService {
             tap(res => {
                 if (res.token) {
                     localStorage.setItem(this.tokenKey, res.token);
-                    this.router.navigate(['/dashboard']);
                 }
             })
         );

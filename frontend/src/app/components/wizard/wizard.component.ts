@@ -218,7 +218,8 @@ export class WizardComponent implements OnInit {
             name: cam.id,
             location: this.clientData.location,
             rtspUrl: `rtsp://${cam.user || 'admin'}:${cam.password || ''}@${cam.ip}${cam.rtspPath}`,
-            ptz: false
+            ptz: false,
+            clientId: this.clientId()
           })
         });
       } catch (e) {
