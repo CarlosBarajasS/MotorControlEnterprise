@@ -84,7 +84,11 @@ export class WizardComponent implements OnInit {
       this.generateFiles();
       this.clearAlert(2);
     } else if (this.currentStep() === 5) {
-      this.createUserInApi();
+      if (this.userCreated()) {
+        this.router.navigate(['/clients']);
+      } else {
+        this.createUserInApi();
+      }
       return;
     }
 
