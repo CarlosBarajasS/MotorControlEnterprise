@@ -199,8 +199,16 @@ namespace MotorControlEnterprise.Api.Controllers
             if (role == "admin")
                 return await _db.Cameras.FindAsync(cameraId);
 
+            // Para usuarios cliente: buscar via Client.UserId → ClientId → Camera.ClientId
+            var clientId = await _db.Clients
+                .Where(c => c.UserId == userId)
+                .Select(c => (int?)c.Id)
+                .FirstOrDefaultAsync();
+
+            if (clientId == null) return null;
+
             return await _db.Cameras
-                .FirstOrDefaultAsync(c => c.Id == cameraId && c.UserId == userId && c.Status == "active");
+                .FirstOrDefaultAsync(c => c.Id == cameraId && c.ClientId == clientId && c.Status == "active");
         }
 
         private string MediamtxBase() =>
