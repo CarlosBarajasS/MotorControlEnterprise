@@ -228,171 +228,40 @@ export class WizardComponent implements OnInit {
     }
   }
 
-  // --- Step 3: Archivos ---
-  generateFiles() {
-    const env = this.buildEnv();
-    const compose = this.buildDockerCompose();
-    const mediamtx = this.buildMediamtxYml();
-    this.generatedFiles.set({ env, compose, mediamtx });
-  }
+  // --- Step 3: Archivos (Desde API) ---
+  async generateFiles() {
+    this.alerts.update(a => {
+      const newAlerts = { ...a };
+      delete newAlerts[3];
+      return newAlerts;
+    });
 
-  buildEnv(): string {
-    const gw = this.clientData.gatewayId;
-    return `# NIRM GROUP Edge Gateway
-# Cliente: ${this.clientData.name}
-# Generado: ${new Date().toLocaleDateString('es-MX')}
+    try {
+      const gId = this.clientData.gatewayId;
+      const res = await fetch(`${this.API_URL}/admin/clients/${gId}/edge-config`, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
+        }
+      });
 
-# ===================================================
-# IDENTIFICACION DEL GATEWAY
-# ===================================================
-CLIENT_ID=${gw}
-GATEWAY_NAME=${this.clientData.name}
-LOCATION=${this.clientData.location}
+      if (!res.ok) {
+        const body = await res.json();
+        this.showAlert(3, 'error', body.message || 'Error al obtener la configuración del Edge Gateway desde el servidor central.');
+        return;
+      }
 
-# ===================================================
-# SERVIDOR CENTRAL - MQTT
-# ===================================================
-MQTT_HOST=177.247.175.4
-MQTT_PORT=1885
-MQTT_USERNAME=
-MQTT_PASSWORD=
-HEARTBEAT_INTERVAL_MS=30000
+      const configData = await res.json();
 
-# ===================================================
-# MEDIAMTX LOCAL
-# ===================================================
-MEDIAMTX_API_URL=http://mediamtx:9997
-MEDIAMTX_USERNAME=edge
-MEDIAMTX_PASSWORD=edge123
+      this.generatedFiles.set({
+        env: configData.env,
+        compose: configData.dockerCompose,
+        mediamtx: configData.mediamtxYml
+      });
 
-# ===================================================
-# RELAY AL SERVIDOR CENTRAL
-# ===================================================
-CENTRAL_RTSP_HOST=177.247.175.4
-CENTRAL_RTSP_PORT=8556
-MEDIAMTX_PUSH_USER=edge-relay
-MEDIAMTX_PUSH_PASS=relay-secret-2026
-
-# ===================================================
-# SERVIDOR HTTP (edge-agent)
-# ===================================================
-PORT=8090
-TZ=America/Mexico_City
-
-# ===================================================
-# CREDENCIALES DE CAMARAS (para ISAPI y PTZ)
-# ===================================================
-${this.cameras().map(cam => `CAMERA_${(cam.id || 'cam').toUpperCase().replace(/-/g, '_')}_IP=${cam.ip}
-CAMERA_${(cam.id || 'cam').toUpperCase().replace(/-/g, '_')}_USER=${cam.user || 'admin'}
-CAMERA_${(cam.id || 'cam').toUpperCase().replace(/-/g, '_')}_PASS=${cam.password || ''}`).join('\n')}
-`;
-  }
-
-  buildDockerCompose(): string {
-    return `services:
-  mediamtx:
-    image: bluenviron/mediamtx:latest-ffmpeg
-    container_name: edge-mediamtx
-    restart: unless-stopped
-    ports:
-      - "8554:8554"   # RTSP
-      - "8888:8888"   # HLS
-      - "8889:8889"   # WebRTC HTTP
-      - "8189:8189/udp" # WebRTC ICE/UDP
-      - "9997:9997"   # API
-    environment:
-      - MEDIAMTX_USERNAME=\${MEDIAMTX_USERNAME:-edge}
-      - MEDIAMTX_PASSWORD=\${MEDIAMTX_PASSWORD:-edge123}
-      - MEDIAMTX_PUSH_USER=\${MEDIAMTX_PUSH_USER:-edge-relay}
-      - MEDIAMTX_PUSH_PASS=\${MEDIAMTX_PUSH_PASS:-relay-secret-changeme}
-      - CENTRAL_RTSP_HOST=\${CENTRAL_RTSP_HOST:-177.247.175.4}
-      - CENTRAL_RTSP_PORT=\${CENTRAL_RTSP_PORT:-8556}
-      - GATEWAY_CLIENT_ID=\${CLIENT_ID:-edge-gateway-001}
-      - TZ=America/Mexico_City
-    volumes:
-      - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
-      - ./data/recordings:/recordings
-      - /usr/share/zoneinfo/America/Mexico_City:/usr/share/zoneinfo/America/Mexico_City:ro
-      - /usr/share/zoneinfo/UTC:/usr/share/zoneinfo/UTC:ro
-    networks:
-      - edge-net
-
-  edge-agent:
-    build: ./edge-agent
-    container_name: edge-agent
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      - TZ=\${TZ:-America/Mexico_City}
-    volumes:
-      - ./data/recordings:/recordings:ro
-    depends_on:
-      - mediamtx
-    networks:
-      - edge-net
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8090/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 4
-      start_period: 60s
-
-networks:
-  edge-net:
-    driver: bridge
-`;
-  }
-
-  buildMediamtxYml(): string {
-    const gw = this.clientData.gatewayId;
-    const camPaths = this.cameras().map(cam => {
-      const user = cam.user ? cam.user : 'admin';
-      const pass = cam.password ? cam.password : 'PASSWORD';
-      return `  ${cam.id}:
-    source: rtsp://${user}:${pass}@${cam.ip}${cam.rtspPath}`;
-    }).join('\n\n');
-
-    return `###############################################
-# MediaMTX Edge Gateway
-# Cliente: ${this.clientData.name}
-# Gateway ID: ${gw}
-###############################################
-
-logLevel: info
-
-api: yes
-apiAddress: 0.0.0.0:9997
-
-authInternalUsers:
-  - user: "\${MEDIAMTX_USERNAME}"
-    pass: "\${MEDIAMTX_PASSWORD}"
-    permissions:
-      - action: read
-      - action: api
-      - action: publish
-
-rtspAddress: :8554
-hlsAddress: :8888
-webrtcAddress: :8889
-
-pathDefaults:
-  record: yes
-  recordPath: /recordings/%path/%Y-%m-%d/%H-%M-%S
-  recordSegmentDuration: 15m
-  recordFormat: fmp4
-  runOnReady: >-
-    ffmpeg
-    -rtsp_transport tcp
-    -i rtsp://\${MEDIAMTX_USERNAME}:\${MEDIAMTX_PASSWORD}@127.0.0.1:8554/$MTX_PATH
-    -c copy -f rtsp
-    -rtsp_transport tcp
-    rtsp://\${MEDIAMTX_PUSH_USER}:\${MEDIAMTX_PUSH_PASS}@\${CENTRAL_RTSP_HOST}:\${CENTRAL_RTSP_PORT}/\${GATEWAY_CLIENT_ID}/$MTX_PATH
-  runOnReadyRestart: yes
-
-paths:
-${camPaths}
-`;
+    } catch (e: any) {
+      this.showAlert(3, 'error', 'Error de red al contactar al servidor: ' + e.message);
+    }
   }
 
   showTab(tab: 'env' | 'mediamtx' | 'compose') {
