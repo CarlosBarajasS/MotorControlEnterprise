@@ -21,7 +21,7 @@ export class UsersComponent implements OnInit {
     newUser = signal({
         email: '',
         name: '',
-        role: 'client',
+        role: 'admin',
         location: 'NIRM GROUP - Sede Principal'
     });
 
@@ -41,7 +41,7 @@ export class UsersComponent implements OnInit {
     }
 
     openCreate() {
-        this.newUser.set({ email: '', name: '', role: 'client', location: 'NIRM GROUP - Sede Principal' });
+        this.newUser.set({ email: '', name: '', role: 'admin', location: 'NIRM GROUP - Sede Principal' });
         this.showModal.set(true);
     }
 
