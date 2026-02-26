@@ -25,7 +25,7 @@
 
     <!-- Controls Column -->
     <div class="controls-column">
-      <div class="panel-card ptz-panel">
+      <div class="panel-card ptz-panel" *ngIf="camera().ptz">
         <h3><span class="icon">🕹️</span> Control PTZ</h3>
         <p class="help-text">Mantén presionado para mover la cámara si soporta protocolo ONVIF/PTZ.</p>
 
