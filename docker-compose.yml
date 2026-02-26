@@ -91,6 +91,16 @@ services:
       Email__AdminAlertEmail: ${Email__AdminAlertEmail:-}
       Email__From:            ${Email__From:-}
       App__FrontendUrl:       ${App__FrontendUrl:-http://177.247.175.4:8080}
+      # EdgeDefaults — configuración generada para nuevos edge gateways
+      EdgeDefaults__MqttPublicHost:   "177.247.175.4"
+      EdgeDefaults__MqttPublicPort:   "1885"
+      EdgeDefaults__MqttEdgeUser:     "edge-client"
+      EdgeDefaults__MqttEdgePass:     "${MQTT_EDGE_CLIENT_PASS:-CHANGE_THIS}"
+      EdgeDefaults__CentralRtspHost:  "177.247.175.4"
+      EdgeDefaults__CentralRtspPort:  "8556"
+      EdgeDefaults__MediamtxPushUser: "edge-relay"
+      EdgeDefaults__MediamtxPushPass: "${MEDIAMTX_RELAY_PASS:-CHANGE_THIS}"
+      EdgeDefaults__CentralApiUrl:    "http://177.247.175.4/api"
       # Primer admin — eliminar del .env después del primer login
       Seed__AdminEmail:    ${Seed__AdminEmail:-}
       Seed__AdminPassword: ${Seed__AdminPassword:-}

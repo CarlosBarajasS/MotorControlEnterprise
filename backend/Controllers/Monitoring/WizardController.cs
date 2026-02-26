@@ -50,18 +50,16 @@ namespace MotorControlEnterprise.Api.Controllers
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
-            // Valores del servidor (appsettings / variables de entorno)
-            var mqttHost     = _config["Mqtt:Host"] ?? "177.247.175.4";
-            var mqttPort     = _config["Mqtt:Port"] ?? "1885";
-            var centralRtsp  = _config["EdgeDefaults:CentralRtspHost"] ?? mqttHost;
-            var centralPort  = _config["EdgeDefaults:CentralRtspPort"] ?? "8556";
-            var pushUser     = _config["EdgeDefaults:MediamtxPushUser"] ?? "edge-relay";
-            var pushPass     = _config["EdgeDefaults:MediamtxPushPass"] ?? "relay-secret-changeme";
-            var centralApi   = _config["EdgeDefaults:CentralApiUrl"]   ?? $"http://{mqttHost}/api";
-
-            // Credenciales MQTT deterministas por gatewayId
-            var mqttUsername = $"client-{gatewayId}";
-            var mqttPassword = DerivePassword(gatewayId);
+            // IP/puerto PÚBLICOS del servidor central (para edge gateways remotos)
+            var mqttHost    = _config["EdgeDefaults:MqttPublicHost"]    ?? "177.247.175.4";
+            var mqttPort    = _config["EdgeDefaults:MqttPublicPort"]    ?? "1885";
+            var mqttUser    = _config["EdgeDefaults:MqttEdgeUser"]      ?? "edge-client";
+            var mqttPass    = _config["EdgeDefaults:MqttEdgePass"]      ?? "CHANGE_THIS";
+            var centralRtsp = _config["EdgeDefaults:CentralRtspHost"]   ?? "177.247.175.4";
+            var centralPort = _config["EdgeDefaults:CentralRtspPort"]   ?? "8556";
+            var pushUser    = _config["EdgeDefaults:MediamtxPushUser"]  ?? "edge-relay";
+            var pushPass    = _config["EdgeDefaults:MediamtxPushPass"]  ?? "relay-secret-changeme";
+            var centralApi  = _config["EdgeDefaults:CentralApiUrl"]     ?? $"http://{mqttHost}/api";
 
             var location = string.Join(", ",
                 new[] { client.City, client.State }.Where(s => !string.IsNullOrWhiteSpace(s)));
@@ -70,21 +68,16 @@ namespace MotorControlEnterprise.Api.Controllers
             return Ok(new
             {
                 gatewayId,
-                mqttUsername,
-                mqttPassword,
-                mosquittoLine  = $"{mqttUsername}:{mqttPassword}",  // para agregar a password_file
-                env            = BuildEnv(client, gatewayId, mqttHost, mqttPort, mqttUsername, mqttPassword, centralApi, location),
-                dockerCompose  = BuildDockerCompose(centralRtsp, centralPort, pushUser, pushPass),
-                mediamtxYml    = BuildMediamtxYml(cameras, gatewayId),
+                mqttHost,
+                mqttPort,
+                mqttUser,
+                centralRtspHost = centralRtsp,
+                centralRtspPort = centralPort,
+                env             = BuildEnv(client, gatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location),
+                dockerCompose   = BuildDockerCompose(centralRtsp, centralPort, pushUser, pushPass),
+                mediamtxYml     = BuildMediamtxYml(cameras, gatewayId),
                 localStorageType = client.LocalStorageType ?? "nvr"
             });
-        }
-
-        // Contraseña de 16 chars hex derivada del gatewayId — repetible y única por cliente
-        private static string DerivePassword(string gatewayId)
-        {
-            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes("mce-mqtt-salt-" + gatewayId));
-            return Convert.ToHexString(bytes)[..16].ToLower();
         }
 
         private static string? ExtractRtspFromStreams(string? streams)
