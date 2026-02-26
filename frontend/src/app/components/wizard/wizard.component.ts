@@ -81,7 +81,7 @@ export class WizardComponent implements OnInit {
     } else if (this.currentStep() === 2) {
       if (!this.validateStep2()) return;
       await this.createCamerasInApi();
-      this.generateFiles();
+      await this.generateFiles();
       this.clearAlert(2);
     } else if (this.currentStep() === 5) {
       if (this.userCreated()) {
@@ -237,8 +237,7 @@ export class WizardComponent implements OnInit {
     });
 
     try {
-      const gId = this.clientData.gatewayId;
-      const res = await fetch(`${this.API_URL}/admin/clients/${gId}/edge-config`, {
+      const res = await fetch(`${this.API_URL}/admin/clients/${this.clientId()}/edge-config`, {
         method: 'GET',
         headers: {
           'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
