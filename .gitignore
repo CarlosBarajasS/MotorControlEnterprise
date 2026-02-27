@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+mosquitto-passwd
 
 # .NET build output
 bin/
@@ -28,8 +29,12 @@ mosquitto/log/
 .DS_Store
 Thumbs.db
 
-# AI tools (local only)
+# AI tools — todo local, no subir al repo
 .claude/
 .kilocode/
+.agents/
+CLAUDE.md
+AGENTS.md
+frontend/CLAUDE.md
 AI_RULES.md
 TODO.md
