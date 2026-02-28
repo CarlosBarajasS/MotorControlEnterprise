@@ -4,10 +4,10 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
 @Component({
-    selector: 'app-client-recordings',
-    standalone: true,
-    imports: [CommonModule, RouterModule, DatePipe],
-    template: `
+  selector: 'app-client-recordings',
+  standalone: true,
+  imports: [CommonModule, RouterModule, DatePipe],
+  template: `
     <div class="recordings-container">
       <div class="rec-topbar">
         <div>
@@ -67,7 +67,7 @@ import { HttpClient } from '@angular/common/http';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .recordings-container { color: #f1f5f9; }
     .rec-topbar { margin-bottom: 24px; }
     .back-link {
@@ -124,73 +124,76 @@ import { HttpClient } from '@angular/common/http';
   `]
 })
 export class ClientRecordingsComponent implements OnInit {
-    private http = inject(HttpClient);
-    private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
+  private route = inject(ActivatedRoute);
 
-    cameraId = signal('');
-    cameraName = signal('Cámara');
-    availableDates = signal<string[]>([]);
-    selectedDate = signal('');
-    recordings = signal<any[]>([]);
-    sdRecordings = signal<any[]>([]);
-    currentVideo = signal('');
-    loadingDates = signal(true);
-    private blobUrl = '';
+  cameraId = signal('');
+  cameraName = signal('Cámara');
+  availableDates = signal<string[]>([]);
+  selectedDate = signal('');
+  recordings = signal<any[]>([]);
+  sdRecordings = signal<any[]>([]);
+  currentVideo = signal('');
+  loadingDates = signal(true);
+  private blobUrl = '';
 
-    ngOnInit() {
-        const id = this.route.snapshot.paramMap.get('id') || '';
-        this.cameraId.set(id);
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id') || '';
+    this.cameraId.set(id);
 
-        // Load camera name
-        this.http.get<any>(`/api/cameras/${id}`).subscribe({
-            next: (cam) => this.cameraName.set(cam.name || 'Cámara'),
-            error: () => { }
-        });
+    // Load camera name
+    this.http.get<any[]>(`/api/recordings/cameras`).subscribe({
+      next: (cams) => {
+        const cam = (cams || []).find((c: any) => String(c.id) === id);
+        if (cam) this.cameraName.set(cam.name);
+      },
+      error: () => { }
+    });
 
-        // Load cloud dates
-        this.http.get<any>(`/api/recordings/cloud/${id}/dates`).subscribe({
-            next: (res) => {
-                this.availableDates.set(res.dates || []);
-                this.loadingDates.set(false);
-                if (this.availableDates().length > 0) {
-                    this.selectDate(this.availableDates()[0]);
-                }
-            },
-            error: () => this.loadingDates.set(false)
-        });
-
-        // Load SD recordings
-        this.http.get<any>(`/api/recordings/sd/${id}`).subscribe({
-            next: (res) => this.sdRecordings.set(Array.isArray(res) ? res : (res.files || [])),
-            error: () => { }
-        });
-    }
-
-    selectDate(date: string) {
-        this.selectedDate.set(date);
-        this.http.get<any>(`/api/recordings/cloud/${this.cameraId()}?date=${date}`).subscribe({
-            next: (res) => this.recordings.set(res.files || []),
-            error: () => this.recordings.set([])
-        });
-    }
-
-    async playRecording(rec: any) {
-        const token = localStorage.getItem('motor_control_token');
-        try {
-            const response = await fetch(`/api/recordings/cloud/video?path=${encodeURIComponent(rec.path)}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (this.blobUrl) URL.revokeObjectURL(this.blobUrl);
-            const blob = await response.blob();
-            this.blobUrl = URL.createObjectURL(blob);
-            this.currentVideo.set(this.blobUrl);
-        } catch (e) {
-            console.error('Error playing recording:', e);
+    // Load cloud dates
+    this.http.get<any>(`/api/recordings/cloud/${id}/dates`).subscribe({
+      next: (res) => {
+        this.availableDates.set(res.dates || []);
+        this.loadingDates.set(false);
+        if (this.availableDates().length > 0) {
+          this.selectDate(this.availableDates()[0]);
         }
-    }
+      },
+      error: () => this.loadingDates.set(false)
+    });
 
-    playSdRecording(rec: any) {
-        // SD recordings are served directly
-        this.currentVideo.set(`/api/recordings/sd/video?path=${encodeURIComponent(rec.path || rec.filename)}`);
+    // Load SD recordings
+    this.http.get<any>(`/api/recordings/sd/${id}`).subscribe({
+      next: (res) => this.sdRecordings.set(Array.isArray(res) ? res : (res.files || [])),
+      error: () => { }
+    });
+  }
+
+  selectDate(date: string) {
+    this.selectedDate.set(date);
+    this.http.get<any>(`/api/recordings/cloud/${this.cameraId()}?date=${date}`).subscribe({
+      next: (res) => this.recordings.set(res.files || []),
+      error: () => this.recordings.set([])
+    });
+  }
+
+  async playRecording(rec: any) {
+    const token = localStorage.getItem('motor_control_token');
+    try {
+      const response = await fetch(`/api/recordings/cloud/video?path=${encodeURIComponent(rec.path)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (this.blobUrl) URL.revokeObjectURL(this.blobUrl);
+      const blob = await response.blob();
+      this.blobUrl = URL.createObjectURL(blob);
+      this.currentVideo.set(this.blobUrl);
+    } catch (e) {
+      console.error('Error playing recording:', e);
     }
+  }
+
+  playSdRecording(rec: any) {
+    // SD recordings are served directly
+    this.currentVideo.set(`/api/recordings/sd/video?path=${encodeURIComponent(rec.path || rec.filename)}`);
+  }
 }

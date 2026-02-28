@@ -5,10 +5,10 @@ import { HttpClient } from '@angular/common/http';
 import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
 
 @Component({
-    selector: 'app-client-camera-detail',
-    standalone: true,
-    imports: [CommonModule, RouterModule, CameraViewerComponent],
-    template: `
+  selector: 'app-client-camera-detail',
+  standalone: true,
+  imports: [CommonModule, RouterModule, CameraViewerComponent],
+  template: `
     <div class="detail-container" *ngIf="camera()">
       <div class="detail-topbar">
         <div>
@@ -22,7 +22,11 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
           </p>
         </div>
         <div class="detail-actions">
-          <a [routerLink]="['/client/recordings', camera().id]" class="btn-recordings">🎞 Grabaciones</a>
+          <a [routerLink]="camera().recordingCameraId ? ['/client/recordings', camera().recordingCameraId] : null" 
+             class="btn-recordings" [class.disabled]="!camera().recordingCameraId"
+             [title]="!camera().recordingCameraId ? 'Esta cámara no tiene almacenamiento en nube configurado' : ''">
+             🎞 Grabaciones
+          </a>
         </div>
       </div>
 
@@ -51,7 +55,7 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .detail-container { color: #f1f5f9; }
     .detail-topbar {
       display: flex; justify-content: space-between; align-items: flex-start;
@@ -78,7 +82,8 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
       background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
       color: #93c5fd; font-size: 13px; font-weight: 600;
       text-decoration: none;
-      &:hover { background: rgba(37,99,235,0.2); }
+      &:hover:not(.disabled) { background: rgba(37,99,235,0.2); }
+      &.disabled { opacity: 0.5; pointer-events: none; cursor: not-allowed; }
     }
     .video-wrapper {
       border-radius: 16px; overflow: hidden;
@@ -110,33 +115,33 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
   `]
 })
 export class ClientCameraDetailComponent implements OnInit {
-    private http = inject(HttpClient);
-    private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
+  private route = inject(ActivatedRoute);
 
-    camera = signal<any>({});
+  camera = signal<any>({});
 
-    ngOnInit() {
-        const id = this.route.snapshot.paramMap.get('id');
-        if (id) {
-            this.http.get<any>(`/api/cameras/${id}`).subscribe({
-                next: (cam) => this.camera.set(cam),
-                error: (err) => console.error('Error loading camera:', err)
-            });
-        }
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.http.get<any>(`/api/cameras/${id}`).subscribe({
+        next: (cam) => this.camera.set(cam),
+        error: (err) => console.error('Error loading camera:', err)
+      });
     }
+  }
 
-    isOnline(): boolean {
-        const cam = this.camera();
-        return cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 60000;
-    }
+  isOnline(): boolean {
+    const cam = this.camera();
+    return cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 60000;
+  }
 
-    ptzMove(pan: number, tilt: number, zoom: number) {
-        const id = this.camera().id;
-        this.http.post(`/api/cameras/${id}/ptz/move`, { pan, tilt, zoom }).subscribe();
-    }
+  ptzMove(pan: number, tilt: number, zoom: number) {
+    const id = this.camera().id;
+    this.http.post(`/api/cameras/${id}/ptz/move`, { pan, tilt, zoom }).subscribe();
+  }
 
-    ptzStop() {
-        const id = this.camera().id;
-        this.http.post(`/api/cameras/${id}/ptz/stop`, {}).subscribe();
-    }
+  ptzStop() {
+    const id = this.camera().id;
+    this.http.post(`/api/cameras/${id}/ptz/stop`, {}).subscribe();
+  }
 }

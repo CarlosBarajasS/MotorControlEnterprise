@@ -100,7 +100,7 @@
                     <button class="btn-live" [disabled]="!isOnline(cam)" (click)="viewStream(cam.id)">
                         Ver en Vivo
                     </button>
-                    <button class="btn-rec" [routerLink]="['/recordings', cam.id]">
+                    <button class="btn-rec" [routerLink]="cam.recordingCameraId ? ['/recordings', cam.recordingCameraId] : null" [disabled]="!cam.recordingCameraId" [title]="!cam.recordingCameraId ? 'Esta cámara no tiene almacenamiento en nube configurado' : ''">
                         Grabaciones
                     </button>
                     

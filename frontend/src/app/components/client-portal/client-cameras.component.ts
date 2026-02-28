@@ -5,10 +5,10 @@ import { HttpClient } from '@angular/common/http';
 import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
 
 @Component({
-    selector: 'app-client-cameras',
-    standalone: true,
-    imports: [CommonModule, RouterModule, CameraViewerComponent],
-    template: `
+  selector: 'app-client-cameras',
+  standalone: true,
+  imports: [CommonModule, RouterModule, CameraViewerComponent],
+  template: `
     <!-- NVR Monitor -->
     <div class="nvr-panel">
       <div class="nvr-toolbar">
@@ -39,7 +39,11 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
           <span class="cell-index">{{ i + 1 }}</span>
           <div class="cell-actions">
             <a [routerLink]="['/client/cameras', cam.id]" class="cell-action-btn">⛶ Expandir</a>
-            <a [routerLink]="['/client/recordings', cam.id]" class="cell-action-btn">🎞 Grabaciones</a>
+            <a [routerLink]="cam.recordingCameraId ? ['/client/recordings', cam.recordingCameraId] : null" 
+               class="cell-action-btn" [class.disabled]="!cam.recordingCameraId" 
+               [title]="!cam.recordingCameraId ? 'Esta cámara no tiene almacenamiento en nube configurado' : ''">
+               🎞 Grabaciones
+            </a>
           </div>
         </div>
 
@@ -57,7 +61,7 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     $nvr-bg: #0a0e1a;
     $nvr-cell: #0f1628;
 
@@ -133,7 +137,8 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
       font-size: 10px; padding: 3px 8px; border-radius: 5px;
       background: rgba(0,0,0,0.6); color: #93c5fd; text-decoration: none;
       border: 1px solid rgba(255,255,255,0.15);
-      &:hover { background: rgba(37,99,235,0.4); }
+      &:hover:not(.disabled) { background: rgba(37,99,235,0.4); }
+      &.disabled { opacity: 0.5; pointer-events: none; }
     }
     .nvr-state {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -154,22 +159,22 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
   `]
 })
 export class ClientCamerasComponent implements OnInit {
-    private http = inject(HttpClient);
-    private router = inject(Router);
+  private http = inject(HttpClient);
+  private router = inject(Router);
 
-    cameras = signal<any[]>([]);
-    gridCols = 2;
+  cameras = signal<any[]>([]);
+  gridCols = 2;
 
-    onlineCount = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
+  onlineCount = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
 
-    ngOnInit() {
-        this.http.get<any[]>('/api/cameras').subscribe({
-            next: (cams) => this.cameras.set(cams || []),
-            error: (err) => console.error('Error loading cameras:', err)
-        });
-    }
+  ngOnInit() {
+    this.http.get<any[]>('/api/cameras').subscribe({
+      next: (cams) => this.cameras.set(cams || []),
+      error: (err) => console.error('Error loading cameras:', err)
+    });
+  }
 
-    isOnline(cam: any): boolean {
-        return cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 60000;
-    }
+  isOnline(cam: any): boolean {
+    return cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 60000;
+  }
 }

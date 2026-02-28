@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChild, inject, signal, computed } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
@@ -17,10 +17,16 @@ export class RecordingsComponent implements OnInit {
     @ViewChild('videoPlayer') videoPlayer!: ElementRef<HTMLVideoElement>;
 
     route = inject(ActivatedRoute);
+    router = inject(Router);
     http = inject(HttpClient);
 
     cameraId = signal<string>('');
-    cameraName = computed(() => `Cámara #${this.cameraId()}`);
+    recordingCameras = signal<any[]>([]);
+    cameraName = computed(() => {
+        const id = this.cameraId();
+        const cam = this.recordingCameras().find(c => String(c.id) === id);
+        return cam ? cam.name : (id ? `Cámara #${id}` : 'Seleccionar Cámara');
+    });
 
     // Cloud recordings
     availableDates = signal<string[]>([]);
@@ -52,10 +58,30 @@ export class RecordingsComponent implements OnInit {
     });
 
     ngOnInit() {
-        this.cameraId.set(this.route.snapshot.paramMap.get('id') || '');
-        if (this.cameraId()) {
-            this.loadAvailableDates();
-        }
+        // Subscribe to param changes to support navigation between cameras
+        this.route.paramMap.subscribe(params => {
+            const id = params.get('id') || '';
+            this.cameraId.set(id);
+            if (id) {
+                this.loadAvailableDates();
+            } else {
+                this.availableDates.set([]);
+                this.cloudRecordings.set([]);
+            }
+        });
+
+        this.loadCameras();
+    }
+
+    loadCameras() {
+        this.http.get<any[]>(`${API_URL}/recordings/cameras`).subscribe({
+            next: (cams) => this.recordingCameras.set(cams || []),
+            error: (err) => console.error('Error loading recording cameras', err)
+        });
+    }
+
+    navigateToCamera(id: string | number) {
+        this.router.navigate(['/recordings', id]);
     }
 
     loadAvailableDates() {
