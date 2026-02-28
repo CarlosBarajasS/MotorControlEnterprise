@@ -42,6 +42,52 @@ namespace MotorControlEnterprise.Api.Controllers
         private string GetCurrentUserRole() =>
             User.FindFirstValue(ClaimTypes.Role) ?? "client";
 
+        // ─── GET /api/recordings/cameras ─────────────────────────────────────
+        /// <summary>
+        /// Lista las cámaras de grabación (IsRecordingOnly=true) accesibles al usuario actual.
+        /// Usado por el sidebar de Grabaciones para mostrar el nombre real de cada cámara.
+        /// </summary>
+        [HttpGet("cameras")]
+        public async Task<IActionResult> ListRecordingCameras()
+        {
+            var userId = GetCurrentUserId();
+            var role   = GetCurrentUserRole();
+
+            var query = _db.Cameras
+                .Include(c => c.Client)
+                .Where(c => c.IsRecordingOnly && c.Client != null);
+
+            if (role != "admin")
+            {
+                var clientId = await _db.Clients
+                    .Where(c => c.UserId == userId)
+                    .Select(c => (int?)c.Id)
+                    .FirstOrDefaultAsync();
+
+                if (clientId == null)
+                    return Ok(Array.Empty<object>());
+
+                query = query.Where(c => c.ClientId == clientId);
+            }
+
+            var cameras = await query
+                .OrderBy(c => c.ClientId)
+                .ThenBy(c => c.Name)
+                .ToListAsync();
+
+            return Ok(cameras.Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.CameraId,
+                c.ClientId,
+                c.Status,
+                c.LastSeen,
+                GatewayId          = c.Client!.GatewayId,
+                CloudStorageActive = c.Client!.CloudStorageActive
+            }));
+        }
+
         // ─── GET /api/recordings/cloud/{cameraId}/dates ───────────────────────
         /// <summary>Lista las fechas que tienen grabaciones disponibles en NAS.</summary>
         [HttpGet("cloud/{cameraId:int}/dates")]
