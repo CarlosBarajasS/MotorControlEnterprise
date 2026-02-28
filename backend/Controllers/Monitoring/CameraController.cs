@@ -75,6 +75,23 @@ namespace MotorControlEnterprise.Api.Controllers
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
+            // Cargar la cámara de grabación asociada a cada cliente (is_recording_only=true)
+            // para que el frontend sepa a qué cámara navegar desde el botón "Grabaciones"
+            var clientIds = cameras
+                .Where(c => c.ClientId.HasValue)
+                .Select(c => c.ClientId!.Value)
+                .Distinct()
+                .ToList();
+
+            var recordingMap = clientIds.Any()
+                ? await _db.Cameras
+                    .Where(c => c.IsRecordingOnly
+                             && c.ClientId.HasValue
+                             && clientIds.Contains(c.ClientId!.Value))
+                    .GroupBy(c => c.ClientId!.Value)
+                    .ToDictionaryAsync(g => g.Key, g => g.First().Id)
+                : new Dictionary<int, int>();
+
             return Ok(cameras.Select(c => new
             {
                 c.Id, c.Name, c.Location, c.Status,
@@ -82,7 +99,10 @@ namespace MotorControlEnterprise.Api.Controllers
                 c.LastSeen, c.ClientId, c.Streams, c.CreatedAt,
                 GatewayId = c.Client != null ? c.Client.GatewayId : null,
                 RtspUrl = ExtractRtspUrl(c.Streams),
-                Client = c.Client == null ? null : new { c.Client.Id, c.Client.Name, c.Client.GatewayId }
+                Client = c.Client == null ? null : new { c.Client.Id, c.Client.Name, c.Client.GatewayId },
+                RecordingCameraId = c.ClientId.HasValue && recordingMap.ContainsKey(c.ClientId.Value)
+                    ? (int?)recordingMap[c.ClientId.Value]
+                    : null
             }));
         }
 
