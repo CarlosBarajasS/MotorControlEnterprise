@@ -62,6 +62,10 @@ var jwtKey = builder.Configuration["Jwt:Key"] ?? "super_secret_key_change_in_pro
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        // Sin esto, ASP.NET Core remapea "sub" → ClaimTypes.NameIdentifier
+        // y User.FindFirstValue(JwtRegisteredClaimNames.Sub) siempre retorna null
+        options.MapInboundClaims = false;
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
