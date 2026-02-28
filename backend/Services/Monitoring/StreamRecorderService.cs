@@ -90,9 +90,25 @@ namespace MotorControlEnterprise.Api.Services
             }
 
             // Iniciar grabación de cámaras nuevas o cuyo proceso murió
+            var nasPath = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/recordings";
+
             foreach (var camera in cameras)
             {
                 var key = $"{camera.Client!.GatewayId}/{camera.CameraId}";
+
+                // Pre-crear directorios de fecha hoy y mañana en cada ciclo.
+                // -strftime_mkdir 1 puede fallar silenciosamente en montajes NFS;
+                // esto garantiza que ffmpeg siempre encuentre el directorio destino.
+                try
+                {
+                    var baseDir = Path.Combine(nasPath, camera.Client!.GatewayId!, camera.CameraId!);
+                    Directory.CreateDirectory(Path.Combine(baseDir, DateTime.Now.ToString("yyyy-MM-dd")));
+                    Directory.CreateDirectory(Path.Combine(baseDir, DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "StreamRecorder: no se pudo pre-crear directorio NAS para {Key}", key);
+                }
 
                 if (_processes.TryGetValue(key, out var existing) && !existing.HasExited)
                     continue;
