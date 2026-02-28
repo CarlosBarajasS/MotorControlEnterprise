@@ -95,7 +95,9 @@
                         style="font-size: 12px; padding: 6px 12px; border-color:transparent; background:rgba(37,99,235,0.08); color:var(--accent);"
                         [routerLink]="['/cameras', cam.id]">👁 Ver En Vivo</button>
                     <button class="btn-secondary" style="font-size: 12px; padding: 6px 12px;"
-                        [routerLink]="['/recordings', cam.id]">Grabaciones</button>
+                        [routerLink]="cam.recordingCameraId ? ['/recordings', cam.recordingCameraId] : null"
+                        [disabled]="!cam.recordingCameraId"
+                        [title]="!cam.recordingCameraId ? 'Esta cámara no tiene almacenamiento en nube' : ''">Grabaciones</button>
                 </td>
             </tr>
         </tbody>

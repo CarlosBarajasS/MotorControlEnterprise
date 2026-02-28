@@ -11,21 +11,31 @@
           <a routerLink="/cameras" style="color:inherit;text-decoration:none;">Cámaras Edge</a>
         </li>
         <ul class="tree-sub">
-          <li class="tree-item expanded">
-            <span class="tree-icon">📹</span> <span class="text-truncate">{{ cameraName() || 'Cámara Seleccionada'
-              }}</span>
-          </li>
+          <ng-container *ngFor="let cam of recordingCameras()">
+            <li class="tree-item" [class.expanded]="cam.id.toString() === cameraId()" style="cursor: pointer;"
+              (click)="navigateToCamera(cam.id)">
+              <span class="tree-icon">📹</span>
+              <span class="text-truncate">{{ cam.name }}</span>
+              <span *ngIf="!cam.cloudStorageActive" class="storage-inactive-badge"
+                style="margin-left:auto; font-size:10px; color:#ef4444;" title="Almacenamiento Inactivo">❌
+                INACTIVO</span>
+            </li>
 
-          <!-- Sub-carpeta: Fechas -->
-          <ul class="tree-sub">
-            <li class="tree-item date-item" *ngFor="let d of availableDates()" [class.active]="d === selectedDate()"
-              (click)="selectDate(d)">
-              <span class="tree-icon">📁</span> {{ d }}
-            </li>
-            <li class="tree-item empty" *ngIf="availableDates().length === 0">
-              <span class="tree-icon" style="opacity:0">└</span> Sin carpetas de fecha
-            </li>
-          </ul>
+            <!-- Sub-carpeta: Fechas (Only if the camera is selected) -->
+            <ul class="tree-sub" *ngIf="cam.id.toString() === cameraId()">
+              <li class="tree-item date-item" *ngFor="let d of availableDates()" [class.active]="d === selectedDate()"
+                (click)="selectDate(d)">
+                <span class="tree-icon">📁</span> {{ d }}
+              </li>
+              <li class="tree-item empty" *ngIf="availableDates().length === 0">
+                <span class="tree-icon" style="opacity:0">└</span> Sin carpetas de fecha
+              </li>
+            </ul>
+          </ng-container>
+          <div class="tree-item empty" *ngIf="recordingCameras().length === 0"
+            style="padding: 10px; color: var(--muted); font-size: 13px;">
+            No hay cámaras con grabación NAS activada.
+          </div>
         </ul>
       </ul>
     </div>
