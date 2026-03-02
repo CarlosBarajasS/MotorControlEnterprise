@@ -1,12 +1,10 @@
-@import '../clients/clients.component.scss';
-
 .filter-bar {
     display: flex;
     gap: 20px;
-    background: white;
+    background: var(--surface);
     padding: 20px;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--outline);
     margin-bottom: 24px;
     align-items: flex-end;
 
@@ -24,7 +22,7 @@
         .form-control {
             width: 100%;
             padding: 10px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--outline);
             border-radius: 8px;
             font-size: 0.95rem;
         }
@@ -40,10 +38,10 @@
 }
 
 .chart-container {
-    background: white;
+    background: var(--surface);
     padding: 24px;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--outline);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
     height: 500px;
     position: relative;
@@ -51,10 +49,10 @@
 }
 
 .empty-state {
-    background: white;
+    background: var(--surface);
     padding: 60px 20px;
     border-radius: 12px;
-    border: 1px dashed #cbd5e1;
+    border: 1px dashed var(--outline);
     text-align: center;
     color: var(--muted);
 
@@ -67,7 +65,7 @@
 
     h3 {
         margin: 0 0 8px 0;
-        color: #334155;
+        color: var(--ink);
     }
 
     p {

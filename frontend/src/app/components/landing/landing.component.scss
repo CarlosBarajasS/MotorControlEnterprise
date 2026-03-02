@@ -293,7 +293,7 @@ $amber: var(--amber);
     border-top-right-radius: 10px;
 
     // Si estamos en dark mode, darle un tono mas oscuro estilo mac
-    .theme-dark & {
+    body:not(.theme-light) & {
         background: #2a2b30;
     }
 }
@@ -901,7 +901,7 @@ $amber: var(--amber);
     padding: 20px 80px;
     border-top: 1px solid rgba(var(--ink-rgb), 0.04);
     font-size: 13px;
-    color: #334155;
+    color: var(--muted);
 
     @media (max-width: 768px) {
         padding: 16px 24px;
@@ -911,7 +911,7 @@ $amber: var(--amber);
 }
 
 .lp-footer-login {
-    color: #334155;
+    color: var(--muted);
     text-decoration: none;
     font-weight: 600;
     transition: color 0.2s;

@@ -1,7 +1,7 @@
 .layout-container {
   padding: 30px;
   font-family: 'IBM Plex Sans', sans-serif;
-  color: var(--surface);
+  color: var(--ink);
 
   .back-link {
     color: var(--accent);
@@ -33,7 +33,7 @@
 
   .meta-separator {
     margin: 0 10px;
-    color: #cbd5e1;
+    color: var(--muted);
   }
 
   .content-grid {
@@ -72,7 +72,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: #cbd5e1;
+      color: var(--muted);
 
       .source-url {
         margin: 0;
@@ -103,10 +103,10 @@
   }
 
   .panel-card {
-    background: white;
+    background: var(--surface);
     padding: 24px;
     border-radius: 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--outline);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
 
     h3 {
@@ -141,11 +141,11 @@
       margin-bottom: 24px;
 
       .ptz-btn {
-        background: #f1f5f9;
-        border: 1px solid #cbd5e1;
+        background: rgba(var(--ink-rgb), 0.06);
+        border: 1px solid var(--outline);
         border-radius: 12px;
         font-size: 1.5rem;
-        color: var(--nav-muted);
+        color: var(--ink);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -154,24 +154,25 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 
         &:hover {
-          background: #e2e8f0;
+          background: rgba(var(--ink-rgb), 0.12);
           transform: translateY(-2px);
         }
 
         &:active {
-          background: #cbd5e1;
+          background: rgba(var(--ink-rgb), 0.18);
           transform: translateY(0);
           box-shadow: none;
         }
 
         &.stop {
-          background: #fee2e2;
-          border-color: #fca5a5;
+          background: rgba(var(--red-rgb), 0.12);
+          border-color: rgba(var(--red-rgb), 0.3);
+          color: var(--red);
           font-size: 1.2rem;
         }
 
         &.stop:hover {
-          background: #fecaca;
+          background: rgba(var(--red-rgb), 0.2);
         }
       }
     }
@@ -198,14 +199,14 @@
 
       li {
         padding: 10px 0;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid var(--outline);
         font-size: 0.9rem;
         display: flex;
         flex-direction: column;
         gap: 4px;
 
         strong {
-          color: var(--nav-muted);
+          color: var(--ink);
         }
 
         &:last-child {
@@ -215,7 +216,7 @@
 
         .mono {
           font-family: monospace;
-          background: #f1f5f9;
+          background: rgba(var(--ink-rgb), 0.05);
           padding: 2px 6px;
           border-radius: 4px;
           display: inline-block;

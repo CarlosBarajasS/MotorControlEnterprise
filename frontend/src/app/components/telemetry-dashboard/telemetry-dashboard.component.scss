@@ -1,6 +1,6 @@
 .telemetry-dashboard-container {
     font-family: 'IBM Plex Sans', sans-serif;
-    color: var(--surface);
+    color: var(--ink);
     margin-top: 20px;
 
     .stats-grid {
@@ -11,10 +11,10 @@
     }
 
     .stat-card {
-        background: #ffffff;
+        background: var(--surface);
         padding: 16px 20px;
         border-radius: 12px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--outline);
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         transition: transform 0.2s;
 
@@ -33,7 +33,7 @@
         .value {
             font-size: 2rem;
             font-weight: 700;
-            color: var(--nav);
+            color: var(--ink);
         }
 
         .subtitle {
@@ -47,8 +47,8 @@
         font-size: 1.15rem;
         font-weight: 600;
         margin-bottom: 16px;
-        color: #334155;
-        border-left: 4px solid #3b82f6;
+        color: var(--ink);
+        border-left: 4px solid var(--accent);
         padding-left: 10px;
     }
 
@@ -60,10 +60,10 @@
     }
 
     .device-card {
-        background: #ffffff;
+        background: var(--surface);
         border-radius: 12px;
         padding: 18px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--outline);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 
         &.online {
@@ -83,7 +83,7 @@
             .device-id {
                 font-weight: 600;
                 font-size: 1rem;
-                color: var(--nav);
+                color: var(--ink);
             }
 
             .status-badge {
@@ -93,13 +93,13 @@
                 font-weight: 600;
 
                 &.online {
-                    background: #d1fae5;
-                    color: #065f46;
+                    background: rgba(var(--green-rgb), 0.12);
+                    color: var(--teal);
                 }
 
                 &.offline {
-                    background: #fee2e2;
-                    color: #991b1b;
+                    background: rgba(var(--red-rgb), 0.12);
+                    color: var(--red);
                 }
             }
         }
@@ -110,10 +110,10 @@
             gap: 12px;
 
             .telemetry-item {
-                background: var(--ink);
+                background: rgba(var(--ink-rgb), 0.05);
                 padding: 10px;
                 border-radius: 8px;
-                border: 1px solid #f1f5f9;
+                border: 1px solid var(--outline);
 
                 label {
                     display: block;
@@ -125,7 +125,7 @@
                 .value {
                     font-size: 1.1rem;
                     font-weight: 600;
-                    color: var(--surface);
+                    color: var(--ink);
                 }
             }
         }
@@ -140,8 +140,8 @@
 
     .no-devices {
         text-align: center;
-        background: var(--ink);
-        border: 1px dashed #cbd5e1;
+        background: var(--surface);
+        border: 1px dashed var(--outline);
         padding: 40px;
         border-radius: 12px;
         color: var(--muted);
@@ -149,16 +149,16 @@
     }
 
     .chart-container {
-        background: #ffffff;
+        background: var(--surface);
         border-radius: 16px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--outline);
         padding: 20px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 
         h3 {
             font-size: 1.1rem;
             font-weight: 600;
-            color: var(--surface);
+            color: var(--ink);
             margin-top: 0;
             margin-bottom: 20px;
         }

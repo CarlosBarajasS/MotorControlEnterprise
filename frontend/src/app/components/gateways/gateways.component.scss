@@ -46,7 +46,7 @@
     .top-left p {
         font-family: 'IBM Plex Sans', sans-serif;
         font-size: 12px;
-        color: #cbd5e1;
+        color: var(--muted);
         margin: 0;
     }
 
@@ -72,9 +72,9 @@
     .dot {
         width: 6px;
         height: 6px;
-        background: #3b82f6;
+        background: var(--accent);
         border-radius: 50%;
-        box-shadow: 0 0 8px #3b82f6;
+        box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.5);
     }
 }
 
@@ -149,8 +149,8 @@
         transition: all 0.2s;
 
         &:hover {
-            background: rgba(51, 65, 85, 0.8);
-            color: #e2e8f0;
+            background: rgba(var(--ink-rgb), 0.08);
+            color: var(--ink);
         }
 
         &.active {
@@ -260,7 +260,7 @@
         .m-value {
             font-size: 16px;
             font-weight: 600;
-            color: #e2e8f0;
+            color: var(--ink);
             font-family: 'Space Grotesk', sans-serif;
         }
     }
@@ -271,7 +271,7 @@
         border-radius: 8px;
         background: rgba(var(--ink-rgb), 0.05);
         border: 1px solid rgba(var(--ink-rgb), 0.05);
-        color: #cbd5e1;
+        color: var(--muted);
         display: flex;
         align-items: center;
         justify-content: center;
