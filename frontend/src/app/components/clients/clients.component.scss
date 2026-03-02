@@ -168,7 +168,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    color: #cbd5e1;
+    color: var(--muted);
     font-size: 12px;
 
     svg {
@@ -267,7 +267,7 @@
 
 // BUTTONS
 .btn-primary {
-    background: #2563eb;
+    background: var(--accent);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -276,21 +276,21 @@
     cursor: pointer;
 
     &:hover {
-        background: #1d4ed8;
+        background: var(--accent-hover);
     }
 }
 
 .btn-secondary {
-    background: #f1f5f9;
-    color: var(--nav-muted);
-    border: 1px solid #cbd5e1;
+    background: rgba(var(--ink-rgb), 0.06);
+    color: var(--ink);
+    border: 1px solid var(--outline);
     padding: 10px 20px;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
 
     &:hover {
-        background: #e2e8f0;
+        background: rgba(var(--ink-rgb), 0.12);
     }
 }
 
@@ -310,7 +310,7 @@
 }
 
 .modal-content {
-    background: white;
+    background: var(--surface);
     border-radius: 16px;
     width: 100%;
     max-width: 500px;
@@ -320,7 +320,7 @@
 
 .modal-header {
     padding: 20px 24px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--outline);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -328,7 +328,7 @@
     h2 {
         margin: 0;
         font-size: 1.25rem;
-        color: var(--nav);
+        color: var(--ink);
     }
 
     .close-btn {
@@ -364,7 +364,7 @@
             width: 100%;
             padding: 10px 14px;
             border-radius: 8px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--outline);
             font-family: inherit;
 
             &:focus {
@@ -378,8 +378,8 @@
 
 .modal-footer {
     padding: 16px 24px;
-    border-top: 1px solid #e2e8f0;
-    background: var(--ink);
+    border-top: 1px solid var(--outline);
+    background: rgba(var(--nav-rgb), 0.5);
     display: flex;
     justify-content: flex-end;
     gap: 12px;
@@ -399,15 +399,15 @@
 
 // Online/Offline badges
 .badge.online {
-    background: #d1fae5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
+    background: rgba(var(--green-rgb), 0.12);
+    color: var(--teal);
+    border: none;
 }
 
 .badge.offline {
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
+    background: rgba(var(--red-rgb), 0.12);
+    color: var(--red);
+    border: none;
 }
 
 // role badges
