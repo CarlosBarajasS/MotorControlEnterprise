@@ -68,12 +68,16 @@
 }
 
 .dot-online {
-    width: 6px; height: 6px; border-radius: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
     background: var(--green);
 }
 
 .dot-offline {
-    width: 6px; height: 6px; border-radius: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
     background: var(--red);
 }
 
@@ -131,13 +135,11 @@
     .cam-thumb-overlay {
         position: absolute;
         inset: 0;
-        background: repeating-linear-gradient(
-            0deg,
-            transparent,
-            transparent 2px,
-            rgba(var(--ink-rgb), 0.02) 2px,
-            rgba(var(--ink-rgb), 0.02) 3px
-        );
+        background: repeating-linear-gradient(0deg,
+                transparent,
+                transparent 2px,
+                rgba(var(--ink-rgb), 0.02) 2px,
+                rgba(var(--ink-rgb), 0.02) 3px);
         pointer-events: none;
         z-index: 10;
     }
@@ -163,7 +165,7 @@
         position: absolute;
         top: 10px;
         left: 12px;
-        background: rgba(var(--nav-rgb), 0.85);
+        background: rgba(0, 0, 0, 0.55);
         padding: 4px 10px;
         border-radius: 99px;
         display: inline-flex;
@@ -172,10 +174,18 @@
         z-index: 12;
 
         .live-dot {
-            width: 5px; height: 5px; border-radius: 50%;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
             background: var(--green);
-            &.offline { background: var(--red); }
-            &.pulse { animation: pulse 1.5s infinite ease-in-out; }
+
+            &.offline {
+                background: var(--red);
+            }
+
+            &.pulse {
+                animation: pulse 1.5s infinite ease-in-out;
+            }
         }
 
         .badge-text {
@@ -205,8 +215,15 @@
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
 }
 
 /* BODY */
@@ -235,11 +252,19 @@
         padding: 3px 6px;
         border-radius: 4px;
         text-transform: uppercase;
-        background: rgba(var(--amber-rgb), 0.15); /* amber as default/SD */
+        background: rgba(var(--amber-rgb), 0.15);
+        /* amber as default/SD */
         color: var(--amber);
 
-        &.cloud { background: rgba(var(--accent-rgb), 0.15); color: var(--accent); }
-        &.nvr { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+        &.cloud {
+            background: rgba(var(--accent-rgb), 0.15);
+            color: var(--accent);
+        }
+
+        &.nvr {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+        }
     }
 }
 
@@ -284,11 +309,14 @@
         flex: 1;
         transition: background 0.2s;
 
-        &:hover { background: var(--accent-hover); }
-        &[disabled] { 
-            background: rgba(var(--ink-rgb), 0.05); 
-            color: rgba(var(--ink-rgb), 0.3); 
-            cursor: not-allowed; 
+        &:hover {
+            background: var(--accent-hover);
+        }
+
+        &[disabled] {
+            background: rgba(var(--ink-rgb), 0.05);
+            color: rgba(var(--ink-rgb), 0.3);
+            cursor: not-allowed;
         }
     }
 
@@ -306,7 +334,9 @@
         text-align: center;
         text-decoration: none;
 
-        &:hover { background: rgba(var(--ink-rgb), 0.05); }
+        &:hover {
+            background: rgba(var(--ink-rgb), 0.05);
+        }
     }
 
     .btn-icon {
@@ -323,7 +353,10 @@
         transition: all 0.2s;
         flex-shrink: 0;
 
-        &:hover { background: rgba(var(--ink-rgb), 0.05); color: #fff; }
+        &:hover {
+            background: rgba(var(--ink-rgb), 0.05);
+            color: #fff;
+        }
     }
 }
 
