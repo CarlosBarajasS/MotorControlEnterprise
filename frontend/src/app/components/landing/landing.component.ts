@@ -13,6 +13,11 @@ import { HttpClient } from '@angular/common/http';
 export class LandingComponent implements OnInit {
   isLightMode = document.body.classList.contains('theme-light');
   showScrollTop = false;
+  isMobileMenuOpen = false;
+
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
 
   @HostListener('window:scroll', [])
   onWindowScroll() {

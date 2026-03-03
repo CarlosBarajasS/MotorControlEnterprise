@@ -52,6 +52,14 @@ $amber: var(--amber);
     border-bottom: 1px solid rgba(var(--ink-rgb), 0.05);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+
+    @media (max-width: 1024px) {
+        padding: 0 48px;
+    }
+
+    @media (max-width: 768px) {
+        padding: 0 20px;
+    }
 }
 
 .lp-brand {
@@ -97,6 +105,10 @@ $amber: var(--amber);
     display: flex;
     gap: 36px;
     align-items: center;
+
+    @media (max-width: 768px) {
+        display: none;
+    }
 }
 
 .lp-nav-link {
@@ -127,6 +139,114 @@ $amber: var(--amber);
         box-shadow: 0 0 28px rgba(var(--accent-rgb), 0.45);
         transform: translateY(-1px);
     }
+
+    @media (max-width: 768px) {
+        display: none;
+    }
+}
+
+// ─── HAMBURGER & MOBILE MENU ──────────────────────────────────────────────────
+.lp-hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 110;
+    flex-shrink: 0;
+
+    span {
+        display: block;
+        width: 24px;
+        height: 2px;
+        background: $ink;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+    }
+
+    &.open {
+        span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        span:nth-child(2) {
+            opacity: 0;
+        }
+
+        span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+    }
+
+    @media (max-width: 768px) {
+        display: flex;
+    }
+}
+
+.lp-mobile-menu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+
+    &.open {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    @media (max-width: 768px) {
+        display: block;
+    }
+}
+
+.lp-mobile-menu-content {
+    position: absolute;
+    top: 72px;
+    left: 0;
+    right: 0;
+    background: rgba(var(--nav-rgb), 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(var(--ink-rgb), 0.08);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 16px 24px;
+    gap: 4px;
+    transform: translateY(-16px);
+    transition: transform 0.3s ease;
+
+    .open & {
+        transform: translateY(0);
+    }
+}
+
+.lp-mobile-link {
+    padding: 13px 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: $muted;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all 0.2s;
+
+    &:hover {
+        background: rgba(var(--ink-rgb), 0.06);
+        color: $ink;
+    }
+}
+
+.lp-mobile-cta {
+    display: flex !important;
+    margin-top: 8px;
+    justify-content: center;
+    text-align: center;
 }
 
 // ─── HERO ─────────────────────────────────────────────────────────────────────
@@ -176,6 +296,14 @@ $amber: var(--amber);
     @media (max-width: 1100px) {
         font-size: 48px;
     }
+
+    @media (max-width: 768px) {
+        font-size: 40px;
+    }
+
+    @media (max-width: 640px) {
+        font-size: 32px;
+    }
 }
 
 .lp-accent {
@@ -187,6 +315,10 @@ $amber: var(--amber);
     line-height: 1.7;
     color: $muted;
     max-width: 520px;
+
+    @media (max-width: 640px) {
+        font-size: 15px;
+    }
 }
 
 .lp-hero-ctas {
@@ -194,6 +326,16 @@ $amber: var(--amber);
     gap: 16px;
     align-items: center;
     flex-wrap: wrap;
+
+    @media (max-width: 640px) {
+        flex-direction: column;
+        align-items: stretch;
+
+        .lp-btn-primary,
+        .lp-btn-ghost {
+            justify-content: center;
+        }
+    }
 }
 
 .lp-btn-primary {
@@ -342,6 +484,16 @@ $amber: var(--amber);
     gap: 4px;
     background: #000;
     padding: 0;
+
+    @media (max-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+        max-height: 300px;
+        overflow: hidden;
+    }
 }
 
 .mock-cell {
@@ -434,6 +586,14 @@ $amber: var(--amber);
     border-bottom: 1px solid rgba(var(--ink-rgb), 0.04);
     position: relative;
     z-index: 1;
+
+    @media (max-width: 768px) {
+        padding: 32px 24px;
+    }
+
+    @media (max-width: 640px) {
+        padding: 24px 16px;
+    }
 }
 
 .lp-trust-label {
@@ -464,6 +624,18 @@ $amber: var(--amber);
             opacity: 0.7;
         }
     }
+
+    @media (max-width: 900px) {
+        gap: 32px;
+    }
+
+    @media (max-width: 640px) {
+        gap: 20px;
+
+        span {
+            font-size: 14px;
+        }
+    }
 }
 
 // ─── FEATURES ─────────────────────────────────────────────────────────────────
@@ -485,6 +657,14 @@ $amber: var(--amber);
         font-size: 40px;
         font-weight: 700;
         margin-bottom: 14px;
+    }
+
+    @media (max-width: 640px) {
+        margin-bottom: 40px;
+
+        h2 {
+            font-size: 28px;
+        }
     }
 }
 
@@ -544,6 +724,10 @@ $amber: var(--amber);
         color: $muted;
         flex: 1;
     }
+
+    @media (max-width: 640px) {
+        padding: 20px;
+    }
 }
 
 .lp-feat-icon {
@@ -596,6 +780,10 @@ $amber: var(--amber);
     @media (max-width: 900px) {
         padding: 60px 24px;
     }
+
+    @media (max-width: 640px) {
+        padding: 48px 16px;
+    }
 }
 
 .lp-philosophy-grid {
@@ -640,6 +828,10 @@ $amber: var(--amber);
         line-height: 1.7;
         color: $muted;
         margin: 0;
+    }
+
+    @media (max-width: 640px) {
+        padding: 28px 20px;
     }
 }
 
@@ -741,8 +933,16 @@ $amber: var(--amber);
     position: relative;
     z-index: 1;
 
+    @media (max-width: 1024px) {
+        padding: 80px 48px;
+    }
+
     @media (max-width: 768px) {
         padding: 60px 24px;
+    }
+
+    @media (max-width: 640px) {
+        padding: 48px 16px;
     }
 }
 
@@ -757,6 +957,7 @@ $amber: var(--amber);
     border: 1px solid rgba(var(--ink-rgb), 0.08);
     backdrop-filter: blur(16px);
     max-width: 860px;
+    width: 100%;
     text-align: center;
 
     &::before {
@@ -779,6 +980,31 @@ $amber: var(--amber);
         color: $muted;
         line-height: 1.7;
     }
+
+    @media (max-width: 768px) {
+        padding: 48px 24px;
+
+        h2 {
+            font-size: 28px;
+        }
+
+        p {
+            font-size: 15px;
+        }
+    }
+
+    @media (max-width: 640px) {
+        padding: 40px 16px;
+
+        h2 {
+            font-size: 24px;
+        }
+
+        .lp-btn-primary {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 }
 
 .lp-cta-note {
@@ -800,10 +1026,21 @@ $amber: var(--amber);
     gap: 48px;
     padding: 64px 80px;
 
+    @media (max-width: 1200px) {
+        grid-template-columns: 2fr 1fr 1fr;
+        padding: 56px 48px;
+    }
+
     @media (max-width: 900px) {
         grid-template-columns: 1fr 1fr;
         padding: 48px 24px;
         gap: 32px;
+    }
+
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+        padding: 40px 16px;
+        gap: 28px;
     }
 }
 
@@ -907,6 +1144,11 @@ $amber: var(--amber);
         padding: 16px 24px;
         flex-direction: column;
         gap: 8px;
+        text-align: center;
+    }
+
+    @media (max-width: 600px) {
+        padding: 16px;
     }
 }
 
