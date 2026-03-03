@@ -34,8 +34,24 @@
                 </div>
             </button>
             <a routerLink="/login" class="lp-nav-cta">Acceso Clientes →</a>
+            <button class="lp-hamburger" (click)="toggleMobileMenu()" [class.open]="isMobileMenuOpen" aria-label="Abrir menú">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="lp-mobile-menu" [class.open]="isMobileMenuOpen" (click)="toggleMobileMenu()">
+        <div class="lp-mobile-menu-content" (click)="$event.stopPropagation()">
+            <a href="#plataforma" class="lp-mobile-link" (click)="toggleMobileMenu()">Plataforma</a>
+            <a href="#edge" class="lp-mobile-link" (click)="toggleMobileMenu()">Edge</a>
+            <a href="#seguridad" class="lp-mobile-link" (click)="toggleMobileMenu()">Seguridad</a>
+            <a href="#filosofia" class="lp-mobile-link" (click)="toggleMobileMenu()">Nosotros</a>
+            <a routerLink="/login" class="lp-btn-primary lp-mobile-cta" (click)="toggleMobileMenu()">Acceso Clientes →</a>
+        </div>
+    </div>
 
     <!-- ═══ HERO ═══ -->
     <section class="lp-hero" id="plataforma">
