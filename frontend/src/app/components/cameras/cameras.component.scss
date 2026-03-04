@@ -495,3 +495,38 @@
         border-color: var(--accent);
     }
 }
+
+// ─── RESPONSIVE ───────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+    .filter-row {
+        gap: 8px;
+    }
+
+    .search-box {
+        max-width: 100%;
+    }
+
+    .gw-selector {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .modal-overlay {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cam-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cam-actions {
+        flex-wrap: wrap;
+
+        .btn-live,
+        .btn-rec {
+            flex: 1 1 calc(50% - 4px);
+        }
+    }
+}

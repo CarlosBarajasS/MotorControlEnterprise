@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router } from '@angular/router';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
@@ -13,6 +13,7 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 export class AppComponent {
     title = 'NirmGroup';
     router = inject(Router);
+    sidebarOpen = false;
 
     isLoggedIn(): boolean {
         return !!localStorage.getItem('motor_control_token');
@@ -28,5 +29,20 @@ export class AppComponent {
         // No mostrar sidebar en landing ni en login, aunque tenga token
         const noSidebarRoutes = ['/', '/login'];
         return this.isLoggedIn() && !noSidebarRoutes.includes(this.router.url);
+    }
+
+    toggleSidebar() {
+        this.sidebarOpen = !this.sidebarOpen;
+    }
+
+    closeSidebar() {
+        this.sidebarOpen = false;
+    }
+
+    @HostListener('window:resize')
+    onResize() {
+        if (window.innerWidth > 768) {
+            this.sidebarOpen = false;
+        }
     }
 }

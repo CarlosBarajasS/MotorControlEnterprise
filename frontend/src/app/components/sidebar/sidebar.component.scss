@@ -328,3 +328,50 @@
     font-weight: 500;
     color: var(--nav-ink);
 }
+
+// ─── CLOSE BUTTON (solo visible en móvil) ────────────────────────────────────
+.close-sidebar-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--nav-ink);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+
+    &:hover {
+        background: rgba(var(--ink-rgb), 0.1);
+    }
+}
+
+// ─── MÓVIL — Drawer lateral ───────────────────────────────────────────────────
+@media (max-width: 768px) {
+    :host {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 200;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    :host(.open) {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .close-sidebar-btn {
+        display: flex;
+        margin-left: auto;
+    }
+
+    .sys-pill {
+        margin-left: 0;
+    }
+}

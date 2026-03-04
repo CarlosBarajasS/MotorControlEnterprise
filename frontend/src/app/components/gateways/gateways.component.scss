@@ -295,3 +295,46 @@
     border: 1px dashed rgba(var(--ink-rgb), 0.1);
     font-size: 14px;
 }
+
+// ─── RESPONSIVE ───────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+    .top-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .filters-row {
+        flex-wrap: wrap;
+    }
+
+    .filter-pills {
+        flex-wrap: wrap;
+    }
+
+    .gw-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .gw-metrics {
+        flex-wrap: wrap;
+        gap: 16px;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .top-content .top-left h1 {
+        font-size: 17px;
+    }
+
+    .gw-left .gw-header {
+        flex-wrap: wrap;
+    }
+
+    .metric {
+        min-width: 80px;
+    }
+}

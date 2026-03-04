@@ -3,6 +3,10 @@
   font-family: 'IBM Plex Sans', sans-serif;
   color: var(--ink);
 
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+
   .back-link {
     color: var(--accent);
     text-decoration: none;
