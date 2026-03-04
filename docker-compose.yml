@@ -17,6 +17,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
     networks:
       - mce-net
 
@@ -32,6 +37,11 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       - ./mosquitto-passwd:/mosquitto/config/passwd:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
     networks:
       - mce-net
       - shared-edge-network
@@ -46,6 +56,11 @@ services:
       - ./mediamtx/central-mediamtx.yml:/mediamtx.yml:ro
     ports:
       - "8556:8554"   # RTSP (push desde edge)
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - mce-net
       - shared-edge-network
@@ -108,6 +123,11 @@ services:
       # NAS: grabaciones de cámaras (bind mount al directorio local del servidor)
       # En producción cambiar /home/victormanuel/recordings por la ruta real del NAS
       - ${NAS_RECORDINGS_PATH:-/home/victormanuel/recordings}:/mnt/nas/recordings
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
     networks:
       - mce-net
 
@@ -126,6 +146,11 @@ services:
       POSTGRES_DB:   ${POSTGRES_DB:-MotorControlEnterprise}
     volumes:
       - ${NAS_BACKUPS_PATH:-/home/victormanuel/backups}:/backups
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
     entrypoint:
       - /bin/sh
       - -c
@@ -151,6 +176,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer-data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
     networks:
       - mce-net
 
@@ -162,6 +192,11 @@ services:
       dockerfile: Dockerfile
     container_name: mce-frontend
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
     networks:
       - mce-net
 
@@ -179,6 +214,11 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
     networks:
       - mce-net
 
