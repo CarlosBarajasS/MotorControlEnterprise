@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -11,6 +11,9 @@ import { AuthService } from '../../services/auth.service';
     styleUrls: ['./sidebar.component.scss']
 })
 export class SidebarComponent {
+    @Input() isOpen = false;
+    @Output() closeSidebar = new EventEmitter<void>();
+
     authService = inject(AuthService);
 
     get userName(): string {

@@ -170,3 +170,36 @@
         }
     }
 }
+
+// ─── RESPONSIVE ───────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+    .telemetry-dashboard-container {
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .devices-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-container .chart-wrapper {
+            height: 220px;
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .telemetry-dashboard-container {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-card .value {
+            font-size: 1.6rem;
+        }
+
+        .device-card .telemetry-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+}

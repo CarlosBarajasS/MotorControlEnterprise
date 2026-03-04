@@ -73,3 +73,25 @@
         font-size: 0.95rem;
     }
 }
+
+// ─── RESPONSIVE ───────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+
+        .form-group {
+            width: 100%;
+        }
+
+        .actions-align button {
+            width: 100%;
+        }
+    }
+
+    .chart-container {
+        height: 280px;
+        padding: 16px;
+    }
+}

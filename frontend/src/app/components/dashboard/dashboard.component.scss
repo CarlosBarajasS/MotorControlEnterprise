@@ -378,7 +378,7 @@
   background: rgba(var(--surface-rgb), 0.5);
   border-radius: 16px;
   border: 1px solid var(--outline);
-  overflow: hidden;
+  overflow-x: auto;
   backdrop-filter: blur(12px);
 }
 
@@ -503,5 +503,40 @@
     background: rgba(var(--red-rgb), 0.15);
     color: var(--red);
     border-color: rgba(var(--red-rgb), 0.3);
+  }
+}
+
+// ─── RESPONSIVE ───────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .topbar-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .health-pill {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  .section-hdr {
+    flex-wrap: wrap;
+  }
+
+  .gateways-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    width: calc(100vw - 32px);
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-value {
+    font-size: 22px;
+  }
+
+  .activity-table {
+    min-width: 520px;
   }
 }

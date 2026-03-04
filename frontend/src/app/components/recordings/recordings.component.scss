@@ -426,3 +426,39 @@
     color: var(--red);
   }
 }
+
+// ─── RESPONSIVE ───────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+    .drive-grid-header {
+        grid-template-columns: 1fr auto;
+
+        // Ocultar columnas de tamaño y duración en móvil
+        > *:nth-child(2),
+        > *:nth-child(3) {
+            display: none;
+        }
+    }
+
+    .drive-file-row {
+        grid-template-columns: 1fr auto;
+
+        > *:nth-child(2),
+        > *:nth-child(3) {
+            display: none;
+        }
+    }
+
+    .rec-player-wrap {
+        width: calc(100vw - 32px);
+        max-width: 100%;
+        margin: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .rec-player-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

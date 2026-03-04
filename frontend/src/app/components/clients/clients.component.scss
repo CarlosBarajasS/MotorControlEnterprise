@@ -76,7 +76,8 @@
     border: 1px solid rgba(var(--ink-rgb), 0.08);
     border-radius: 10px;
     padding: 10px 14px;
-    width: 380px;
+    width: 100%;
+    max-width: 380px;
 
     svg {
         color: var(--muted);
@@ -425,5 +426,37 @@
     &.client {
         background: #f1f5f9;
         color: var(--nav-muted);
+    }
+}
+
+// ─── RESPONSIVE ───────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+    .new-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+
+        .header-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    .search-box {
+        max-width: 100%;
+    }
+
+    .modal-content {
+        width: calc(100vw - 32px);
+    }
+
+    .modal-body .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .client-grid {
+        grid-template-columns: 1fr;
     }
 }
