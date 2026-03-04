@@ -17,6 +17,15 @@ export class LandingComponent implements OnInit {
 
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    document.body.style.overflow = this.isMobileMenuOpen ? 'hidden' : '';
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.isMobileMenuOpen) {
+      this.isMobileMenuOpen = false;
+      document.body.style.overflow = '';
+    }
   }
 
   @HostListener('window:scroll', [])

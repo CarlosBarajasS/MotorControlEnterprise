@@ -1,7 +1,7 @@
 <div class="lp-root">
 
     <!-- ═══ NAVBAR ═══ -->
-    <nav class="lp-nav">
+    <nav class="lp-nav" [class.menu-open]="isMobileMenuOpen">
         <a routerLink="/" class="lp-brand">
             <div class="lp-brand-icon">m</div>
             <span class="lp-brand-name">NIRM <strong>GROUP</strong></span>
@@ -34,7 +34,7 @@
                 </div>
             </button>
             <a routerLink="/login" class="lp-nav-cta">Acceso Clientes →</a>
-            <button class="lp-hamburger" (click)="toggleMobileMenu()" [class.open]="isMobileMenuOpen" aria-label="Abrir menú">
+            <button class="lp-hamburger" (click)="toggleMobileMenu()" [class.open]="isMobileMenuOpen" aria-label="Abrir menú" [attr.aria-expanded]="isMobileMenuOpen">
                 <span></span>
                 <span></span>
                 <span></span>

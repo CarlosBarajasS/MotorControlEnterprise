@@ -43,6 +43,10 @@ $amber: var(--amber);
     position: sticky;
     top: 0;
     z-index: 100;
+
+    &.menu-open {
+        z-index: 201;
+    }
     display: flex;
     align-items: center;
     justify-content: space-between;
