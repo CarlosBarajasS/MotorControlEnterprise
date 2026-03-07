@@ -26,9 +26,10 @@ export class AppComponent {
     }
 
     showSidebar(): boolean {
-        // No mostrar sidebar en landing ni en login, aunque tenga token
-        const noSidebarRoutes = ['/', '/login'];
-        return this.isLoggedIn() && !noSidebarRoutes.includes(this.router.url);
+        const url = this.router.url;
+        if (!this.isLoggedIn()) return false;
+        if (url === '/' || url.startsWith('/login') || url.startsWith('/client')) return false;
+        return true;
     }
 
     toggleSidebar() {

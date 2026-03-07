@@ -91,7 +91,8 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
   `,
   styles: [`
     .client-app {
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       background: var(--bg);
       color: rgba(var(--ink-rgb), 1);
       font-family: 'IBM Plex Sans', sans-serif;
