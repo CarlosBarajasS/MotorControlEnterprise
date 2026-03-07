@@ -92,8 +92,8 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
   styles: [`
     .client-app {
       min-height: 100vh;
-      background: #060a14;
-      color: #f1f5f9;
+      background: var(--bg);
+      color: rgba(var(--ink-rgb), 1);
       font-family: 'IBM Plex Sans', sans-serif;
       display: flex;
       flex-direction: column;
@@ -106,8 +106,8 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
       justify-content: space-between;
       padding: 0 20px;
       height: 56px;
-      background: rgba(15, 23, 42, 0.97);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(var(--nav-rgb), 0.97);
+      border-bottom: 1px solid var(--outline);
       backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
@@ -159,7 +159,7 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
     }
     .user-greeting {
       font-size: 13px;
-      color: rgba(248,250,252,0.6);
+      color: var(--muted);
     }
     .btn-logout {
       display: flex;
@@ -167,7 +167,7 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
       gap: 6px;
       background: transparent;
       border: 1px solid rgba(255,255,255,0.1);
-      color: rgba(248,250,252,0.7);
+      color: var(--muted);
       padding: 6px 14px;
       border-radius: 8px;
       font-size: 13px;
@@ -187,8 +187,8 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
     .client-sidebar {
       width: 220px;
       flex-shrink: 0;
-      background: rgba(8, 13, 27, 0.97);
-      border-right: 1px solid rgba(255,255,255,0.06);
+      background: rgba(var(--nav-rgb), 0.99);
+      border-right: 1px solid var(--outline);
       display: flex;
       flex-direction: column;
       padding: 16px 0;
@@ -206,7 +206,7 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
       padding: 10px 14px;
       border-radius: 8px;
       border-left: 3px solid transparent;
-      color: rgba(248,250,252,0.6);
+      color: var(--muted);
       text-decoration: none;
       font-size: 14px;
       font-weight: 500;

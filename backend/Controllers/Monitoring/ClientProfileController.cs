@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +22,7 @@ namespace MotorControlEnterprise.Api.Controllers
         [HttpGet("me")]
         public async Task<IActionResult> GetMyProfile()
         {
-            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+            if (!int.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out var userId))
                 return Unauthorized();
 
             var client = await _db.Clients
@@ -75,7 +75,7 @@ namespace MotorControlEnterprise.Api.Controllers
         [HttpPatch("me/change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
         {
-            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+            if (!int.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out var userId))
                 return Unauthorized();
 
             var user = await _db.Users.FindAsync(userId);

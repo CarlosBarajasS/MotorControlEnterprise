@@ -172,7 +172,7 @@ import { Router } from '@angular/router';
       align-items: center;
       gap: 16px;
       padding: 64px 24px;
-      color: rgba(248,250,252,0.5);
+      color: var(--muted);
       font-size: 14px;
     }
     .btn-retry {
@@ -194,8 +194,8 @@ import { Router } from '@angular/router';
       gap: 24px;
       margin-bottom: 32px;
       padding: 28px;
-      background: rgba(15,23,42,0.6);
-      border: 1px solid rgba(255,255,255,0.07);
+      background: var(--surface);
+      border: 1px solid var(--outline);
       border-radius: 16px;
     }
     .avatar {
@@ -221,12 +221,12 @@ import { Router } from '@angular/router';
     .profile-info h1 {
       font-size: 22px;
       font-weight: 700;
-      color: #f1f5f9;
+      color: rgba(var(--ink-rgb), 1);
       margin: 0;
     }
     .meta {
       font-size: 13px;
-      color: rgba(248,250,252,0.45);
+      color: var(--muted);
       margin: 0;
     }
 
@@ -264,8 +264,8 @@ import { Router } from '@angular/router';
       margin-bottom: 32px;
     }
     .info-card {
-      background: rgba(15,23,42,0.6);
-      border: 1px solid rgba(255,255,255,0.07);
+      background: var(--surface);
+      border: 1px solid var(--outline);
       border-radius: 16px;
       padding: 24px;
     }
@@ -273,7 +273,7 @@ import { Router } from '@angular/router';
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: rgba(248,250,252,0.45);
+      color: var(--muted);
       font-weight: 600;
       margin: 0 0 16px 0;
     }
@@ -294,14 +294,14 @@ import { Router } from '@angular/router';
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: rgba(248,250,252,0.45);
+      color: var(--muted);
       font-weight: 500;
       svg { opacity: 0.7; }
     }
     .row-value {
       font-size: 15px;
       font-weight: 600;
-      color: #f1f5f9;
+      color: rgba(var(--ink-rgb), 1);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -426,6 +426,6 @@ export class ClientAccountComponent implements OnInit {
 
   logout() {
     localStorage.removeItem('motor_control_token');
-    this.router.navigate(['/client/login']);
+    this.router.navigate(['/login']);
   }
 }
