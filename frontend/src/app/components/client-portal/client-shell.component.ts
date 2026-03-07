@@ -124,12 +124,12 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
       display: none;
       background: transparent;
       border: none;
-      color: rgba(248,250,252,0.7);
+      color: var(--nav-ink);
       cursor: pointer;
       padding: 6px;
       border-radius: 6px;
       transition: background 0.15s;
-      &:hover { background: rgba(255,255,255,0.08); }
+      &:hover { background: rgba(var(--ink-rgb), 0.08); }
     }
     .brand {
       display: flex;
@@ -150,8 +150,8 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
     }
     .brand-name {
       font-size: 15px;
-      color: rgba(248,250,252,0.7);
-      strong { color: #f1f5f9; font-weight: 700; }
+      color: var(--nav-muted);
+      strong { color: var(--nav-ink); font-weight: 700; }
     }
     .topbar-right {
       display: flex;
@@ -160,15 +160,15 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
     }
     .user-greeting {
       font-size: 13px;
-      color: var(--muted);
+      color: var(--nav-muted);
     }
     .btn-logout {
       display: flex;
       align-items: center;
       gap: 6px;
       background: transparent;
-      border: 1px solid rgba(255,255,255,0.1);
-      color: var(--muted);
+      border: 1px solid rgba(var(--ink-rgb), 0.12);
+      color: var(--nav-muted);
       padding: 6px 14px;
       border-radius: 8px;
       font-size: 13px;
@@ -215,8 +215,8 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
       transition: all 0.15s;
       svg { flex-shrink: 0; }
       &:hover {
-        background: rgba(255,255,255,0.05);
-        color: rgba(248,250,252,0.9);
+        background: rgba(var(--ink-rgb), 0.06);
+        color: rgba(var(--ink-rgb), 0.9);
       }
       &.active {
         background: rgba(37,99,235,0.2);

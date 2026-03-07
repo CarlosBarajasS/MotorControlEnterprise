@@ -33,7 +33,7 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
         if (Hls.isSupported()) {
             this.hls = new Hls({
                 liveDurationInfinity: true,
-                maxLiveSyncPlaybackRate: 1.0,
+                maxLiveSyncPlaybackRate: 1.1,
                 maxMaxBufferLength: 60,
                 backBufferLength: 0,
                 liveSyncDurationCount: 3,
