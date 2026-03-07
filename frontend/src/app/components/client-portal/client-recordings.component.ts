@@ -1,12 +1,12 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-client-recordings',
   standalone: true,
-  imports: [CommonModule, RouterModule, DatePipe],
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="recordings-container">
       <div class="rec-topbar">
@@ -51,70 +51,56 @@ import { HttpClient } from '@angular/common/http';
         <video #videoPlayer controls autoplay [src]="currentVideo()" class="video-el"></video>
       </div>
 
-      <!-- SD Card Recordings -->
-      <div class="sd-section">
-        <h3>Grabaciones en SD Card (Dispositivo Local)</h3>
-        <div class="sd-list" *ngIf="sdRecordings().length > 0">
-          <div class="rec-item" *ngFor="let rec of sdRecordings()" (click)="playSdRecording(rec)">
-            <div class="rec-icon">💾</div>
-            <div class="rec-info">
-              <span class="rec-name">{{ rec.name }}</span>
-              <span class="rec-size">{{ rec.duration || '' }}</span>
-            </div>
-          </div>
-        </div>
-        <p class="empty-msg" *ngIf="sdRecordings().length === 0">Sin grabaciones locales disponibles</p>
-      </div>
     </div>
   `,
   styles: [`
-    .recordings-container { color: #f1f5f9; }
+    .recordings-container { color: rgba(var(--ink-rgb), 1); }
     .rec-topbar { margin-bottom: 24px; }
     .back-link {
-      color: #93c5fd; text-decoration: none; font-size: 13px; font-weight: 600;
+      color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 600;
       display: inline-block; margin-bottom: 8px;
       &:hover { text-decoration: underline; }
     }
     h1 { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; margin: 0; }
-    h3 { font-size: 14px; color: rgba(248,250,252,0.6); margin: 0 0 12px; }
+    h3 { font-size: 14px; color: var(--muted); margin: 0 0 12px; }
 
     .date-selector {
-      background: rgba(15,23,42,0.6); border-radius: 16px;
-      padding: 20px; border: 1px solid rgba(255,255,255,0.06);
+      background: var(--surface); border-radius: 16px;
+      padding: 20px; border: 1px solid var(--outline);
       margin-bottom: 20px;
     }
     .date-chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .date-chip {
       padding: 8px 16px; border-radius: 8px;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-      color: rgba(248,250,252,0.7); font-size: 13px; cursor: pointer;
+      background: rgba(var(--ink-rgb), 0.05); border: 1px solid var(--outline);
+      color: var(--muted); font-size: 13px; cursor: pointer;
       transition: all 0.15s;
-      &:hover { background: rgba(255,255,255,0.1); }
+      &:hover { background: rgba(var(--ink-rgb), 0.1); }
       &.active { background: rgba(37,99,235,0.25); border-color: #3b82f6; color: #93c5fd; }
     }
-    .empty-msg { color: rgba(248,250,252,0.4); font-size: 13px; }
+    .empty-msg { color: var(--muted); font-size: 13px; }
 
-    .rec-list, .sd-section {
-      background: rgba(15,23,42,0.6); border-radius: 16px;
-      padding: 20px; border: 1px solid rgba(255,255,255,0.06);
+    .rec-list {
+      background: var(--surface); border-radius: 16px;
+      padding: 20px; border: 1px solid var(--outline);
       margin-bottom: 20px;
     }
     .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
     .rec-item {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 16px; border-radius: 10px;
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(var(--ink-rgb), 0.03); border: 1px solid var(--outline);
       cursor: pointer; transition: all 0.15s;
       &:hover { background: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.3); }
     }
     .rec-icon { font-size: 24px; }
     .rec-info { display: flex; flex-direction: column; gap: 2px; }
-    .rec-name { font-size: 13px; font-weight: 600; color: #f1f5f9; }
-    .rec-size { font-size: 11px; color: rgba(248,250,252,0.4); }
+    .rec-name { font-size: 13px; font-weight: 600; color: rgba(var(--ink-rgb), 1); }
+    .rec-size { font-size: 11px; color: var(--muted); }
 
     .video-player {
-      background: rgba(15,23,42,0.6); border-radius: 16px;
-      padding: 20px; border: 1px solid rgba(255,255,255,0.06);
+      background: var(--surface); border-radius: 16px;
+      padding: 20px; border: 1px solid var(--outline);
       margin-bottom: 20px;
     }
     .video-el {
@@ -132,7 +118,6 @@ export class ClientRecordingsComponent implements OnInit {
   availableDates = signal<string[]>([]);
   selectedDate = signal('');
   recordings = signal<any[]>([]);
-  sdRecordings = signal<any[]>([]);
   currentVideo = signal('');
   loadingDates = signal(true);
   private blobUrl = '';
@@ -162,11 +147,6 @@ export class ClientRecordingsComponent implements OnInit {
       error: () => this.loadingDates.set(false)
     });
 
-    // Load SD recordings
-    this.http.get<any>(`/api/recordings/sd/${id}`).subscribe({
-      next: (res) => this.sdRecordings.set(Array.isArray(res) ? res : (res.files || [])),
-      error: () => { }
-    });
   }
 
   selectDate(date: string) {
@@ -192,8 +172,5 @@ export class ClientRecordingsComponent implements OnInit {
     }
   }
 
-  playSdRecording(rec: any) {
-    // SD recordings are served directly
-    this.currentVideo.set(`/api/recordings/sd/video?path=${encodeURIComponent(rec.path || rec.filename)}`);
-  }
 }
+

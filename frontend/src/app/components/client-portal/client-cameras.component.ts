@@ -83,14 +83,14 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
       margin-right: auto;
       display: flex; align-items: center; gap: 10px;
     }
-    .nvr-sub { font-size: 12px; color: rgba(248,250,252,0.5); font-weight: 400; }
+    .nvr-sub { font-size: 12px; color: rgba(var(--ink-rgb), 0.5); font-weight: 400; }
     .nvr-layout-btns { display: flex; gap: 6px; }
     .layout-btn {
       padding: 5px 10px; border-radius: 7px;
-      background: transparent; border: 1px solid rgba(255,255,255,0.12);
+      background: transparent; border: 1px solid var(--outline);
       color: var(--muted); font-size: 12px; cursor: pointer;
       transition: all 0.15s;
-      &:hover { background: rgba(255,255,255,0.08); color: #fff; }
+      &:hover { background: rgba(var(--ink-rgb), 0.08); color: rgba(var(--ink-rgb), 1); }
       &.active { background: rgba(37,99,235,0.25); border-color: #3b82f6; color: #93c5fd; }
     }
     .camera-grid {
@@ -140,7 +140,7 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
     .nvr-state {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 10px; padding: 80px 20px; grid-column: 1/-1;
-      color: rgba(255,255,255,0.4);
+      color: rgba(var(--ink-rgb), 0.4);
     }
     .nvr-state-icon { font-size: 48px; opacity: 0.4; }
     .nvr-state-title { font-size: 18px; font-weight: 600; }
