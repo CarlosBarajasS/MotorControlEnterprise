@@ -207,23 +207,45 @@ export class WizardComponent implements OnInit {
   async createCamerasInApi() {
     const token = localStorage.getItem('motor_control_token');
     for (const cam of this.cameras()) {
+      const rtspUrl = `rtsp://${cam.user || 'admin'}:${cam.password || ''}@${cam.ip}${cam.rtspPath}`;
       try {
+        // Cámara live (alta calidad, vista en vivo)
         await fetch(`${this.API_URL}/cameras`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
           body: JSON.stringify({
             name: cam.id,
+            cameraId: cam.id,
             location: this.clientData.location,
-            rtspUrl: `rtsp://${cam.user || 'admin'}:${cam.password || ''}@${cam.ip}${cam.rtspPath}`,
+            rtspUrl,
             ptz: false,
+            isRecordingOnly: false,
             clientId: this.clientId()
           })
         });
       } catch (e) {
-        console.warn('Error creating camera:', cam.id, e);
+        console.warn('Error creating live camera:', cam.id, e);
+      }
+
+      // Cámara de grabación (solo si cloudStorageActive)
+      if (this.clientData.cloudStorageActive) {
+        try {
+          await fetch(`${this.API_URL}/cameras`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({
+              name: `${cam.id}-low`,
+              cameraId: `${cam.id}-low`,
+              location: this.clientData.location,
+              rtspUrl,
+              ptz: false,
+              isRecordingOnly: true,
+              clientId: this.clientId()
+            })
+          });
+        } catch (e) {
+          console.warn('Error creating recording camera:', cam.id, e);
+        }
       }
     }
   }
