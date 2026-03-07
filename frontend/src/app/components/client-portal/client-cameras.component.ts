@@ -62,27 +62,24 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
     </div>
   `,
   styles: [`
-    $nvr-bg: #0a0e1a;
-    $nvr-cell: #0f1628;
-
     .nvr-panel {
-      background: $nvr-bg;
+      background: var(--bg);
       border-radius: 20px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid var(--outline);
       box-shadow: 0 24px 48px rgba(0,0,0,0.4);
     }
     .nvr-toolbar {
       display: flex; align-items: center; gap: 12px;
       padding: 14px 20px;
-      background: rgba(255,255,255,0.03);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(var(--ink-rgb), 0.02);
+      border-bottom: 1px solid var(--outline);
       flex-wrap: wrap;
     }
     .nvr-toolbar-title {
-      font-size: 14px; font-weight: 600; color: #f1f5f9;
+      font-size: 14px; font-weight: 600; color: rgba(var(--ink-rgb), 1);
       margin-right: auto;
       display: flex; align-items: center; gap: 10px;
     }
@@ -91,18 +88,18 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
     .layout-btn {
       padding: 5px 10px; border-radius: 7px;
       background: transparent; border: 1px solid rgba(255,255,255,0.12);
-      color: rgba(255,255,255,0.5); font-size: 12px; cursor: pointer;
+      color: var(--muted); font-size: 12px; cursor: pointer;
       transition: all 0.15s;
       &:hover { background: rgba(255,255,255,0.08); color: #fff; }
       &.active { background: rgba(37,99,235,0.25); border-color: #3b82f6; color: #93c5fd; }
     }
     .camera-grid {
       display: grid; gap: 3px; padding: 3px;
-      background: #060a12; min-height: 400px;
+      background: var(--bg); min-height: 400px;
     }
     .camera-cell {
       position: relative; aspect-ratio: 16/9;
-      background: $nvr-cell; overflow: hidden;
+      background: var(--surface); overflow: hidden;
       &:hover { outline: 2px solid #3b82f6; }
       &:hover .cell-actions { opacity: 1; }
     }
@@ -151,9 +148,9 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
     .nvr-statusbar {
       display: flex; align-items: center; gap: 16px;
       padding: 8px 20px;
-      background: rgba(255,255,255,0.02);
-      border-top: 1px solid rgba(255,255,255,0.06);
-      font-size: 11px; color: rgba(248,250,252,0.5);
+      background: rgba(var(--ink-rgb), 0.02);
+      border-top: 1px solid var(--outline);
+      font-size: 11px; color: var(--muted);
       .dot.online { background: #10b981; box-shadow: 0 0 6px #10b981; }
     }
   `]
