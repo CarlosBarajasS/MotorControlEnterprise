@@ -30,7 +30,6 @@ pathDefaults:
   record: no
   hlsSegmentCount: 10
   hlsSegmentDuration: 4s
-  hlsPartDuration: 200ms
 
 paths:
   all_others: ~
