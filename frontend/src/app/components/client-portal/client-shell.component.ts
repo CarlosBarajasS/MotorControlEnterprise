@@ -294,6 +294,6 @@ export class ClientShellComponent {
 
   logout() {
     localStorage.removeItem('motor_control_token');
-    this.router.navigate(['/client/login']);
+    this.router.navigate(['/login']);
   }
 }

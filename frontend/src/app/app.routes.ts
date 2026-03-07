@@ -15,7 +15,6 @@ import { UsersComponent } from './components/users/users.component';
 import { TelemetryHistoryComponent } from './components/telemetry-history/telemetry-history.component';
 
 // Client Portal
-import { ClientLoginComponent } from './components/client-portal/client-login.component';
 import { ClientShellComponent } from './components/client-portal/client-shell.component';
 import { ClientCamerasComponent } from './components/client-portal/client-cameras.component';
 import { ClientCameraDetailComponent } from './components/client-portal/client-camera-detail.component';
@@ -31,15 +30,12 @@ const adminAuthGuard = () => {
         inject(Router).navigate(['/login']);
         return false;
     }
-    // If client role, redirect to client portal
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.role === 'client') {
             inject(Router).navigate(['/client/cameras']);
             return false;
         }
-
-        // ADMIN FORCED PASSWORD CHANGE
         const mustChange = localStorage.getItem('motor_control_must_change');
         if (mustChange === 'true') {
             inject(Router).navigate(['/change-password']);
@@ -71,7 +67,7 @@ export const routes: Routes = [
     {
         path: 'client',
         children: [
-            { path: 'login', component: ClientLoginComponent },
+            { path: 'login', redirectTo: '/login', pathMatch: 'full' },
             { path: 'change-password', component: ClientChangePasswordComponent },
             {
                 path: '',
@@ -89,5 +85,5 @@ export const routes: Routes = [
         ]
     },
 
-    { path: '**', redirectTo: 'dashboard' }
+    { path: '**', redirectTo: 'login' }
 ];
