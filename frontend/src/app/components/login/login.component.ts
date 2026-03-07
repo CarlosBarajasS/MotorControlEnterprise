@@ -41,7 +41,8 @@ export class LoginComponent {
         this.authService.login(this.loginForm.value).subscribe({
             next: (res) => {
                 this.loading = false;
-                if (res.role === 'client') {
+                const role = res.user?.role ?? res.role;
+                if (role === 'client') {
                     if (res.mustChangePassword) {
                         this.router.navigate(['/client/change-password']);
                     } else {
