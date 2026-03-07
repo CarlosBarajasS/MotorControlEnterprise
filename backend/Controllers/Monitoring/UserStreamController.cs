@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using MotorControlEnterprise.Api.Data;
 using System.Security.Claims;
 using System.Text.Json;
@@ -22,17 +23,20 @@ namespace MotorControlEnterprise.Api.Controllers
         private readonly IConfiguration _config;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<UserStreamController> _logger;
+        private readonly IMemoryCache _cache;
 
         public UserStreamController(
             ApplicationDbContext db,
             IConfiguration config,
             IHttpClientFactory httpClientFactory,
-            ILogger<UserStreamController> logger)
+            ILogger<UserStreamController> logger,
+            IMemoryCache cache)
         {
             _db                = db;
             _config            = config;
             _httpClientFactory = httpClientFactory;
             _logger            = logger;
+            _cache             = cache;
         }
 
         private int GetCurrentUserId()
@@ -92,7 +96,7 @@ namespace MotorControlEnterprise.Api.Controllers
             if (!System.Text.RegularExpressions.Regex.IsMatch(segment, @"^[\w\-]+\.(ts|m3u8|mp4|m4s)$"))
                 return BadRequest(new { message = "Nombre de segmento inválido." });
 
-            var camera = await GetAuthorizedCamera(cameraId);
+            var camera = await GetAuthorizedCameraCached(cameraId, ct);
             if (camera == null) return NotFound(new { message = "Acceso denegado." });
 
             var streamPath  = ResolveStreamPath(camera);
@@ -202,6 +206,23 @@ namespace MotorControlEnterprise.Api.Controllers
         }
 
         // ─── Helpers ──────────────────────────────────────────────────────────
+        private async Task<Models.Camera?> GetAuthorizedCameraCached(int cameraId, CancellationToken ct = default)
+        {
+            var userId   = GetCurrentUserId();
+            var cacheKey = $"stream-auth:{userId}:{cameraId}";
+
+            if (_cache.TryGetValue(cacheKey, out bool isAuthorized))
+            {
+                if (!isAuthorized) return null;
+                return await _db.Cameras.FindAsync(new object[] { cameraId }, ct);
+            }
+
+            var camera     = await GetAuthorizedCamera(cameraId);
+            var authorized = camera != null;
+            _cache.Set(cacheKey, authorized, TimeSpan.FromMinutes(5));
+            return camera;
+        }
+
         private async Task<Models.Camera?> GetAuthorizedCamera(int cameraId)
         {
             var userId = GetCurrentUserId();

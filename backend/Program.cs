@@ -12,6 +12,7 @@ builder.Services.AddControllers()
         opts.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddMemoryCache();
 
 // HttpClient — mediamtx proxy + Resend.dev email
 builder.Services.AddHttpClient("mediamtx", (sp, client) =>
