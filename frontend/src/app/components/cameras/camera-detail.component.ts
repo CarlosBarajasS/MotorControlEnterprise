@@ -27,6 +27,8 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
 
   private hls: Hls | null = null;
   private statusInterval: any;
+  private initPlayerTimer: any = null;
+  private mediaErrorRecoveryAttempted = false;
 
   ngOnInit() {
     this.cameraId = this.route.snapshot.paramMap.get('id') || '';
@@ -42,6 +44,10 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (this.initPlayerTimer) {
+      clearTimeout(this.initPlayerTimer);
+      this.initPlayerTimer = null;
+    }
     if (this.hls) {
       this.hls.destroy();
     }
@@ -56,7 +62,7 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
         this.camera.set(cam);
         this.checkStatus();
         // *ngIf="camera()" is now true — wait one tick for the DOM to render
-        setTimeout(() => this.initPlayer(), 0);
+        this.initPlayerTimer = setTimeout(() => this.initPlayer(), 0);
       },
       error: (err) => console.error(err)
     });
@@ -75,10 +81,18 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
     const streamUrl = `${API_URL}/stream/${this.cameraId}/hls`;
 
     if (Hls.isSupported()) {
-      const token = localStorage.getItem('motor_control_token');
       this.hls = new Hls({
+        liveDurationInfinity: true,
         maxLiveSyncPlaybackRate: 1.5,
+        maxMaxBufferLength: 30,
+        fragLoadingMaxRetry: 6,
+        fragLoadingRetryDelay: 500,
+        levelLoadingMaxRetry: 6,
+        levelLoadingRetryDelay: 500,
+        manifestLoadingMaxRetry: 4,
+        manifestLoadingRetryDelay: 1000,
         xhrSetup: (xhr: XMLHttpRequest) => {
+          const token = localStorage.getItem('motor_control_token');
           if (token) {
             xhr.setRequestHeader('Authorization', `Bearer ${token}`);
           }
@@ -88,6 +102,15 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
       this.hls.attachMedia(video);
       this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
         video.play().catch(e => console.log('Auto-play prevent:', e));
+      });
+      this.hls.on(Hls.Events.ERROR, (_, data) => {
+        if (!data.fatal) return;
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !this.mediaErrorRecoveryAttempted) {
+          this.mediaErrorRecoveryAttempted = true;
+          this.hls!.recoverMediaError();
+          return;
+        }
+        console.warn('HLS fatal error — stream detenido:', data);
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       // For Safari HTML5 Native Support

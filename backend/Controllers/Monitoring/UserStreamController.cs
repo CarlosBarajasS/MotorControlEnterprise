@@ -35,10 +35,12 @@ namespace MotorControlEnterprise.Api.Controllers
             _logger            = logger;
         }
 
-        private int GetCurrentUserId() =>
-            int.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)
-                      ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
-                      ?? "0");
+        private int GetCurrentUserId()
+        {
+            var raw = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                      ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return int.TryParse(raw, out var id) ? id : 0;
+        }
 
         private string GetCurrentUserRole() =>
             User.FindFirstValue(ClaimTypes.Role) ?? "client";
@@ -99,14 +101,14 @@ namespace MotorControlEnterprise.Api.Controllers
 
             try
             {
-                var http     = _httpClientFactory.CreateClient("mediamtx");
-                var response = await http.GetAsync(segmentUrl, ct);
-
-                if (!response.IsSuccessStatusCode)
-                    return StatusCode((int)response.StatusCode, new { message = "Segmento no disponible." });
+                var http = _httpClientFactory.CreateClient("mediamtx");
 
                 if (isPlaylist)
                 {
+                    var response = await http.GetAsync(segmentUrl, ct);
+                    if (!response.IsSuccessStatusCode)
+                        return StatusCode((int)response.StatusCode, new { message = "Segmento no disponible." });
+
                     var content = await response.Content.ReadAsStringAsync(ct);
                     content = RewritePlaylistUrls(content, cameraId);
                     return Content(content, "application/vnd.apple.mpegurl");
@@ -115,8 +117,17 @@ namespace MotorControlEnterprise.Api.Controllers
                 {
                     var contentType = segment.EndsWith(".mp4") || segment.EndsWith(".m4s")
                         ? "video/mp4" : "video/MP2T";
-                    var bytes = await response.Content.ReadAsByteArrayAsync(ct);
-                    return File(bytes, contentType);
+
+                    using var response = await http.GetAsync(segmentUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+                    if (!response.IsSuccessStatusCode)
+                        return StatusCode((int)response.StatusCode, new { message = "Segmento no disponible." });
+
+                    Response.ContentType = contentType;
+                    if (response.Content.Headers.ContentLength.HasValue)
+                        Response.ContentLength = response.Content.Headers.ContentLength.Value;
+
+                    await response.Content.CopyToAsync(Response.Body, ct);
+                    return new EmptyResult();
                 }
             }
             catch (HttpRequestException ex)
@@ -196,7 +207,7 @@ namespace MotorControlEnterprise.Api.Controllers
             var userId = GetCurrentUserId();
             var role   = GetCurrentUserRole();
 
-            if (role == "admin")
+            if (role == "admin" || role == "installer")
                 return await _db.Cameras.FindAsync(cameraId);
 
             // Para usuarios cliente: buscar via Client.UserId → ClientId → Camera.ClientId
@@ -273,11 +284,21 @@ namespace MotorControlEnterprise.Api.Controllers
 
         private static string RewritePlaylistUrls(string content, int cameraId)
         {
-            return System.Text.RegularExpressions.Regex.Replace(
+            // 1. Reescribir URLs absolutas de MediaMTX (http[s]://host/path/seg.ext)
+            content = System.Text.RegularExpressions.Regex.Replace(
                 content,
-                @"^((?!#|http)[^\s]+\.(m3u8|ts|mp4|m4s))$",
-                m => $"/api/stream/{cameraId}/hls/{m.Value}",
+                @"^https?://[^\s]+/([\w\-]+\.(m3u8|ts|mp4|m4s))$",
+                m => $"/api/stream/{cameraId}/hls/{m.Groups[1].Value}",
                 System.Text.RegularExpressions.RegexOptions.Multiline);
+
+            // 2. Reescribir URLs relativas con o sin subdirectorio — extraer solo el filename
+            content = System.Text.RegularExpressions.Regex.Replace(
+                content,
+                @"^(?!#|http|/)(?:[^\s]*/)?(\w[\w\-]*\.(m3u8|ts|mp4|m4s))$",
+                m => $"/api/stream/{cameraId}/hls/{m.Groups[1].Value}",
+                System.Text.RegularExpressions.RegexOptions.Multiline);
+
+            return content;
         }
     }
 }
