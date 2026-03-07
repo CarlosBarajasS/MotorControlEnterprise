@@ -22,14 +22,15 @@ authInternalUsers:
       - action: publish
       - action: read
 
+hlsSegmentCount: 10
+hlsSegmentDuration: 4s
+
 rtspAddress: :8554
 hlsAddress:  :8888
 webrtcAddress: :8889
 
 pathDefaults:
   record: no
-  hlsSegmentCount: 10
-  hlsSegmentDuration: 4s
 
 paths:
   all_others: ~
