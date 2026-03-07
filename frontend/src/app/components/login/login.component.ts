@@ -41,9 +41,12 @@ export class LoginComponent {
         this.authService.login(this.loginForm.value).subscribe({
             next: (res) => {
                 this.loading = false;
-                // The auth service saves the token
                 if (res.role === 'client') {
-                    this.router.navigate(['/client/cameras']);
+                    if (res.mustChangePassword) {
+                        this.router.navigate(['/client/change-password']);
+                    } else {
+                        this.router.navigate(['/client/cameras']);
+                    }
                 } else {
                     if (res.mustChangePassword) {
                         localStorage.setItem('motor_control_must_change', 'true');
