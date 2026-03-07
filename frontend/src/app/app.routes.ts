@@ -21,6 +21,7 @@ import { ClientCamerasComponent } from './components/client-portal/client-camera
 import { ClientCameraDetailComponent } from './components/client-portal/client-camera-detail.component';
 import { ClientRecordingsComponent } from './components/client-portal/client-recordings.component';
 import { ClientChangePasswordComponent } from './components/client-change-password/client-change-password.component';
+import { ClientAccountComponent } from './components/client-portal/client-account.component';
 import { ChangePasswordComponent } from './components/change-password/change-password.component';
 import { clientAuthGuard } from './guards/client-auth.guard';
 
@@ -81,6 +82,7 @@ export const routes: Routes = [
                     { path: 'cameras/:id', component: ClientCameraDetailComponent },
                     { path: 'recordings', component: ClientRecordingsComponent },
                     { path: 'recordings/:id', component: ClientRecordingsComponent },
+                    { path: 'account', component: ClientAccountComponent },
                     { path: '', redirectTo: 'cameras', pathMatch: 'full' }
                 ]
             }
