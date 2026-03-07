@@ -444,10 +444,24 @@ namespace MotorControlEnterprise.Api.Controllers
             var userId = GetCurrentUserId();
             var role   = GetCurrentUserRole();
 
+            if (role == "admin")
+            {
+                return await _db.Cameras
+                    .Include(c => c.Client)
+                    .FirstOrDefaultAsync(c => c.Id == cameraId);
+            }
+
+            // Para usuarios no-admin: verificar ownership directo O relación de cliente
+            var clientId = await _db.Clients
+                .Where(c => c.UserId == userId)
+                .Select(c => (int?)c.Id)
+                .FirstOrDefaultAsync();
+
             return await _db.Cameras
                 .Include(c => c.Client)
                 .FirstOrDefaultAsync(c =>
-                    c.Id == cameraId && (role == "admin" || c.UserId == userId));
+                    c.Id == cameraId &&
+                    (c.UserId == userId || (clientId != null && c.ClientId == clientId)));
         }
     }
 

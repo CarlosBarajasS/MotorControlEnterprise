@@ -185,8 +185,8 @@ namespace MotorControlEnterprise.Api.Controllers
             var inactive  = await _db.Clients.CountAsync(c => c.Status == "inactive");
             var suspended = await _db.Clients.CountAsync(c => c.Status == "suspended");
             var withCloud = await _db.Clients.CountAsync(c => c.CloudStorageActive);
-            var totalCam  = await _db.Cameras.CountAsync();
-            var activeCam = await _db.Cameras.CountAsync(c => c.Status == "active");
+            var totalCam  = await _db.Cameras.CountAsync(c => !c.IsRecordingOnly);
+            var activeCam = await _db.Cameras.CountAsync(c => c.Status == "active" && !c.IsRecordingOnly);
 
             var byType = await _db.Clients
                 .Where(c => c.BusinessType != null)

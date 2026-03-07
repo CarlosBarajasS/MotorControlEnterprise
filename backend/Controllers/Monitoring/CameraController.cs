@@ -25,7 +25,8 @@ namespace MotorControlEnterprise.Api.Controllers
             string? RtspUrl,
             int? ClientId,
             bool Ptz = false,
-            bool IsRecordingOnly = false
+            bool IsRecordingOnly = false,
+            string? CameraId = null
         );
 
         // Extrae la URL RTSP del campo Streams (jsonb { "rtsp": "...", "hls": "..." })
@@ -161,6 +162,7 @@ namespace MotorControlEnterprise.Api.Controllers
                 Location        = dto.Location,
                 Ptz             = dto.Ptz,
                 IsRecordingOnly = dto.IsRecordingOnly,
+                CameraId        = dto.CameraId,
                 ClientId        = dto.ClientId,
                 UserId          = userId,
                 Streams         = dto.RtspUrl != null ? BuildStreams(dto.RtspUrl) : null,
