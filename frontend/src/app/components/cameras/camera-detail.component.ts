@@ -29,6 +29,9 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
   private statusInterval: any;
   private initPlayerTimer: any = null;
   private mediaErrorRecoveryAttempted = false;
+  private safariRetryTimer: any = null;
+  private safariRetryCount = 0;
+  private readonly SAFARI_MAX_RETRIES = 5;
 
   ngOnInit() {
     this.cameraId = this.route.snapshot.paramMap.get('id') || '';
@@ -47,6 +50,10 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
     if (this.initPlayerTimer) {
       clearTimeout(this.initPlayerTimer);
       this.initPlayerTimer = null;
+    }
+    if (this.safariRetryTimer) {
+      clearTimeout(this.safariRetryTimer);
+      this.safariRetryTimer = null;
     }
     if (this.hls) {
       this.hls.destroy();
@@ -115,11 +122,20 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
         console.warn('HLS fatal error — stream detenido:', data);
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // For Safari HTML5 Native Support
+      // Safari native HLS — token via query param (Authorization headers not supported)
       const safariToken = localStorage.getItem('motor_control_token') ?? '';
       video.src = safariToken ? `${streamUrl}?token=${encodeURIComponent(safariToken)}` : streamUrl;
       video.addEventListener('loadedmetadata', () => {
+        this.safariRetryCount = 0;
         video.play().catch(e => console.log('Auto-play prevent:', e));
+      });
+      video.addEventListener('error', () => {
+        if (this.safariRetryCount >= this.SAFARI_MAX_RETRIES) return;
+        this.safariRetryCount++;
+        this.safariRetryTimer = setTimeout(() => {
+          video.src = '';
+          this.initPlayer();
+        }, 5000);
       });
     }
   }

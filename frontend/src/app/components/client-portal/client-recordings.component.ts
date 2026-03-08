@@ -489,6 +489,7 @@ export class ClientRecordingsComponent implements OnInit, OnDestroy {
   // ── Popup controls ────────────────────────────────────────────
   closePopup() {
     this.currentVideo.set('');
+    this.loadingVideo.set(false);
     this.popupVisible.set(false);
     this.popupExpanded.set(false);
     this.currentRecordingName.set('');
