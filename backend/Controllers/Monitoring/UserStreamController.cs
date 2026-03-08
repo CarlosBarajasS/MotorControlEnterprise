@@ -101,8 +101,24 @@ namespace MotorControlEnterprise.Api.Controllers
             if (camera == null) return NotFound(new { message = "Acceso denegado." });
 
             var streamPath  = ResolveStreamPath(camera);
-            var segmentUrl  = $"{MediamtxBase()}/{streamPath}/{segment}";
             var isPlaylist  = segment.EndsWith(".m3u8");
+
+            // Construir URL del segmento; reenviar parámetros LL-HLS para sub-playlists.
+            // Sin estos params MediaMTX responde de inmediato en vez de esperar el siguiente
+            // segmento, lo que deja a Safari sin frames nuevos y el video se congela.
+            var segmentUrl = $"{MediamtxBase()}/{streamPath}/{segment}";
+            if (isPlaylist)
+            {
+                var llParams = new List<string>();
+                var msn  = HttpContext.Request.Query["_HLS_msn"].FirstOrDefault();
+                var part = HttpContext.Request.Query["_HLS_part"].FirstOrDefault();
+                var skip = HttpContext.Request.Query["_HLS_skip"].FirstOrDefault();
+                if (msn  != null) llParams.Add($"_HLS_msn={Uri.EscapeDataString(msn)}");
+                if (part != null) llParams.Add($"_HLS_part={Uri.EscapeDataString(part)}");
+                if (skip != null) llParams.Add($"_HLS_skip={Uri.EscapeDataString(skip)}");
+                if (llParams.Count > 0)
+                    segmentUrl += "?" + string.Join("&", llParams);
+            }
 
             try
             {
@@ -324,15 +340,19 @@ namespace MotorControlEnterprise.Api.Controllers
                 System.Text.RegularExpressions.RegexOptions.Multiline);
 
             // 3. Reescribir #EXT-X-MAP:URI — init segment de streams fMP4/CMAF
-            //    Safari native HLS necesita ?token= también en el init segment
-            content = System.Text.RegularExpressions.Regex.Replace(
-                content,
-                @"(#EXT-X-MAP:URI=""?)(?:https?://[^\s""]*?/|(?:[^""/ \t]*/))?([\w\-]+\.(?:mp4|m4s))(""?)",
-                m =>
-                {
-                    var filename = m.Groups[2].Value;
-                    return $"{m.Groups[1].Value}/api/stream/{cameraId}/hls/{filename}{qs}{m.Groups[3].Value}";
-                });
+            //    Solo cuando hay token (Safari native HLS): HLS.js resuelve la URI
+            //    relativa correctamente por sí mismo, esta reescritura lo rompería.
+            if (!string.IsNullOrEmpty(qs))
+            {
+                content = System.Text.RegularExpressions.Regex.Replace(
+                    content,
+                    @"(#EXT-X-MAP:URI=""?)(?:https?://[^\s""]*?/|(?:[^""/ \t]*/))?([\w\-]+\.(?:mp4|m4s))(""?)",
+                    m =>
+                    {
+                        var filename = m.Groups[2].Value;
+                        return $"{m.Groups[1].Value}/api/stream/{cameraId}/hls/{filename}{qs}{m.Groups[3].Value}";
+                    });
+            }
 
             return content;
         }

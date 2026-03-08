@@ -17,7 +17,7 @@ builder.Services.AddMemoryCache();
 // HttpClient — mediamtx proxy + Resend.dev email
 builder.Services.AddHttpClient("mediamtx", (sp, client) =>
 {
-    client.Timeout = TimeSpan.FromSeconds(10);
+    client.Timeout = TimeSpan.FromSeconds(30);
 
     // Basic auth para acceder a central-mediamtx (lectura HLS/WebRTC)
     var cfg  = sp.GetRequiredService<IConfiguration>();
