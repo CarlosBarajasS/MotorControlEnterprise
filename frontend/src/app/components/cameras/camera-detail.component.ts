@@ -87,7 +87,11 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
     const video = this.videoElement.nativeElement;
     const streamUrl = `${API_URL}/stream/${this.cameraId}/hls`;
 
-    if (Hls.isSupported()) {
+    // iOS Safari: forzar native HLS — evita problemas de MSE con init segment fMP4
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    if (Hls.isSupported() && !isIOS) {
       this.hls = new Hls({
         liveDurationInfinity: true,
         maxLiveSyncPlaybackRate: 1.0,

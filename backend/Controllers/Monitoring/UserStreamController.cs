@@ -323,6 +323,17 @@ namespace MotorControlEnterprise.Api.Controllers
                 m => $"/api/stream/{cameraId}/hls/{m.Groups[1].Value}{qs}",
                 System.Text.RegularExpressions.RegexOptions.Multiline);
 
+            // 3. Reescribir #EXT-X-MAP:URI — init segment de streams fMP4/CMAF
+            //    Safari native HLS necesita ?token= también en el init segment
+            content = System.Text.RegularExpressions.Regex.Replace(
+                content,
+                @"(#EXT-X-MAP:URI=""?)(?:https?://[^\s""]*?/|(?:[^""/ \t]*/))?([\w\-]+\.(?:mp4|m4s))(""?)",
+                m =>
+                {
+                    var filename = m.Groups[2].Value;
+                    return $"{m.Groups[1].Value}/api/stream/{cameraId}/hls/{filename}{qs}{m.Groups[3].Value}";
+                });
+
             return content;
         }
     }

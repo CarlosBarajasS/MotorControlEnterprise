@@ -30,7 +30,12 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
     private initStream() {
         const video = this.videoEl.nativeElement;
 
-        if (Hls.isSupported()) {
+        // iOS Safari: forzar native HLS — HLS.js + MSE en iOS no maneja
+        // correctamente el init segment fMP4 (#EXT-X-MAP) en todas las versiones
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (Hls.isSupported() && !isIOS) {
             this.hls = new Hls({
                 liveDurationInfinity: true,
                 maxLiveSyncPlaybackRate: 1.1,
