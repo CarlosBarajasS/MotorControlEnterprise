@@ -126,7 +126,6 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
       const safariToken = localStorage.getItem('motor_control_token') ?? '';
       video.src = safariToken ? `${streamUrl}?token=${encodeURIComponent(safariToken)}` : streamUrl;
       video.addEventListener('loadedmetadata', () => {
-        this.safariRetryCount = 0;
         video.play().catch(e => console.log('Auto-play prevent:', e));
       });
       video.addEventListener('error', () => {

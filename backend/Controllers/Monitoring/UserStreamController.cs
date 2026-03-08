@@ -72,7 +72,8 @@ namespace MotorControlEnterprise.Api.Controllers
                                   ?? "application/vnd.apple.mpegurl";
 
                 // Reescribir segmentos relativos para que pasen por el proxy
-                content = RewritePlaylistUrls(content, cameraId);
+                var token = HttpContext.Request.Query["token"].FirstOrDefault();
+                content = RewritePlaylistUrls(content, cameraId, token);
 
                 // Actualizar lastSeen
                 camera.LastSeen  = DateTime.UtcNow;
@@ -114,7 +115,8 @@ namespace MotorControlEnterprise.Api.Controllers
                         return StatusCode((int)response.StatusCode, new { message = "Segmento no disponible." });
 
                     var content = await response.Content.ReadAsStringAsync(ct);
-                    content = RewritePlaylistUrls(content, cameraId);
+                    var token = HttpContext.Request.Query["token"].FirstOrDefault();
+                    content = RewritePlaylistUrls(content, cameraId, token);
                     return Content(content, "application/vnd.apple.mpegurl");
                 }
                 else
@@ -303,20 +305,22 @@ namespace MotorControlEnterprise.Api.Controllers
             return camera.CameraKey ?? $"camera-{camera.Id}";
         }
 
-        private static string RewritePlaylistUrls(string content, int cameraId)
+        private static string RewritePlaylistUrls(string content, int cameraId, string? token = null)
         {
+            var qs = !string.IsNullOrEmpty(token) ? $"?token={Uri.EscapeDataString(token)}" : "";
+
             // 1. Reescribir URLs absolutas de MediaMTX (http[s]://host/path/seg.ext)
             content = System.Text.RegularExpressions.Regex.Replace(
                 content,
                 @"^https?://[^\s]+/([\w\-]+\.(m3u8|ts|mp4|m4s))$",
-                m => $"/api/stream/{cameraId}/hls/{m.Groups[1].Value}",
+                m => $"/api/stream/{cameraId}/hls/{m.Groups[1].Value}{qs}",
                 System.Text.RegularExpressions.RegexOptions.Multiline);
 
             // 2. Reescribir URLs relativas con o sin subdirectorio — extraer solo el filename
             content = System.Text.RegularExpressions.Regex.Replace(
                 content,
                 @"^(?!#|http|/)(?:[^\s]*/)?(\w[\w\-]*\.(m3u8|ts|mp4|m4s))$",
-                m => $"/api/stream/{cameraId}/hls/{m.Groups[1].Value}",
+                m => $"/api/stream/{cameraId}/hls/{m.Groups[1].Value}{qs}",
                 System.Text.RegularExpressions.RegexOptions.Multiline);
 
             return content;

@@ -213,6 +213,8 @@ import { HttpClient } from '@angular/common/http';
     .video-popup {
       position: fixed; z-index: 1000;
       width: 680px; height: 480px;
+      max-width: calc(100vw - 16px);
+      max-height: calc(100vh - 40px);
       background: #0e0e11;
       border-radius: 14px;
       box-shadow: 0 28px 80px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.09);
@@ -302,6 +304,22 @@ import { HttpClient } from '@angular/common/http';
       font-size: 9px; color: rgba(255,255,255,0.3);
       white-space: nowrap; pointer-events: none;
     }
+
+    @media (max-width: 720px) {
+      .video-popup {
+        left: 8px !important;
+        right: 8px !important;
+        top: auto !important;
+        bottom: 0 !important;
+        width: calc(100vw - 16px) !important;
+        height: auto !important;
+        max-height: 85vh !important;
+        border-radius: 16px 16px 0 0 !important;
+      }
+      .popup-header {
+        cursor: default !important;
+      }
+    }
   `]
 })
 export class ClientRecordingsComponent implements OnInit, OnDestroy {
@@ -326,7 +344,7 @@ export class ClientRecordingsComponent implements OnInit, OnDestroy {
   videoCurrentTime     = signal(0);  // seconds within current segment
 
   // Popup position
-  popupX = signal(Math.max(20, Math.floor((window.innerWidth  - 680) / 2)));
+  popupX = signal(Math.max(8, Math.floor((window.innerWidth  - 680) / 2)));
   popupY = signal(Math.max(20, Math.floor((window.innerHeight - 480) / 2)));
 
   // Internal
@@ -501,6 +519,7 @@ export class ClientRecordingsComponent implements OnInit, OnDestroy {
   // ── Drag ──────────────────────────────────────────────────────
   onDragStart(e: MouseEvent) {
     if (this.popupExpanded()) return;
+    if (window.innerWidth <= 720) return;
     e.preventDefault();
     this.isDragging  = true;
     this.dragOffsetX = e.clientX - this.popupX();

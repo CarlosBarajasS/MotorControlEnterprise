@@ -117,6 +117,24 @@ namespace MotorControlEnterprise.Api.Controllers
                 var content     = await response.Content.ReadAsStringAsync(ct);
                 var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/vnd.apple.mpegurl";
 
+                // Reescribir URLs de segmentos para que Safari pueda cargarlos con ?token=
+                var safarToken = HttpContext.Request.Query["token"].FirstOrDefault();
+                var safarQs = !string.IsNullOrEmpty(safarToken) ? $"?token={Uri.EscapeDataString(safarToken)}" : "";
+
+                // URLs absolutas MediaMTX
+                content = System.Text.RegularExpressions.Regex.Replace(
+                    content,
+                    @"^https?://[^\s]+/([\w\-]+\.(m3u8|ts|mp4|m4s))$",
+                    m => $"/api/stream/{id}/hls/{m.Groups[1].Value}{safarQs}",
+                    System.Text.RegularExpressions.RegexOptions.Multiline);
+
+                // URLs relativas (con o sin subdirectorio — solo extraer el filename)
+                content = System.Text.RegularExpressions.Regex.Replace(
+                    content,
+                    @"^(?!#|http|/)(?:[^\s]*/)?(\w[\w\-]*\.(m3u8|ts|mp4|m4s))$",
+                    m => $"/api/stream/{id}/hls/{m.Groups[1].Value}{safarQs}",
+                    System.Text.RegularExpressions.RegexOptions.Multiline);
+
                 return Content(content, contentType);
             }
             catch (HttpRequestException ex)
