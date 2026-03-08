@@ -111,11 +111,35 @@ namespace MotorControlEnterprise.Api.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var userIdStr = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            _ = int.TryParse(userIdStr, out var userId);
+
             var camera = await _db.Cameras
                 .Include(c => c.Client)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (camera == null) return NotFound();
+
+            // Clientes solo pueden ver cámaras asignadas a su ClientId
+            if (role != "admin" && role != "installer")
+            {
+                var clientId = await _db.Clients
+                    .Where(c => c.UserId == userId)
+                    .Select(c => (int?)c.Id)
+                    .FirstOrDefaultAsync();
+
+                if (clientId == null || camera.ClientId != clientId)
+                    return NotFound();
+            }
+
+            // await no puede usarse dentro de un inicializador de objeto anónimo
+            int? recordingCameraId = camera.ClientId.HasValue
+                ? await _db.Cameras
+                    .Where(c => c.IsRecordingOnly && c.ClientId == camera.ClientId)
+                    .Select(c => (int?)c.Id)
+                    .FirstOrDefaultAsync()
+                : null;
 
             return Ok(new
             {
@@ -124,7 +148,8 @@ namespace MotorControlEnterprise.Api.Controllers
                 camera.LastSeen, camera.ClientId, camera.Streams, camera.CreatedAt,
                 GatewayId = camera.Client != null ? camera.Client.GatewayId : null,
                 RtspUrl = ExtractRtspUrl(camera.Streams),
-                Client = camera.Client == null ? null : new { camera.Client.Id, camera.Client.Name, camera.Client.GatewayId }
+                Client = camera.Client == null ? null : new { camera.Client.Id, camera.Client.Name, camera.Client.GatewayId },
+                RecordingCameraId = recordingCameraId
             });
         }
 
@@ -132,8 +157,24 @@ namespace MotorControlEnterprise.Api.Controllers
         [HttpGet("{id:int}/status")]
         public async Task<IActionResult> GetStatus(int id)
         {
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var userIdStr = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            _ = int.TryParse(userIdStr, out var userId);
+
             var camera = await _db.Cameras.FindAsync(id);
             if (camera == null) return NotFound();
+
+            // Clientes solo pueden consultar estado de cámaras propias
+            if (role != "admin" && role != "installer")
+            {
+                var clientId = await _db.Clients
+                    .Where(c => c.UserId == userId)
+                    .Select(c => (int?)c.Id)
+                    .FirstOrDefaultAsync();
+
+                if (clientId == null || camera.ClientId != clientId)
+                    return NotFound();
+            }
 
             var isOnline = camera.LastSeen.HasValue &&
                            (DateTime.UtcNow - camera.LastSeen.Value).TotalSeconds < 90;
