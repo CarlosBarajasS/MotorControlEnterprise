@@ -365,6 +365,18 @@ namespace MotorControlEnterprise.Api.Controllers
                         var filename = m.Groups[2].Value;
                         return $"{m.Groups[1].Value}/api/stream/{cameraId}/hls/{filename}{qs}{m.Groups[3].Value}";
                     });
+
+                // 5. Reescribir #EXT-X-PRELOAD-HINT:TYPE=PART,URI — carga anticipada del siguiente part LL-HLS.
+                //    Safari 18 intenta precargar este recurso antes de que esté disponible.
+                //    Sin token → 401 → Safari no puede avanzar el stream y se congela.
+                content = System.Text.RegularExpressions.Regex.Replace(
+                    content,
+                    @"(#EXT-X-PRELOAD-HINT:[^""\n]*URI="")(?:https?://[^\s""]*?/|(?:[^""/ \t]*/))?([^""\s]+\.(?:mp4|m4s))("")",
+                    m =>
+                    {
+                        var filename = m.Groups[2].Value;
+                        return $"{m.Groups[1].Value}/api/stream/{cameraId}/hls/{filename}{qs}{m.Groups[3].Value}";
+                    });
             }
 
             return content;
