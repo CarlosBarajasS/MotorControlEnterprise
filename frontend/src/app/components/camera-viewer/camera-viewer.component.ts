@@ -81,7 +81,8 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
             };
             video.addEventListener('loadedmetadata', this.safariLoadedHandler);
             video.addEventListener('error', this.safariErrorHandler);
-            video.src = this.streamUrl;
+            const safariToken = localStorage.getItem('motor_control_token') ?? '';
+            video.src = safariToken ? `${this.streamUrl}?token=${encodeURIComponent(safariToken)}` : this.streamUrl;
         } else {
             this.isLoading = false;
             this.hasError = true;

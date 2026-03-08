@@ -121,6 +121,8 @@ import { HttpClient } from '@angular/common/http';
              [class.hidden]="loadingVideo()"
              controls autoplay
              [src]="currentVideo()"
+             (loadeddata)="onVideoLoaded()"
+             (error)="loadingVideo.set(false)"
              (timeupdate)="onTimeUpdate($event)"
              (ended)="onVideoEnded()">
       </video>
@@ -328,10 +330,7 @@ export class ClientRecordingsComponent implements OnInit, OnDestroy {
   popupY = signal(Math.max(20, Math.floor((window.innerHeight - 480) / 2)));
 
   // Internal
-  private blobUrl:        string = '';
-  private abortCtrl:      AbortController | null = null;
-  private mediaSource:    MediaSource | null = null;
-  private pendingSeek:    number | null = null;   // seconds to seek after loadeddata
+  private pendingSeek: number | null = null;   // seconds to seek after loadeddata
 
   // Drag
   private isDragging  = false;
@@ -422,7 +421,6 @@ export class ClientRecordingsComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     document.removeEventListener('mousemove', this.boundMouseMove);
     document.removeEventListener('mouseup',   this.boundMouseUp);
-    this.cancelCurrent();
   }
 
   selectDate(date: string) {
@@ -434,108 +432,22 @@ export class ClientRecordingsComponent implements OnInit, OnDestroy {
   }
 
   // ── Playback ──────────────────────────────────────────────────
-  async playRecording(rec: any, seekToSec?: number) {
-    this.cancelCurrent();
+  playRecording(rec: any, seekToSec?: number) {
+    this.currentVideo.set('');
     this.currentRecordingName.set(rec.filename || rec.startTime || '');
     this.videoCurrentTime.set(0);
     this.loadingVideo.set(true);
-    this.currentVideo.set('');
     this.popupVisible.set(true);
     this.pendingSeek = seekToSec ?? null;
 
-    const token  = localStorage.getItem('motor_control_token') ?? '';
-    const apiUrl = `/api/recordings/cloud/video?path=${encodeURIComponent(rec.path)}`;
-    this.abortCtrl = new AbortController();
-    const { signal } = this.abortCtrl;
-
-    const ok = typeof (window as any).MediaSource !== 'undefined'
-      ? await this.streamMSE(apiUrl, token, signal)
-      : false;
-
-    if (!ok && !signal.aborted) {
-      await this.streamBlob(apiUrl, token, signal);
-    }
+    const token = localStorage.getItem('motor_control_token') ?? '';
+    const url = `/api/recordings/cloud/video?path=${encodeURIComponent(rec.path)}`
+              + (token ? `&token=${encodeURIComponent(token)}` : '');
+    this.currentVideo.set(url);
   }
 
-  private async streamMSE(url: string, token: string, signal: AbortSignal): Promise<boolean> {
-    return new Promise<boolean>((resolve) => {
-      try {
-        const ms = new MediaSource();
-        this.mediaSource = ms;
-        const objUrl = URL.createObjectURL(ms);
-        this.blobUrl = objUrl;
-
-        ms.addEventListener('sourceopen', async () => {
-          if (signal.aborted) { resolve(false); return; }
-
-          const codecs = [
-            'video/mp4; codecs="avc1.64001E,mp4a.40.2"',
-            'video/mp4; codecs="avc1.4D401E,mp4a.40.2"',
-            'video/mp4; codecs="avc1.42E01E,mp4a.40.2"',
-            'video/mp4; codecs="avc1.42E01E"',
-          ];
-          let sb: SourceBuffer | null = null;
-          for (const c of codecs) {
-            if (MediaSource.isTypeSupported(c)) {
-              try { sb = ms.addSourceBuffer(c); break; } catch { /* try next */ }
-            }
-          }
-          if (!sb) { resolve(false); return; }
-
-          try {
-            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }, signal });
-            if (!res.ok || !res.body) { resolve(false); return; }
-
-            const reader = res.body.getReader();
-            let first = true;
-
-            const pump = async (): Promise<void> => {
-              if (signal.aborted || ms.readyState !== 'open') return;
-              const { done, value } = await reader.read();
-              if (done) {
-                if (ms.readyState === 'open') try { ms.endOfStream(); } catch { /* noop */ }
-                return;
-              }
-              if (sb!.updating) await new Promise<void>(r => sb!.addEventListener('updateend', r as any, { once: true }));
-              if (ms.readyState !== 'open' || signal.aborted) return;
-              try { sb!.appendBuffer(value); } catch { return; }
-              await new Promise<void>(r => sb!.addEventListener('updateend', r as any, { once: true }));
-              if (first) { first = false; this.loadingVideo.set(false); }
-              pump();
-            };
-
-            pump();
-            resolve(true);
-          } catch (err: any) {
-            resolve(err?.name === 'AbortError');
-          }
-        }, { once: true });
-
-        this.currentVideo.set(objUrl);
-      } catch { resolve(false); }
-    });
-  }
-
-  private async streamBlob(url: string, token: string, signal: AbortSignal) {
-    try {
-      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }, signal });
-      if (!res.ok || signal.aborted) return;
-      const blob = await res.blob();
-      if (signal.aborted) return;
-      this.blobUrl = URL.createObjectURL(blob);
-      this.currentVideo.set(this.blobUrl);
-    } catch { /* aborted or network error */ }
+  onVideoLoaded() {
     this.loadingVideo.set(false);
-  }
-
-  private cancelCurrent() {
-    this.abortCtrl?.abort();
-    this.abortCtrl = null;
-    if (this.mediaSource && this.mediaSource.readyState === 'open') {
-      try { this.mediaSource.endOfStream(); } catch { /* noop */ }
-    }
-    this.mediaSource = null;
-    if (this.blobUrl) { URL.revokeObjectURL(this.blobUrl); this.blobUrl = ''; }
   }
 
   // ── Video events ──────────────────────────────────────────────
@@ -576,10 +488,9 @@ export class ClientRecordingsComponent implements OnInit, OnDestroy {
 
   // ── Popup controls ────────────────────────────────────────────
   closePopup() {
-    this.cancelCurrent();
+    this.currentVideo.set('');
     this.popupVisible.set(false);
     this.popupExpanded.set(false);
-    this.currentVideo.set('');
     this.currentRecordingName.set('');
     this.videoCurrentTime.set(0);
   }

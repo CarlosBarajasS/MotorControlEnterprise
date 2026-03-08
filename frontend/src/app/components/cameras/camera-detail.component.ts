@@ -116,7 +116,8 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       // For Safari HTML5 Native Support
-      video.src = streamUrl;
+      const safariToken = localStorage.getItem('motor_control_token') ?? '';
+      video.src = safariToken ? `${streamUrl}?token=${encodeURIComponent(safariToken)}` : streamUrl;
       video.addEventListener('loadedmetadata', () => {
         video.play().catch(e => console.log('Auto-play prevent:', e));
       });
