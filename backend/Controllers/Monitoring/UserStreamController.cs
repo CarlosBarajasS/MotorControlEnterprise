@@ -339,14 +339,27 @@ namespace MotorControlEnterprise.Api.Controllers
                 m => $"/api/stream/{cameraId}/hls/{m.Groups[1].Value}{qs}",
                 System.Text.RegularExpressions.RegexOptions.Multiline);
 
-            // 3. Reescribir #EXT-X-MAP:URI — init segment de streams fMP4/CMAF
-            //    Solo cuando hay token (Safari native HLS): HLS.js resuelve la URI
-            //    relativa correctamente por sí mismo, esta reescritura lo rompería.
+            // 3 y 4. Solo para Safari (qs no vacío): reescribir init segment y partes LL-HLS.
+            //    HLS.js resuelve las URIs relativas correctamente y no necesita estas reescrituras.
+            //    Safari native HLS sí necesita el token en cada recurso individual.
             if (!string.IsNullOrEmpty(qs))
             {
+                // 3. Reescribir #EXT-X-MAP:URI — init segment fMP4/CMAF
                 content = System.Text.RegularExpressions.Regex.Replace(
                     content,
                     @"(#EXT-X-MAP:URI=""?)(?:https?://[^\s""]*?/|(?:[^""/ \t]*/))?([\w\-]+\.(?:mp4|m4s))(""?)",
+                    m =>
+                    {
+                        var filename = m.Groups[2].Value;
+                        return $"{m.Groups[1].Value}/api/stream/{cameraId}/hls/{filename}{qs}{m.Groups[3].Value}";
+                    });
+
+                // 4. Reescribir #EXT-X-PART:...,URI — partes LL-HLS
+                //    Sin esto Safari intenta descargar las partes sin token y recibe 401,
+                //    lo que impide que el stream arranque en iOS.
+                content = System.Text.RegularExpressions.Regex.Replace(
+                    content,
+                    @"(#EXT-X-PART:[^""\n]*URI="")(?:https?://[^\s""]*?/|(?:[^""/ \t]*/))?([^""\s]+\.(?:mp4|m4s))("")",
                     m =>
                     {
                         var filename = m.Groups[2].Value;
