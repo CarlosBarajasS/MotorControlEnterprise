@@ -75,8 +75,24 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
                 this.scheduleReconnect();
             });
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // iOS hold-back: start 30s behind live edge so Safari always has
+            // multiple buffered segments ahead and never stalls at boundaries.
+            // MediaMTX keeps hlsSegmentCount:10 × 4s = 40s of history, so 30s
+            // behind is safely within the available range.
+            const IOS_HOLD_BACK_SEC = 30;
             this.safariLoadedHandler = () => {
+                if (!this.isLoading) return; // guard: loadedmetadata + canplay both fire
                 this.isLoading = false;
+                const seekAndPlay = () => video.play().catch(() => { });
+                if (video.seekable && video.seekable.length > 0) {
+                    const liveEdge = video.seekable.end(video.seekable.length - 1);
+                    const target = liveEdge - IOS_HOLD_BACK_SEC;
+                    if (target > 0) {
+                        video.currentTime = target;
+                        video.addEventListener('seeked', seekAndPlay, { once: true });
+                        return;
+                    }
+                }
                 video.play().catch(() => { });
             };
             this.safariErrorHandler = () => {
