@@ -339,12 +339,11 @@ namespace MotorControlEnterprise.Api.Controllers
                 m => $"/api/stream/{cameraId}/hls/{m.Groups[1].Value}{qs}",
                 System.Text.RegularExpressions.RegexOptions.Multiline);
 
-            // 3 y 4. Solo para Safari (qs no vacío): reescribir init segment y partes LL-HLS.
-            //    HLS.js resuelve las URIs relativas correctamente y no necesita estas reescrituras.
-            //    Safari native HLS sí necesita el token en cada recurso individual.
+            // Solo para Safari (qs no vacío): reescribir init segment y eliminar LL-HLS.
+            //    HLS.js no necesita estas transformaciones (usa Authorization header).
             if (!string.IsNullOrEmpty(qs))
             {
-                // 3. Reescribir #EXT-X-MAP:URI — init segment fMP4/CMAF
+                // 3. Reescribir #EXT-X-MAP:URI — init segment fMP4/CMAF (no es LL-HLS, sí necesario)
                 content = System.Text.RegularExpressions.Regex.Replace(
                     content,
                     @"(#EXT-X-MAP:URI=""?)(?:https?://[^\s""]*?/|(?:[^""/ \t]*/))?([\w\-]+\.(?:mp4|m4s))(""?)",
@@ -354,29 +353,26 @@ namespace MotorControlEnterprise.Api.Controllers
                         return $"{m.Groups[1].Value}/api/stream/{cameraId}/hls/{filename}{qs}{m.Groups[3].Value}";
                     });
 
-                // 4. Reescribir #EXT-X-PART:...,URI — partes LL-HLS
-                //    Sin esto Safari intenta descargar las partes sin token y recibe 401,
-                //    lo que impide que el stream arranque en iOS.
+                // 4-7. Eliminar directivas LL-HLS del manifest para Safari native HLS.
+                //    LL-HLS requiere fetch de partes sub-segundo; a través del proxy la latencia
+                //    acumulada supera el PART-HOLD-BACK y Safari congela cada ~4s y salta al
+                //    live edge. Sin estas directivas Safari usa segmentos regulares (4s) con
+                //    2-3 segmentos de buffer adelante → reproducción continua sin stalls.
+                //    Desktop (HLS.js) no entra a este bloque → LL-HLS intacto para escritorio.
                 content = System.Text.RegularExpressions.Regex.Replace(
-                    content,
-                    @"(#EXT-X-PART:[^""\n]*URI="")(?:https?://[^\s""]*?/|(?:[^""/ \t]*/))?([^""\s]+\.(?:mp4|m4s))("")",
-                    m =>
-                    {
-                        var filename = m.Groups[2].Value;
-                        return $"{m.Groups[1].Value}/api/stream/{cameraId}/hls/{filename}{qs}{m.Groups[3].Value}";
-                    });
-
-                // 5. Reescribir #EXT-X-PRELOAD-HINT:TYPE=PART,URI — carga anticipada del siguiente part LL-HLS.
-                //    Safari 18 intenta precargar este recurso antes de que esté disponible.
-                //    Sin token → 401 → Safari no puede avanzar el stream y se congela.
+                    content, @"^#EXT-X-SERVER-CONTROL:[^\n]*$", "",
+                    System.Text.RegularExpressions.RegexOptions.Multiline);
                 content = System.Text.RegularExpressions.Regex.Replace(
-                    content,
-                    @"(#EXT-X-PRELOAD-HINT:[^""\n]*URI="")(?:https?://[^\s""]*?/|(?:[^""/ \t]*/))?([^""\s]+\.(?:mp4|m4s))("")",
-                    m =>
-                    {
-                        var filename = m.Groups[2].Value;
-                        return $"{m.Groups[1].Value}/api/stream/{cameraId}/hls/{filename}{qs}{m.Groups[3].Value}";
-                    });
+                    content, @"^#EXT-X-PART-INF:[^\n]*$", "",
+                    System.Text.RegularExpressions.RegexOptions.Multiline);
+                content = System.Text.RegularExpressions.Regex.Replace(
+                    content, @"^#EXT-X-PART:[^\n]*$", "",
+                    System.Text.RegularExpressions.RegexOptions.Multiline);
+                content = System.Text.RegularExpressions.Regex.Replace(
+                    content, @"^#EXT-X-PRELOAD-HINT:[^\n]*$", "",
+                    System.Text.RegularExpressions.RegexOptions.Multiline);
+                content = System.Text.RegularExpressions.Regex.Replace(
+                    content, @"\n{3,}", "\n\n");
             }
 
             return content;
