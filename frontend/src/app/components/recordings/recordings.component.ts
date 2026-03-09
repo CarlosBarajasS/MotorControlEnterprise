@@ -122,14 +122,6 @@ export class RecordingsComponent implements OnInit {
         const token = localStorage.getItem('motor_control_token') || '';
         const src = `${API_URL}/recordings/cloud/video?path=${encodeURIComponent(filePath)}&token=${encodeURIComponent(token)}`;
         this.currentVideoSource.set(src);
-        setTimeout(() => {
-            if (this.videoPlayer?.nativeElement) {
-                const video = this.videoPlayer.nativeElement;
-                video.src = src;
-                video.load();
-                video.play().catch(e => console.warn('Autoplay block', e));
-            }
-        }, 100);
     }
 
     getDownloadUrl(filePath: string): string {

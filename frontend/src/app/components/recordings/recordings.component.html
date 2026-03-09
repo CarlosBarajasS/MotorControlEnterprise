@@ -150,6 +150,9 @@
       </div>
       <button class="close-btn" (click)="currentVideoSource.set(null)">✕ Cerrar</button>
     </div>
-    <video #videoPlayer controls autoplay class="rec-player-video"></video>
+    <video #videoPlayer controls autoplay muted playsinline
+           class="rec-player-video"
+           [src]="currentVideoSource()"
+           (error)="currentVideoSource.set(null)"></video>
   </div>
 </div>

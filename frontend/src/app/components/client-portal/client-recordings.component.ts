@@ -119,7 +119,7 @@ import { HttpClient } from '@angular/common/http';
       <video *ngIf="currentVideo()"
              class="popup-video"
              [class.hidden]="loadingVideo()"
-             controls autoplay
+             controls autoplay playsinline
              [src]="currentVideo()"
              (loadeddata)="onVideoLoaded()"
              (error)="loadingVideo.set(false)"

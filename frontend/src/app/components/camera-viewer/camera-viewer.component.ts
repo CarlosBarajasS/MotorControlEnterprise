@@ -18,7 +18,7 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
     private hls: Hls | null = null;
     private mediaErrorRecoveryAttempted = false;
     private reconnectAttempts = 0;
-    private readonly MAX_RECONNECT_ATTEMPTS = 5;
+    private readonly MAX_RECONNECT_ATTEMPTS = 8;
     private reconnectTimer: any = null;
     private safariLoadedHandler: (() => void) | null = null;
     private safariErrorHandler: (() => void) | null = null;
@@ -85,9 +85,11 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
                 this.scheduleReconnect();
             };
             video.addEventListener('loadedmetadata', this.safariLoadedHandler);
+            video.addEventListener('canplay', this.safariLoadedHandler);
             video.addEventListener('error', this.safariErrorHandler);
             const safariToken = localStorage.getItem('motor_control_token') ?? '';
             video.src = safariToken ? `${this.streamUrl}?token=${encodeURIComponent(safariToken)}` : this.streamUrl;
+            video.load();
         } else {
             this.isLoading = false;
             this.hasError = true;
@@ -112,6 +114,7 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
         if (videoEl) {
             if (this.safariLoadedHandler) {
                 videoEl.removeEventListener('loadedmetadata', this.safariLoadedHandler);
+                videoEl.removeEventListener('canplay', this.safariLoadedHandler);
                 this.safariLoadedHandler = null;
             }
             if (this.safariErrorHandler) {
@@ -128,12 +131,13 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
         if (this.reconnectTimer) return;
         if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) return;
         this.reconnectAttempts++;
+        const delay = Math.min(2000 * Math.pow(2, this.reconnectAttempts - 1), 30000);
         this.reconnectTimer = setTimeout(() => {
             this.reconnectTimer = null;
             if (this.hasError) {
                 this.retry();
             }
-        }, 5000);
+        }, delay);
     }
 
     ngOnDestroy() {
@@ -144,6 +148,7 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
         if (videoEl) {
             if (this.safariLoadedHandler) {
                 videoEl.removeEventListener('loadedmetadata', this.safariLoadedHandler);
+                videoEl.removeEventListener('canplay', this.safariLoadedHandler);
             }
             if (this.safariErrorHandler) {
                 videoEl.removeEventListener('error', this.safariErrorHandler);
