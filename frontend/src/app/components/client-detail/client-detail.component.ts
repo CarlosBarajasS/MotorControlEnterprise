@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -12,7 +12,7 @@ const API_URL = '/api';
   templateUrl: './client-detail.component.html',
   styleUrls: ['./client-detail.component.scss']
 })
-export class ClientDetailComponent implements OnInit {
+export class ClientDetailComponent implements OnInit, OnDestroy {
   route = inject(ActivatedRoute);
   router = inject(Router);
   http = inject(HttpClient);
@@ -21,6 +21,8 @@ export class ClientDetailComponent implements OnInit {
   clientData = signal<any>(null);
   cameras = signal<any[]>([]);
   loading = signal<boolean>(true);
+
+  reScanPollInterval: ReturnType<typeof setInterval> | null = null;
 
   // Edge Config Modal
   showEdgeConfig = signal<boolean>(false);
@@ -118,5 +120,75 @@ export class ClientDetailComponent implements OnInit {
       next: () => this.loadClientDetails(),
       error: (err: any) => console.error('Error toggling cloud storage:', err)
     });
+  }
+
+  parseDiscovery(metadata: string | null | undefined): any {
+    try {
+      const m = JSON.parse(metadata || '{}');
+      return m.discovery || { status: 'pending' };
+    } catch { return { status: 'pending' }; }
+  }
+
+  async reScanOnvif(clientId: number, cameraId: number) {
+    const token = localStorage.getItem('motor_control_token');
+    await fetch(`/api/admin/clients/${clientId}/trigger-discovery?cameraId=${cameraId}`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+
+    // Optimistic update: set the badge to "discovering" immediately
+    this.cameras.update(cams => cams.map(cam => {
+      if (cam.id !== cameraId) return cam;
+      let meta: any = {};
+      try { meta = JSON.parse(cam.metadata || '{}'); } catch { /* ignore */ }
+      meta.discovery = { ...(meta.discovery || {}), status: 'discovering' };
+      return { ...cam, metadata: JSON.stringify(meta) };
+    }));
+
+    // Start polling for terminal state
+    this.stopReScanPoll();
+    let elapsed = 0;
+    const TIMEOUT_MS = 60_000;
+    const INTERVAL_MS = 3_000;
+
+    this.reScanPollInterval = setInterval(async () => {
+      elapsed += INTERVAL_MS;
+      if (elapsed > TIMEOUT_MS) {
+        this.stopReScanPoll();
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/monitoring/wizard/discovery-status?clientId=${clientId}&cameraId=${cameraId}`,
+          { headers: { 'Authorization': 'Bearer ' + token } }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const status: string = data?.status ?? 'pending';
+        // Update local badge with latest polled status
+        this.cameras.update(cams => cams.map(cam => {
+          if (cam.id !== cameraId) return cam;
+          let meta: any = {};
+          try { meta = JSON.parse(cam.metadata || '{}'); } catch { /* ignore */ }
+          meta.discovery = { ...(meta.discovery || {}), ...data };
+          return { ...cam, metadata: JSON.stringify(meta) };
+        }));
+        if (['discovered', 'onvif_failed', 'manual'].includes(status)) {
+          this.stopReScanPoll();
+          await this.loadClientDetails(); // final reload to get full data
+        }
+      } catch { /* ignore network errors, keep polling */ }
+    }, INTERVAL_MS);
+  }
+
+  stopReScanPoll() {
+    if (this.reScanPollInterval) {
+      clearInterval(this.reScanPollInterval);
+      this.reScanPollInterval = null;
+    }
+  }
+
+  ngOnDestroy() {
+    this.stopReScanPoll();
   }
 }

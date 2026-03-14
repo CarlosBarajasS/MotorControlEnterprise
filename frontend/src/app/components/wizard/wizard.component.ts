@@ -52,11 +52,19 @@ export class WizardComponent implements OnInit {
   userCreated = signal<boolean>(false);
 
   // Step 3: Cameras
-  cameras = signal<any[]>([{ id: 'cam1', ip: '', user: 'admin', password: '', rtspPath: '/Streaming/Channels/101' }]);
+  cameras = signal<any[]>([{ id: 'cam1', ip: '', onvifPort: 8000, onvifUser: 'admin', onvifPass: '' }]);
 
   // Step 4: Files
   activeTab = signal<'env' | 'mediamtx' | 'compose'>('env');
   generatedFiles = signal<{ env: string, compose: string, mediamtx: string }>({ env: '', compose: '', mediamtx: '' });
+
+  // Step 4: Discovery
+  discoveryStatus = signal<any>(null);
+  private discoveryPollInterval: any = null;
+  private discoveryStartTime = 0;
+  private readonly DISCOVERY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+  manualRtspInputs: { [key: number]: string } = {};
 
   ngOnInit(): void { }
 
@@ -83,6 +91,12 @@ export class WizardComponent implements OnInit {
       await this.createCamerasInApi();
       await this.generateFiles();
       this.clearAlert(2);
+    } else if (this.currentStep() === 3) {
+      // Moving from step 3 → step 4: start discovery polling
+      this.startDiscoveryPolling();
+    } else if (this.currentStep() === 4) {
+      // Moving from step 4 → step 5: stop discovery polling
+      this.stopDiscoveryPolling();
     } else if (this.currentStep() === 5) {
       if (this.userCreated()) {
         this.router.navigate(['/clients']);
@@ -100,9 +114,108 @@ export class WizardComponent implements OnInit {
 
   prevStep() {
     if (this.currentStep() > 1 && this.currentStep() !== 5) {
+      if (this.currentStep() === 4) {
+        this.stopDiscoveryPolling();
+      }
       this.currentStep.update(v => v - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
+
+  // --- Step 4: Discovery polling ---
+
+  startDiscoveryPolling() {
+    this.discoveryStartTime = Date.now();
+    this.pollDiscoveryOnce(); // immediate first call
+    this.discoveryPollInterval = setInterval(() => {
+      const elapsed = Date.now() - this.discoveryStartTime;
+      if (elapsed > this.DISCOVERY_TIMEOUT_MS) {
+        this.stopDiscoveryPolling();
+        this.showAlert(4, 'error', 'Tiempo de espera agotado. Verifica que el Pi esté encendido y conectado.');
+        return;
+      }
+      this.pollDiscoveryOnce();
+    }, 3000);
+  }
+
+  stopDiscoveryPolling() {
+    if (this.discoveryPollInterval) {
+      clearInterval(this.discoveryPollInterval);
+      this.discoveryPollInterval = null;
+    }
+  }
+
+  private async pollDiscoveryOnce() {
+    if (!this.clientId()) return;
+    try {
+      const res = await fetch(
+        `${this.API_URL}/admin/clients/${this.clientId()}/discovery-status`,
+        { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token') } }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      this.discoveryStatus.set(data);
+
+      // Stop polling when all cameras reach terminal state
+      const allTerminal = data.cameras?.every((c: any) =>
+        ['discovered', 'onvif_failed', 'manual'].includes(c.status)
+      );
+      if (allTerminal && data.cameras?.length > 0) {
+        this.stopDiscoveryPolling();
+      }
+    } catch { /* ignore polling errors */ }
+  }
+
+  get canContinueFromStep4(): boolean {
+    const status = this.discoveryStatus();
+    if (!status?.gatewayOnline) return false;
+    return status?.cameras?.every((c: any) =>
+      ['discovered', 'onvif_failed', 'manual'].includes(c.status)
+    ) ?? false;
+  }
+
+  async retryDiscovery(cameraId?: number) {
+    if (!this.clientId()) return;
+    const url = cameraId
+      ? `${this.API_URL}/admin/clients/${this.clientId()}/trigger-discovery?cameraId=${cameraId}`
+      : `${this.API_URL}/admin/clients/${this.clientId()}/trigger-discovery`;
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token') }
+    });
+    if (!this.discoveryPollInterval) {
+      this.startDiscoveryPolling();
+    }
+  }
+
+  async saveManualRtsp(cameraId: number, rtspUrl: string) {
+    if (!rtspUrl?.startsWith('rtsp://')) return;
+    const res = await fetch(`${this.API_URL}/cameras/${cameraId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
+      },
+      body: JSON.stringify({ rtspUrl, status: 'manual' })
+    });
+    if (!res.ok) {
+      this.showAlert(4, 'error', 'Error al guardar la URL RTSP. Intenta de nuevo.');
+      return;
+    }
+
+    // Optimistic local update: mark this camera as 'manual' immediately so
+    // canContinueFromStep4 unblocks without waiting for the next poll cycle.
+    this.discoveryStatus.update((s: any) => {
+      if (!s?.cameras) return s;
+      return {
+        ...s,
+        cameras: s.cameras.map((c: any) =>
+          c.id === cameraId ? { ...c, status: 'manual' } : c
+        )
+      };
+    });
+
+    await this.pollDiscoveryOnce();
   }
 
   // --- Step 1 ---
@@ -183,7 +296,7 @@ export class WizardComponent implements OnInit {
 
   // --- Step 3 ---
   addCamera() {
-    this.cameras.update(c => [...c, { id: 'cam' + (c.length + 1), ip: '', user: 'admin', password: '', rtspPath: '/Streaming/Channels/101' }]);
+    this.cameras.update(c => [...c, { id: 'cam' + (c.length + 1), ip: '', onvifPort: 8000, onvifUser: 'admin', onvifPass: '' }]);
   }
 
   removeCamera(index: number) {
@@ -196,10 +309,12 @@ export class WizardComponent implements OnInit {
       return false;
     }
     for (const cam of this.cameras()) {
-      if (!cam.id || !cam.ip || !cam.rtspPath) {
-        this.showAlert(2, 'error', 'Completa el nombre, IP y ruta RTSP de todas las cámaras');
+      if (!cam.id?.trim() || !cam.ip?.trim() || !cam.onvifUser?.trim()) {
+        this.showAlert(2, 'error', 'Completa el nombre, IP y usuario ONVIF de todas las cámaras');
         return false;
       }
+      // Default port to 8000 if blank
+      if (!cam.onvifPort) cam.onvifPort = 8000;
     }
     return true;
   }
@@ -207,7 +322,6 @@ export class WizardComponent implements OnInit {
   async createCamerasInApi() {
     const token = localStorage.getItem('motor_control_token');
     for (const cam of this.cameras()) {
-      const rtspUrl = `rtsp://${cam.user || 'admin'}:${cam.password || ''}@${cam.ip}${cam.rtspPath}`;
       try {
         // Cámara live (alta calidad, vista en vivo)
         await fetch(`${this.API_URL}/cameras`, {
@@ -217,7 +331,9 @@ export class WizardComponent implements OnInit {
             name: cam.id,
             cameraId: cam.id,
             location: this.clientData.location,
-            rtspUrl,
+            onvifPort: cam.onvifPort || 8000,
+            onvifUser: cam.onvifUser,
+            onvifPass: cam.onvifPass,
             ptz: false,
             isRecordingOnly: false,
             clientId: this.clientId()
@@ -237,7 +353,9 @@ export class WizardComponent implements OnInit {
               name: `${cam.id}-low`,
               cameraId: `${cam.id}-low`,
               location: this.clientData.location,
-              rtspUrl,
+              onvifPort: cam.onvifPort || 8000,
+              onvifUser: cam.onvifUser,
+              onvifPass: cam.onvifPass,
               ptz: false,
               isRecordingOnly: true,
               clientId: this.clientId()
@@ -296,7 +414,7 @@ export class WizardComponent implements OnInit {
 
     if (type === 'env') {
       content = this.generatedFiles().env;
-      filename = '.env';
+      filename = 'edge-gateway.env';
     } else if (type === 'mediamtx') {
       content = this.generatedFiles().mediamtx;
       filename = `${gw}_mediamtx.yml`;

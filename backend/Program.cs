@@ -102,6 +102,7 @@ app.UseSwaggerUI();
 // Use Cors, Auth & Controllers
 app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 app.UseAuthentication();
+app.UseMiddleware<MotorControlEnterprise.Api.Middleware.EdgeTokenAuthMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();
