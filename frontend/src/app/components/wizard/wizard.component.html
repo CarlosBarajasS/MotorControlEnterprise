@@ -312,7 +312,8 @@
                 <div class="deploy-step-num">3</div>
                 <div class="deploy-step-content">
                     <strong>Iniciar el contenedor Docker</strong>
-                    <p>Iniciamos el servicio en background de forma desatendida.</p>
+                    <p>Renombramos el archivo descargado y luego iniciamos el servicio en background de forma desatendida.</p>
+                    <code class="cmd">mv edge-gateway.env .env</code>
                     <code class="cmd">docker compose up -d</code>
                 </div>
             </div>

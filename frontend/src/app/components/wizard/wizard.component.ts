@@ -296,7 +296,7 @@ export class WizardComponent implements OnInit {
 
     if (type === 'env') {
       content = this.generatedFiles().env;
-      filename = '.env';
+      filename = 'edge-gateway.env';
     } else if (type === 'mediamtx') {
       content = this.generatedFiles().mediamtx;
       filename = `${gw}_mediamtx.yml`;
