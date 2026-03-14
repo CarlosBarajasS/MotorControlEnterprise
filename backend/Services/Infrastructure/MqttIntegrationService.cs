@@ -219,6 +219,17 @@ namespace MotorControlEnterprise.Api.Services
                         var gatewayId = parts[1];
                         var cameraKey = parts[2];
 
+                        // Skip intermediate sub-streams (e.g. cuarto-low) — only process
+                        // main streams and the lowest-quality recording stream (-low-low).
+                        bool isIntermediateSubStream =
+                            cameraKey.EndsWith("-low", StringComparison.OrdinalIgnoreCase)
+                            && !cameraKey.EndsWith("-low-low", StringComparison.OrdinalIgnoreCase);
+                        if (isIntermediateSubStream)
+                        {
+                            _logger.LogDebug("MQTT register: ignorando sub-stream intermedio {CameraKey}.", cameraKey);
+                            return;
+                        }
+
                         // Look up client by gatewayId to get correct userId/clientId
                         var client = db.Clients.FirstOrDefault(c => c.GatewayId == gatewayId);
                         var camera = db.Cameras.FirstOrDefault(c => c.CameraKey == cameraKey);
