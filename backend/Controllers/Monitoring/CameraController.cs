@@ -240,17 +240,17 @@ namespace MotorControlEnterprise.Api.Controllers
             }
             else
             {
-                // ONVIF path: compute centralHls from client's GatewayId
-                var gatewayId = dto.ClientId.HasValue
-                    ? await _db.Clients
-                        .Where(c => c.Id == dto.ClientId.Value)
-                        .Select(c => c.GatewayId)
-                        .FirstOrDefaultAsync()
-                    : null;
+                // ONVIF path: client must exist and have a GatewayId
+                if (!dto.ClientId.HasValue)
+                    return BadRequest(new { message = "clientId is required for ONVIF camera creation." });
 
-                var centralHls = gatewayId != null
-                    ? $"http://central-mediamtx:8888/{gatewayId}/{cameraKey}/index.m3u8"
-                    : null;
+                var client = await _db.Clients.FindAsync(dto.ClientId.Value);
+                if (client == null)
+                    return BadRequest(new { message = $"Client {dto.ClientId} not found." });
+                if (string.IsNullOrEmpty(client.GatewayId))
+                    return BadRequest(new { message = "Client does not have a gateway configured. Complete the wizard first." });
+
+                var centralHls = $"http://central-mediamtx:8888/{client.GatewayId}/{cameraKey}/index.m3u8";
 
                 streams  = BuildStreams("pending_onvif_discovery", centralHls);
                 metadata = BuildCameraMetadata(dto.OnvifPort, dto.OnvifUser, dto.OnvifPass, "pending");
