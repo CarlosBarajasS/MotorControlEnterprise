@@ -53,16 +53,17 @@
         [hideOverlay]="true">
       </app-camera-viewer>
 
-      <div class="nvr-overlay">
-        <div class="nvr-badge-top">
-          <span class="live-dot" [class.online]="isOnline(cam)"></span>
-          {{ isOnline(cam) ? 'EN VIVO' : 'OFFLINE' }}
-        </div>
-        <div class="nvr-cam-name">{{ cam.name }}</div>
-        <button class="nvr-fullscreen-btn"
-                (click)="toggleFullscreen($event, cell)"
-                title="Pantalla completa">⛶</button>
+      <!-- Always-visible badges: direct children of nvr-cell, NOT inside opacity wrapper -->
+      <div class="nvr-badge-top">
+        <span class="live-dot" [class.online]="isOnline(cam)"></span>
+        {{ isOnline(cam) ? 'EN VIVO' : 'OFFLINE' }}
       </div>
+      <div class="nvr-cam-name">{{ cam.name }}</div>
+
+      <!-- Hover-only: fullscreen button -->
+      <button class="nvr-fullscreen-btn"
+              (click)="toggleFullscreen($event, cell)"
+              title="Pantalla completa">⛶</button>
 
     </div>
   </div>
