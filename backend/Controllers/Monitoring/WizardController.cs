@@ -257,6 +257,7 @@ networks:
             sb.AppendLine();
             sb.AppendLine("paths:");
             sb.AppendLine("  # Paths managed dynamically by edge-agent via MediaMTX REST API");
+            sb.AppendLine("  # edge-agent calls POST /v3/config/paths/add/{name} after ONVIF discovery");
             sb.AppendLine("  all_others: ~");
             return sb.ToString();
         }
