@@ -141,6 +141,7 @@ namespace MotorControlEnterprise.Api.Controllers
             try
             {
                 var files = Directory.GetFiles(dir, "*.mp4")
+                    .Where(f => new FileInfo(f).Length > 0)   // skip 0-byte (incomplete/failed segments)
                     .Select(f =>
                     {
                         var name = Path.GetFileNameWithoutExtension(f);

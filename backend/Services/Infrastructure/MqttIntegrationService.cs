@@ -307,11 +307,19 @@ namespace MotorControlEnterprise.Api.Services
                                 UpdatedAt = DateTime.UtcNow
                             };
 
-                            db.Cameras.Add(newCamera);
-                            await db.SaveChangesAsync();
-                            _logger.LogInformation(
-                                "Cámara {CameraKey} auto-registrada desde edge {GatewayId} (client: {ClientId}).",
-                                cameraKey, gatewayId, client?.Id.ToString() ?? "desconocido");
+                                db.Cameras.Add(newCamera);
+                            try
+                            {
+                                await db.SaveChangesAsync();
+                                _logger.LogInformation(
+                                    "Cámara {CameraKey} auto-registrada desde edge {GatewayId} (client: {ClientId}).",
+                                    cameraKey, gatewayId, client?.Id.ToString() ?? "desconocido");
+                            }
+                            catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+                            {
+                                // Race condition: another handler already inserted this camera_key — ignore
+                                _logger.LogDebug("MQTT register: cámara {CameraKey} ya insertada por otro hilo, ignorado.", cameraKey);
+                            }
 
                             _ = emailService.SendCameraAlertAsync(
                                 newCamera.Name, gatewayId, "registrada",
