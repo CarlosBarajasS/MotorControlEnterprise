@@ -28,7 +28,7 @@ export class AppComponent {
     showSidebar(): boolean {
         const url = this.router.url;
         if (!this.isLoggedIn()) return false;
-        if (url === '/' || url.startsWith('/login') || url.startsWith('/client')) return false;
+        if (url === '/' || url.startsWith('/login') || url.startsWith('/client/') || url === '/client') return false;
         return true;
     }
 
