@@ -248,35 +248,16 @@ networks:
             sb.AppendLine("  recordSegmentDuration: 15m");
             // The ${} here will be substituted by docker-compose at runtime
             sb.AppendLine("  runOnReady: >-");
-            sb.AppendLine("    ffmpeg -re");
+            sb.AppendLine("    ffmpeg");
+            sb.AppendLine("    -rtsp_transport tcp");
             sb.AppendLine("    -i rtsp://${MEDIAMTX_USERNAME}:${MEDIAMTX_PASSWORD}@127.0.0.1:8554/$MTX_PATH");
-            sb.AppendLine("    -c copy -f rtsp");
+            sb.AppendLine("    -c copy -f rtsp -rtsp_transport tcp");
             sb.AppendLine("    rtsp://${MEDIAMTX_PUSH_USER}:${MEDIAMTX_PUSH_PASS}@${CENTRAL_RTSP_HOST}:${CENTRAL_RTSP_PORT}/${GATEWAY_CLIENT_ID}/$MTX_PATH");
             sb.AppendLine("  runOnReadyRestart: yes");
             sb.AppendLine();
             sb.AppendLine("paths:");
-
-            if (cameras.Count == 0)
-            {
-                sb.AppendLine("  # Agrega aquí las cámaras del cliente");
-                sb.AppendLine("  cam-principal:");
-                sb.AppendLine("    source: rtsp://USUARIO:CLAVE@IP_CAMARA:554/Streaming/Channels/101");
-            }
-            else
-            {
-                foreach (var cam in cameras)
-                {
-                    var rtsp     = ExtractRtspFromStreams(cam.Streams);
-                    var pathName = (cam.CameraKey ?? cam.CameraId ??
-                                   cam.Name.ToLower().Replace(" ", "-"))
-                                  .Trim();
-                    sb.AppendLine($"  {pathName}:  # {cam.Name}");
-                    sb.AppendLine($"    source: {rtsp ?? "rtsp://USUARIO:CLAVE@IP_CAMARA:554/stream"}");
-                }
-            }
-
-            sb.AppendLine();
-            sb.AppendLine("  all_others:");
+            sb.AppendLine("  # Paths managed dynamically by edge-agent via MediaMTX REST API");
+            sb.AppendLine("  all_others: ~");
             return sb.ToString();
         }
     }
