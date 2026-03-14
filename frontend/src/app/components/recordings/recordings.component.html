@@ -99,16 +99,23 @@
     <div class="drive-grid-header" *ngIf="!loadingRecordings() && filteredRecordings().length > 0">
       <span>Nombre del archivo</span>
       <span>Tamaño</span>
-      <span>Modificado</span>
+      <span>Hora</span>
+      <span></span>
     </div>
 
     <!-- Drive Files Grid -->
     <div class="drive-files-container" *ngIf="!loadingRecordings() && filteredRecordings().length > 0">
 
-      <div class="drive-file-row" *ngFor="let file of filteredRecordings()" (click)="playCloudVideo(file.path)">
+      <div class="drive-file-row"
+           *ngFor="let file of filteredRecordings()"
+           [class.playing]="currentRecordingName() === file.filename"
+           (click)="playRecording(file)">
+
         <div class="file-name-col">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"
-            class="file-icon">
+          <!-- Play icon (outline) or Pause icon (filled blue) when playing -->
+          <svg *ngIf="currentRecordingName() !== file.filename"
+               width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"
+               class="file-icon">
             <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
             <line x1="7" y1="2" x2="7" y2="22"></line>
             <line x1="17" y1="2" x2="17" y2="22"></line>
@@ -118,13 +125,23 @@
             <line x1="17" y1="17" x2="22" y2="17"></line>
             <line x1="17" y1="7" x2="22" y2="7"></line>
           </svg>
-          <span class="f-name">{{ file.filename || file.name }}</span>
+          <svg *ngIf="currentRecordingName() === file.filename"
+               width="20" height="20" viewBox="0 0 24 24" fill="#3b82f6" stroke="none"
+               class="file-icon file-icon-playing">
+            <rect x="6" y="4" width="4" height="16" rx="1"/>
+            <rect x="14" y="4" width="4" height="16" rx="1"/>
+          </svg>
+          <div class="file-name-info">
+            <span class="f-name">{{ formatSegmentTime(file.filename) || file.filename || file.name }}</span>
+            <span class="f-sub now-playing-tag" *ngIf="currentRecordingName() === file.filename">● reproduciendo</span>
+          </div>
         </div>
+
         <div class="file-size-col text-muted">{{ file.sizeMb | number:'1.1-1' }} MB</div>
         <div class="file-date-col text-muted">{{ file.startTime | date:'HH:mm:ss' }}</div>
 
         <div class="file-actions-hover">
-          <button class="hover-btn" (click)="playCloudVideo(file.path); $event.stopPropagation()"
+          <button class="hover-btn" (click)="playRecording(file); $event.stopPropagation()"
             title="Reproducir">▶</button>
           <a class="hover-btn dl" [href]="getDownloadUrl(file.path)" target="_blank" (click)="$event.stopPropagation()"
             title="Descargar">⬇</a>
@@ -137,22 +154,73 @@
 
 </div>
 
-<!-- VIDEO PLAYER OVERLAY MODAL -->
-<div class="rec-player-overlay" *ngIf="currentVideoSource()">
-  <div class="rec-player-wrap">
-    <div class="rec-player-header">
-      <div class="now-playing-label">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polygon points="10 8 16 12 10 16 10 8"></polygon>
-        </svg>
-        Reproduciendo Video NVR
-      </div>
-      <button class="close-btn" (click)="currentVideoSource.set(null)">✕ Cerrar</button>
+<!-- ═══════════════════════ FLOATING VIDEO POPUP ═══════════════════════ -->
+<div class="video-popup" *ngIf="popupVisible()"
+     [class.expanded]="popupExpanded()"
+     [style.left.px]="popupX()"
+     [style.top.px]="popupY()">
+
+  <!-- Header / drag handle -->
+  <div class="popup-header" (mousedown)="onDragStart($event)">
+    <svg class="drag-dots" width="12" height="18" viewBox="0 0 12 18" fill="currentColor">
+      <circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/>
+      <circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/>
+      <circle cx="3" cy="15" r="1.5"/><circle cx="9" cy="15" r="1.5"/>
+    </svg>
+    <div class="popup-title-block">
+      <span class="popup-cam">{{ cameraName() }}</span>
+      <span class="popup-seg">{{ formatSegmentTime(currentRecordingName()) }}</span>
     </div>
-    <video #videoPlayer controls autoplay muted playsinline
-           class="rec-player-video"
-           [src]="currentVideoSource()"
-           (error)="currentVideoSource.set(null)"></video>
+    <button class="popup-btn" (click)="toggleExpand()" [title]="popupExpanded() ? 'Modo ventana' : 'Pantalla completa'">
+      <svg *ngIf="!popupExpanded()" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+        <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+      </svg>
+      <svg *ngIf="popupExpanded()" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>
+        <line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/>
+      </svg>
+    </button>
+    <button class="popup-btn close-popup-btn" (click)="closePopup()" title="Cerrar">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="popup-loading" *ngIf="loadingVideo()">
+    <div class="popup-spinner"></div>
+    <span>Iniciando reproducción...</span>
+  </div>
+
+  <!-- Video -->
+  <video *ngIf="currentVideo()"
+         class="popup-video"
+         [class.hidden]="loadingVideo()"
+         controls autoplay playsinline
+         [src]="currentVideo()"
+         (loadeddata)="onVideoLoaded()"
+         (error)="loadingVideo.set(false)"
+         (timeupdate)="onTimeUpdate($event)"
+         (ended)="onVideoEnded()">
+  </video>
+
+  <!-- ── Timeline ── -->
+  <div class="popup-timeline" *ngIf="cloudRecordings().length > 0">
+    <div class="tl-track" (click)="onTimelineClick($event)">
+      <div class="tl-seg" *ngFor="let rec of cloudRecordings()"
+           [class.tl-played]="isSegmentPast(rec)"
+           [class.tl-active]="currentRecordingName() === rec.filename"
+           [style.left.%]="segmentLeftPct(rec)"
+           [style.width.%]="segmentWidthPct()"
+           [title]="formatSegmentTime(rec.filename)">
+      </div>
+      <div class="tl-playhead" [style.left.%]="playheadPct()" *ngIf="currentVideo()"></div>
+    </div>
+    <div class="tl-labels">
+      <span class="tl-label" *ngFor="let lbl of timelineLabels()"
+            [style.left.%]="lbl.pct">{{ lbl.text }}</span>
+    </div>
   </div>
 </div>
