@@ -335,6 +335,93 @@
                 </div>
             </div>
 
+            @if (alerts()[4]) {
+            <div class="alert" [ngClass]="alerts()[4].type">{{ alerts()[4].message }}</div>
+            }
+
+            <!-- Discovery Status Panel -->
+            <div class="discovery-panel">
+                <h3>Estado del descubrimiento</h3>
+
+                <div class="gateway-status">
+                    @if (!discoveryStatus()?.gatewayOnline) {
+                    <span class="status-dot pending"></span>
+                    <span>Esperando conexión del gateway...</span>
+                    } @else {
+                    <span class="status-dot online"></span>
+                    <span>Gateway conectado</span>
+                    }
+                </div>
+
+                @if (discoveryStatus()?.cameras?.length > 0) {
+                <div class="camera-list">
+                    @for (cam of discoveryStatus().cameras; track cam.id) {
+                    <div class="camera-item" [class.failed]="cam.status === 'onvif_failed'">
+                        <div class="camera-header">
+                            <span class="camera-icon">📷</span>
+                            <strong>{{ cam.name }}</strong>
+                            @switch (cam.status) {
+                            @case ('pending') { <span class="badge pending">⬜ Pendiente</span> }
+                            @case ('discovering') { <span class="badge discovering">🟡 Descubriendo...</span> }
+                            @case ('discovered') {
+                            <span class="badge discovered">
+                                ✅ {{ cam.brand }} {{ cam.model }}
+                                @if (cam.resolution) { · {{ cam.resolution }} }
+                                @if (cam.fps) { · {{ cam.fps }}fps }
+                            </span>
+                            }
+                            @case ('manual') { <span class="badge manual">✏️ URL manual</span> }
+                            @case ('onvif_failed') { <span class="badge failed">⚠️ ONVIF no respondió</span> }
+                            }
+                        </div>
+
+                        @if (cam.status === 'onvif_failed') {
+                        <div class="failure-guide">
+                            <div class="guide-option">
+                                <strong>Opción 1 — Activar ONVIF en la cámara</strong>
+                                <p>Busca en la app o interfaz web de la cámara:<br>
+                                    <em>Configuración → Red → ONVIF → Activar</em></p>
+                                <button class="btn btn-secondary" (click)="retryDiscovery(cam.id)">
+                                    🔄 Reintentar descubrimiento
+                                </button>
+                            </div>
+
+                            <div class="guide-option">
+                                <strong>Opción 2 — URL RTSP manual</strong>
+                                <table class="rtsp-cheatsheet">
+                                    <tr><td>Hikvision</td><td><code>/Streaming/Channels/101</code></td></tr>
+                                    <tr><td>Dahua</td><td><code>/cam/realmonitor?channel=1&subtype=0</code></td></tr>
+                                    <tr><td>Reolink</td><td><code>/h264Preview_01_main</code></td></tr>
+                                    <tr><td>TP-Link Tapo</td><td><code>/stream1</code></td></tr>
+                                    <tr><td>Axis</td><td><code>/axis-media/media.amp</code></td></tr>
+                                </table>
+                                <div class="manual-input-row">
+                                    <input type="text"
+                                           [(ngModel)]="manualRtspInputs[cam.id]"
+                                           placeholder="rtsp://admin:pass@192.168.1.100:554/..."
+                                           class="form-input manual-rtsp">
+                                    <button class="btn btn-primary"
+                                            (click)="saveManualRtsp(cam.id, manualRtspInputs[cam.id])">
+                                        Guardar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="guide-option">
+                                <strong>Opción 3 — Diagnóstico desde el Pi (avanzado)</strong>
+                                <pre class="diag-code-block">docker exec edge-agent node -e \
+  "require('./services/OnvifDiscoveryService')
+    .scan('{{ cam.ip || '192.168.x.x' }}', 8000, 'admin', 'CONTRASEÑA')
+    .then(r => console.log(JSON.stringify(r, null, 2)))"</pre>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+
             <div style="margin-top: 24px;">
                 <button class="btn btn-secondary" routerLink="/clients">Ir a lista de Clientes</button>
             </div>
@@ -403,7 +490,8 @@
         <button class="btn btn-secondary" [disabled]="currentStep() === 1" (click)="prevStep()">← Anterior</button>
         <span class="step-counter">Paso <span>{{currentStep()}}</span> de 5</span>
 
-        <button class="btn btn-primary" (click)="nextStep()" [disabled]="isCreatingUser()">
+        <button class="btn btn-primary" (click)="nextStep()"
+            [disabled]="isCreatingUser() || (currentStep() === 4 && !canContinueFromStep4)">
             @if (isCreatingUser()) {
             Procesando...
             } @else {

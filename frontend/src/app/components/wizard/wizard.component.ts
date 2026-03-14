@@ -58,6 +58,14 @@ export class WizardComponent implements OnInit {
   activeTab = signal<'env' | 'mediamtx' | 'compose'>('env');
   generatedFiles = signal<{ env: string, compose: string, mediamtx: string }>({ env: '', compose: '', mediamtx: '' });
 
+  // Step 4: Discovery
+  discoveryStatus = signal<any>(null);
+  private discoveryPollInterval: any = null;
+  private discoveryStartTime = 0;
+  private readonly DISCOVERY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+  manualRtspInputs: { [key: number]: string } = {};
+
   ngOnInit(): void { }
 
   showAlert(step: number, type: 'error' | 'success' | 'info', message: string) {
@@ -83,6 +91,12 @@ export class WizardComponent implements OnInit {
       await this.createCamerasInApi();
       await this.generateFiles();
       this.clearAlert(2);
+    } else if (this.currentStep() === 3) {
+      // Moving from step 3 → step 4: start discovery polling
+      this.startDiscoveryPolling();
+    } else if (this.currentStep() === 4) {
+      // Moving from step 4 → step 5: stop discovery polling
+      this.stopDiscoveryPolling();
     } else if (this.currentStep() === 5) {
       if (this.userCreated()) {
         this.router.navigate(['/clients']);
@@ -100,9 +114,91 @@ export class WizardComponent implements OnInit {
 
   prevStep() {
     if (this.currentStep() > 1 && this.currentStep() !== 5) {
+      if (this.currentStep() === 4) {
+        this.stopDiscoveryPolling();
+      }
       this.currentStep.update(v => v - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
+
+  // --- Step 4: Discovery polling ---
+
+  startDiscoveryPolling() {
+    this.discoveryStartTime = Date.now();
+    this.pollDiscoveryOnce(); // immediate first call
+    this.discoveryPollInterval = setInterval(() => {
+      const elapsed = Date.now() - this.discoveryStartTime;
+      if (elapsed > this.DISCOVERY_TIMEOUT_MS) {
+        this.stopDiscoveryPolling();
+        this.showAlert(4, 'error', 'Tiempo de espera agotado. Verifica que el Pi esté encendido y conectado.');
+        return;
+      }
+      this.pollDiscoveryOnce();
+    }, 3000);
+  }
+
+  stopDiscoveryPolling() {
+    if (this.discoveryPollInterval) {
+      clearInterval(this.discoveryPollInterval);
+      this.discoveryPollInterval = null;
+    }
+  }
+
+  private async pollDiscoveryOnce() {
+    if (!this.clientId()) return;
+    try {
+      const res = await fetch(
+        `${this.API_URL}/admin/clients/${this.clientId()}/discovery-status`,
+        { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token') } }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      this.discoveryStatus.set(data);
+
+      // Stop polling when all cameras reach terminal state
+      const allTerminal = data.cameras?.every((c: any) =>
+        ['discovered', 'onvif_failed', 'manual'].includes(c.status)
+      );
+      if (allTerminal && data.cameras?.length > 0) {
+        this.stopDiscoveryPolling();
+      }
+    } catch { /* ignore polling errors */ }
+  }
+
+  get canContinueFromStep4(): boolean {
+    const status = this.discoveryStatus();
+    if (!status?.gatewayOnline) return false;
+    return status?.cameras?.every((c: any) =>
+      ['discovered', 'onvif_failed', 'manual'].includes(c.status)
+    ) ?? false;
+  }
+
+  async retryDiscovery(cameraId?: number) {
+    if (!this.clientId()) return;
+    const url = cameraId
+      ? `${this.API_URL}/admin/clients/${this.clientId()}/trigger-discovery?cameraId=${cameraId}`
+      : `${this.API_URL}/admin/clients/${this.clientId()}/trigger-discovery`;
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token') }
+    });
+    if (!this.discoveryPollInterval) {
+      this.startDiscoveryPolling();
+    }
+  }
+
+  async saveManualRtsp(cameraId: number, rtspUrl: string) {
+    if (!rtspUrl?.startsWith('rtsp://')) return;
+    await fetch(`${this.API_URL}/cameras/${cameraId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
+      },
+      body: JSON.stringify({ rtspUrl, status: 'manual' })
+    });
+    await this.pollDiscoveryOnce();
   }
 
   // --- Step 1 ---
