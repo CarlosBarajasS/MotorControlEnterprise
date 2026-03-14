@@ -51,7 +51,8 @@ namespace MotorControlEnterprise.Api.Controllers
                 edgeToken = Guid.NewGuid().ToString("N"); // 32-char hex, no hyphens
                 var meta = string.IsNullOrEmpty(client.Metadata)
                     ? new Dictionary<string, object>()
-                    : JsonSerializer.Deserialize<Dictionary<string, object>>(client.Metadata)!;
+                    : (JsonSerializer.Deserialize<Dictionary<string, object>>(client.Metadata)
+                       ?? new Dictionary<string, object>());
                 meta["edgeToken"] = edgeToken;
                 client.Metadata  = JsonSerializer.Serialize(meta);
                 client.UpdatedAt = DateTime.UtcNow;
