@@ -3,14 +3,13 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
 
 const API_URL = '/api';
 
 @Component({
     selector: 'app-cameras',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, CameraViewerComponent],
+    imports: [CommonModule, FormsModule, RouterModule],
     templateUrl: './cameras.component.html',
     styleUrls: ['./cameras.component.scss']
 })
@@ -19,57 +18,49 @@ export class CamerasComponent implements OnInit {
     router = inject(Router);
 
     cameras = signal<any[]>([]);
-    clients = signal<any[]>([]); // gateways/clients
+    clients = signal<any[]>([]);
     searchTerm = signal('');
-    filterStatus = signal<'all' | 'online' | 'offline'>('all');
-    filterGateway = signal<string>('all');
-    gridCols = 2;
+    loading = signal(true);
+    loadError = signal(false);
 
-    camerasOnline = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
-
-    filtered = computed(() => {
-        let list = this.cameras();
-
-        // Filter by Status
-        if (this.filterStatus() === 'online') list = list.filter(c => this.isOnline(c));
-        if (this.filterStatus() === 'offline') list = list.filter(c => !this.isOnline(c));
-
-        // Filter by Gateway
-        if (this.filterGateway() !== 'all') {
-            list = list.filter(c => c.clientId === this.filterGateway());
-        }
-
-        // Filter by Search Term
+    clientCards = computed(() => {
         const q = this.searchTerm().toLowerCase();
-        if (q) {
-            list = list.filter(c =>
-                c.name.toLowerCase().includes(q) ||
-                (c.location ?? '').toLowerCase().includes(q)
-            );
-        }
-
-        return list;
+        return this.clients()
+            .map(client => {
+                const cams = this.cameras().filter(c => c.clientId === client.id);
+                const online = cams.filter(c => this.isOnline(c)).length;
+                return { id: client.id, name: client.name, total: cams.length, online, offline: cams.length - online };
+            })
+            .filter(c => !q || c.name.toLowerCase().includes(q));
     });
 
+    skeletonItems = [0, 1, 2];
+
+    // ── Modal ────────────────────────────────────────────────────────────────
     showModal = signal(false);
     modalMode = signal<'create' | 'edit'>('create');
     currentCamera = signal<any>({});
 
     ngOnInit() {
         this.loadData();
-        // Load clients for dropdown mapping
-        this.http.get<any[]>(`${API_URL}/clients`).subscribe(res => {
-            this.clients.set(res || []);
-        });
     }
 
     loadData() {
+        this.loading.set(true);
+        this.loadError.set(false);
         this.http.get<any[]>(`${API_URL}/cameras`).subscribe({
             next: (res) => {
-                const sorted = (res || []).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                this.cameras.set(sorted);
+                this.cameras.set(res || []);
+                this.loading.set(false);
             },
-            error: (err) => console.error(err)
+            error: () => {
+                this.loadError.set(true);
+                this.loading.set(false);
+            }
+        });
+        this.http.get<any[]>(`${API_URL}/clients`).subscribe({
+            next: (res) => this.clients.set(res || []),
+            error: () => { this.loadError.set(true); this.loading.set(false); }
         });
     }
 
@@ -90,12 +81,8 @@ export class CamerasComponent implements OnInit {
         const req = this.modalMode() === 'create'
             ? this.http.post(`${API_URL}/cameras`, data)
             : this.http.put(`${API_URL}/cameras/${data.id}`, data);
-
         req.subscribe({
-            next: () => {
-                this.showModal.set(false);
-                this.loadData();
-            },
+            next: () => { this.showModal.set(false); this.loadData(); },
             error: (err) => alert('Error al guardar la cámara: ' + (err.error?.message || err.message))
         });
     }
@@ -103,23 +90,17 @@ export class CamerasComponent implements OnInit {
     deleteCamera(id: string) {
         if (confirm('¿Estás seguro de inhabilitar/eliminar esta cámara?')) {
             this.http.delete(`${API_URL}/cameras/${id}`).subscribe({
-                next: () => this.loadData(),
-                error: (err) => alert('Error al eliminar')
+                next: () => { this.showModal.set(false); this.loadData(); },
+                error: () => alert('Error al eliminar')
             });
         }
     }
 
-    viewStream(id: string) {
-        this.router.navigate(['/cameras', id]);
+    setCameraField(field: string, value: any) {
+        this.currentCamera.update(c => ({ ...c, [field]: value }));
     }
 
     isOnline(cam: any): boolean {
-        // Mock online check for UX representation
-        return cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 60000;
-    }
-
-    getGatewayName(clientId: string): string {
-        const gw = this.clients().find(c => c.id === clientId);
-        return gw ? gw.name : 'Sin Gateway';
+        return !!cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 90_000;
     }
 }

@@ -16,7 +16,7 @@
         [class.hidden]="isLoading || hasError">
     </video>
 
-    <div class="overlay-controls" *ngIf="!isLoading && !hasError">
+    <div class="overlay-controls" *ngIf="!isLoading && !hasError && !hideOverlay">
         <div class="badge live">LIVE</div>
     </div>
 </div>

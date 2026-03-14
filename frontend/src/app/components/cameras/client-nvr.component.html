@@ -1,0 +1,70 @@
+<div class="nvr-layout">
+
+  <!-- NVR TOPBAR -->
+  <div class="nvr-topbar">
+    <button class="btn-back" (click)="router.navigate(['/cameras'])">← Clientes</button>
+    <span class="nvr-client-name">{{ clientName() }}</span>
+    <div class="nvr-status-badges" *ngIf="!loading() && !loadError()">
+      <span class="status-badge online" *ngIf="onlineCount() > 0">
+        ● {{ onlineCount() }} EN VIVO
+      </span>
+      <span class="status-badge offline" *ngIf="offlineCount() > 0">
+        ○ {{ offlineCount() }} Offline
+      </span>
+      <span class="status-badge muted" *ngIf="cameras().length === 0">
+        Sin cámaras
+      </span>
+    </div>
+    <div class="nvr-topbar-spacer"></div>
+    <button class="btn-add" (click)="router.navigate(['/cameras'])">+ Añadir Cámara</button>
+  </div>
+
+  <!-- LOADING: 4 skeleton cells in 2×2 grid -->
+  <div class="nvr-grid nvr-grid-2" *ngIf="loading()">
+    <div class="nvr-skeleton" *ngFor="let i of skeletonCells"></div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="nvr-center-msg" *ngIf="!loading() && loadError()">
+    <p class="msg-text">Error al cargar cámaras.</p>
+    <button class="btn-retry" (click)="loadData()">Reintentar</button>
+  </div>
+
+  <!-- EMPTY -->
+  <div class="nvr-center-msg" *ngIf="!loading() && !loadError() && cameras().length === 0">
+    <p class="msg-text">Este cliente no tiene cámaras configuradas.</p>
+    <button class="btn-retry" (click)="router.navigate(['/cameras'])">Añadir Cámara</button>
+  </div>
+
+  <!-- NVR GRID -->
+  <div class="nvr-grid"
+       *ngIf="!loading() && !loadError() && cameras().length > 0"
+       [class.nvr-grid-1]="gridCols() === 1"
+       [class.nvr-grid-2]="gridCols() === 2"
+       [class.nvr-grid-3]="gridCols() === 3"
+       [class.nvr-grid-4]="gridCols() === 4">
+
+    <div class="nvr-cell" #cell
+         *ngFor="let cam of cameras()"
+         (click)="goToDetail(cam.id)">
+
+      <app-camera-viewer
+        [streamUrl]="getHlsUrl(cam)"
+        [hideOverlay]="true">
+      </app-camera-viewer>
+
+      <div class="nvr-overlay">
+        <div class="nvr-badge-top">
+          <span class="live-dot" [class.online]="isOnline(cam)"></span>
+          {{ isOnline(cam) ? 'EN VIVO' : 'OFFLINE' }}
+        </div>
+        <div class="nvr-cam-name">{{ cam.name }}</div>
+        <button class="nvr-fullscreen-btn"
+                (click)="toggleFullscreen($event, cell)"
+                title="Pantalla completa">⛶</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

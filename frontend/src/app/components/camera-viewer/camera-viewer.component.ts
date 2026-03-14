@@ -11,6 +11,7 @@ import Hls from 'hls.js';
 })
 export class CameraViewerComponent implements AfterViewInit, OnDestroy {
     @Input() streamUrl!: string;
+    @Input() hideOverlay = false;
     @ViewChild('videoEl') videoEl!: ElementRef<HTMLVideoElement>;
 
     isLoading = true;

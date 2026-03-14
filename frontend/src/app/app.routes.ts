@@ -10,6 +10,7 @@ import { ClientsComponent } from './components/clients/clients.component';
 import { ClientDetailComponent } from './components/client-detail/client-detail.component';
 import { CamerasComponent } from './components/cameras/cameras.component';
 import { CameraDetailComponent } from './components/cameras/camera-detail.component';
+import { ClientNvrComponent } from './components/cameras/client-nvr.component';
 import { RecordingsComponent } from './components/recordings/recordings.component';
 import { UsersComponent } from './components/users/users.component';
 import { TelemetryHistoryComponent } from './components/telemetry-history/telemetry-history.component';
@@ -56,6 +57,7 @@ export const routes: Routes = [
     { path: 'clients', component: ClientsComponent, canActivate: [adminAuthGuard] },
     { path: 'clients/:id', component: ClientDetailComponent, canActivate: [adminAuthGuard] },
     { path: 'cameras', component: CamerasComponent, canActivate: [adminAuthGuard] },
+    { path: 'cameras/client/:clientId', component: ClientNvrComponent, canActivate: [adminAuthGuard] },
     { path: 'cameras/:id', component: CameraDetailComponent, canActivate: [adminAuthGuard] },
     { path: 'recordings', component: RecordingsComponent, canActivate: [adminAuthGuard] },
     { path: 'recordings/:id', component: RecordingsComponent, canActivate: [adminAuthGuard] },
