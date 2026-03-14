@@ -190,7 +190,7 @@ export class WizardComponent implements OnInit {
 
   async saveManualRtsp(cameraId: number, rtspUrl: string) {
     if (!rtspUrl?.startsWith('rtsp://')) return;
-    await fetch(`${this.API_URL}/cameras/${cameraId}`, {
+    const res = await fetch(`${this.API_URL}/cameras/${cameraId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -198,6 +198,10 @@ export class WizardComponent implements OnInit {
       },
       body: JSON.stringify({ rtspUrl, status: 'manual' })
     });
+    if (!res.ok) {
+      this.showAlert(4, 'error', 'Error al guardar la URL RTSP. Intenta de nuevo.');
+      return;
+    }
     await this.pollDiscoveryOnce();
   }
 
