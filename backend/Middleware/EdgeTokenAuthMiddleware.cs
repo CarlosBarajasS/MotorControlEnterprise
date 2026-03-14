@@ -27,11 +27,13 @@ namespace MotorControlEnterprise.Api.Middleware
                 return;
             }
 
-            // Find client with matching edgeToken in Metadata JSONB
-            // Use JsonSerializer to safely build the JSON contains clause (prevents injection)
+            // Find client with matching edgeToken in Metadata JSONB.
+            // EF.Functions.JsonContains does not translate for string-typed jsonb columns in
+            // Npgsql EF Core 8.x, so we use parameterized raw SQL with the @> operator instead.
+            // JsonSerializer.Serialize produces safe JSON — {0} is passed as a db parameter (no injection).
             var containsJson = JsonSerializer.Serialize(new { edgeToken = token });
             var client = await db.Clients
-                .Where(c => EF.Functions.JsonContains(c.Metadata!, containsJson))
+                .FromSqlRaw(@"SELECT * FROM ""Clients"" WHERE ""Metadata"" @> {0}::jsonb LIMIT 1", containsJson)
                 .FirstOrDefaultAsync();
 
             if (client == null)
