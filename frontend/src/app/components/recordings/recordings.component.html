@@ -47,7 +47,10 @@
       <div class="storage-bar">
         <div class="storage-fill" [style.width.%]="cloudPct()"></div>
       </div>
-      <div class="storage-meta">{{ totalSizeMb() | number:'1.0-1' }} MB en uso actual</div>
+      <div class="storage-meta">
+        {{ totalSizeMb() | number:'1.0-1' }} MB usados
+        <span *ngIf="nasStats().capacityMb > 0"> de {{ (nasStats().capacityMb / 1024) | number:'1.0-1' }} GB</span>
+      </div>
     </div>
   </div>
 

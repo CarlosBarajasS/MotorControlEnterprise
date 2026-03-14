@@ -44,13 +44,15 @@ export class RecordingsComponent implements OnInit, OnDestroy {
         return recs;
     });
 
-    totalSizeMb = computed(() =>
-        this.cloudRecordings().reduce((sum, r) => sum + (r.sizeMb || 0), 0)
-    );
+    nasStats = signal<{ totalMb: number; capacityMb: number }>({ totalMb: 0, capacityMb: 0 });
+
+    totalSizeMb = computed(() => this.nasStats().totalMb);
 
     cloudPct = computed(() => {
-        const total = this.totalSizeMb();
-        return total > 0 ? Math.min((total / 1000) * 100, 100) : 0;
+        const { totalMb, capacityMb } = this.nasStats();
+        if (capacityMb > 0) return Math.min((totalMb / capacityMb) * 100, 100);
+        if (totalMb > 0)    return Math.min((totalMb / 10240) * 100, 100); // fallback: assume 10 GB
+        return 0;
     });
 
     // ── Popup / player ────────────────────────────────────────────
@@ -134,11 +136,19 @@ export class RecordingsComponent implements OnInit, OnDestroy {
             }
         });
         this.loadCameras();
+        this.loadStorageStats();
     }
 
     ngOnDestroy() {
         document.removeEventListener('mousemove', this.boundMouseMove);
         document.removeEventListener('mouseup',   this.boundMouseUp);
+    }
+
+    loadStorageStats() {
+        this.http.get<{ totalMb: number; capacityMb: number }>(`${API_URL}/recordings/storage-stats`).subscribe({
+            next: (s) => this.nasStats.set(s),
+            error: () => {}
+        });
     }
 
     loadCameras() {

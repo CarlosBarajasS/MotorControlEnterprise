@@ -88,6 +88,47 @@ namespace MotorControlEnterprise.Api.Controllers
             }));
         }
 
+        // ─── GET /api/recordings/storage-stats ───────────────────────────────
+        /// <summary>
+        /// Uso global del NAS: suma todos los MP4 en el directorio raíz de grabaciones.
+        /// Devuelve totalMb (usado) y capacityMb (capacidad total del volumen).
+        /// </summary>
+        [HttpGet("storage-stats")]
+        public IActionResult StorageStats()
+        {
+            var nasPath = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/recordings";
+            double totalMb    = 0;
+            double capacityMb = 0;
+
+            try
+            {
+                if (Directory.Exists(nasPath))
+                {
+                    totalMb = Directory
+                        .GetFiles(nasPath, "*.mp4", SearchOption.AllDirectories)
+                        .Where(f => new FileInfo(f).Length > 0)
+                        .Sum(f => new FileInfo(f).Length / 1024.0 / 1024.0);
+
+                    try
+                    {
+                        var drive = new DriveInfo(nasPath);
+                        capacityMb = drive.TotalSize / 1024.0 / 1024.0;
+                    }
+                    catch { capacityMb = 0; }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "StorageStats: error leyendo NAS {NasPath}", nasPath);
+            }
+
+            return Ok(new
+            {
+                totalMb    = Math.Round(totalMb, 1),
+                capacityMb = Math.Round(capacityMb, 1)
+            });
+        }
+
         // ─── GET /api/recordings/cloud/{cameraId}/dates ───────────────────────
         /// <summary>Lista las fechas que tienen grabaciones disponibles en NAS.</summary>
         [HttpGet("cloud/{cameraId:int}/dates")]
