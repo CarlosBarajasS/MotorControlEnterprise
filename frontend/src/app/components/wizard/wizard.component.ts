@@ -202,6 +202,19 @@ export class WizardComponent implements OnInit {
       this.showAlert(4, 'error', 'Error al guardar la URL RTSP. Intenta de nuevo.');
       return;
     }
+
+    // Optimistic local update: mark this camera as 'manual' immediately so
+    // canContinueFromStep4 unblocks without waiting for the next poll cycle.
+    this.discoveryStatus.update((s: any) => {
+      if (!s?.cameras) return s;
+      return {
+        ...s,
+        cameras: s.cameras.map((c: any) =>
+          c.id === cameraId ? { ...c, status: 'manual' } : c
+        )
+      };
+    });
+
     await this.pollDiscoveryOnce();
   }
 

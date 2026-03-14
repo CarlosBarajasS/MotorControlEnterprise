@@ -302,7 +302,23 @@ namespace MotorControlEnterprise.Api.Controllers
             camera.UpdatedAt       = DateTime.UtcNow;
 
             if (dto.RtspUrl != null)
+            {
+                // If installer manually provides RTSP URL for a camera that was pending ONVIF discovery,
+                // update discovery status to "manual" so the wizard can unblock
+                var currentRtsp = ExtractRtspUrl(camera.Streams);
+                if (currentRtsp == "pending_onvif_discovery")
+                {
+                    var meta = string.IsNullOrEmpty(camera.Metadata)
+                        ? new Dictionary<string, object>()
+                        : JsonSerializer.Deserialize<Dictionary<string, object>>(camera.Metadata)
+                          ?? new Dictionary<string, object>();
+
+                    meta["discovery"] = new Dictionary<string, object> { ["status"] = "manual" };
+                    camera.Metadata = JsonSerializer.Serialize(meta);
+                }
+
                 camera.Streams = BuildStreams(dto.RtspUrl);
+            }
 
             await _db.SaveChangesAsync();
 
