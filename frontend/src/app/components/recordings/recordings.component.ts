@@ -21,10 +21,32 @@ export class RecordingsComponent implements OnInit, OnDestroy {
 
     cameraId = signal<string>('');
     recordingCameras = signal<any[]>([]);
+
     cameraName = computed(() => {
         const id = this.cameraId();
         const cam = this.recordingCameras().find(c => String(c.id) === id);
         return cam ? cam.name : (id ? `Cámara #${id}` : 'Seleccionar Cámara');
+    });
+
+    clientName = computed(() => {
+        const id = this.cameraId();
+        const cam = this.recordingCameras().find(c => String(c.id) === id);
+        return cam?.clientName ?? '';
+    });
+
+    groupedCameras = computed(() => {
+        const map = new Map<number, { clientId: number; clientName: string; cameras: any[] }>();
+        for (const cam of this.recordingCameras()) {
+            if (!map.has(cam.clientId)) {
+                map.set(cam.clientId, {
+                    clientId: cam.clientId,
+                    clientName: cam.clientName ?? `Cliente #${cam.clientId}`,
+                    cameras: []
+                });
+            }
+            map.get(cam.clientId)!.cameras.push(cam);
+        }
+        return Array.from(map.values());
     });
 
     // Cloud recordings

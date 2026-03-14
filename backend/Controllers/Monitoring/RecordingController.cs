@@ -81,6 +81,7 @@ namespace MotorControlEnterprise.Api.Controllers
                 c.Name,
                 c.CameraId,
                 c.ClientId,
+                ClientName         = c.Client!.Name,
                 c.Status,
                 c.LastSeen,
                 GatewayId          = c.Client!.GatewayId,
