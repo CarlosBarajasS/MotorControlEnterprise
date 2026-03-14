@@ -71,12 +71,7 @@ export class ClientNvrComponent implements OnInit {
     }
 
     getHlsUrl(cam: any): string {
-        try {
-            const s = JSON.parse(cam.streams ?? '{}');
-            return s.centralHls ?? s.hls ?? '';
-        } catch {
-            return '';
-        }
+        return `${API_URL}/stream/${cam.id}/hls`;
     }
 
     goToDetail(id: number) {
