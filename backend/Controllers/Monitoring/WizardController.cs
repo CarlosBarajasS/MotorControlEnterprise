@@ -44,6 +44,20 @@ namespace MotorControlEnterprise.Api.Controllers
                 await _db.SaveChangesAsync();
             }
 
+            // Generate edge token if not yet present
+            var edgeToken = ExtractEdgeToken(client.Metadata);
+            if (string.IsNullOrEmpty(edgeToken))
+            {
+                edgeToken = Guid.NewGuid().ToString("N"); // 32-char hex, no hyphens
+                var meta = string.IsNullOrEmpty(client.Metadata)
+                    ? new Dictionary<string, object>()
+                    : JsonSerializer.Deserialize<Dictionary<string, object>>(client.Metadata)!;
+                meta["edgeToken"] = edgeToken;
+                client.Metadata  = JsonSerializer.Serialize(meta);
+                client.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+            }
+
             // Cámaras registradas para este cliente
             var cameras = await _db.Cameras
                 .Where(c => c.ClientId == id)
@@ -73,11 +87,23 @@ namespace MotorControlEnterprise.Api.Controllers
                 mqttUser,
                 centralRtspHost = centralRtsp,
                 centralRtspPort = centralPort,
-                env             = BuildEnv(client, gatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location),
+                env             = BuildEnv(client, gatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location, edgeToken),
                 dockerCompose   = BuildDockerCompose(centralRtsp, centralPort, pushUser, pushPass),
                 mediamtxYml     = BuildMediamtxYml(cameras, gatewayId),
                 localStorageType = client.LocalStorageType ?? "nvr"
             });
+        }
+
+        private static string? ExtractEdgeToken(string? metadata)
+        {
+            if (string.IsNullOrEmpty(metadata)) return null;
+            try
+            {
+                var doc = JsonDocument.Parse(metadata);
+                return doc.RootElement.TryGetProperty("edgeToken", out var el)
+                    ? el.GetString() : null;
+            }
+            catch { return null; }
         }
 
         private static string? ExtractRtspFromStreams(string? streams)
@@ -95,7 +121,8 @@ namespace MotorControlEnterprise.Api.Controllers
             Client client,  string gatewayId,
             string mqttHost, string mqttPort,
             string mqttUser, string mqttPass,
-            string centralApi, string location)
+            string centralApi, string location,
+            string edgeToken)
         {
             var sb = new StringBuilder();
             sb.AppendLine("# ===================================================");
@@ -136,7 +163,7 @@ namespace MotorControlEnterprise.Api.Controllers
             sb.AppendLine("# ===================================================");
             sb.AppendLine();
             sb.AppendLine($"CENTRAL_API_URL={centralApi}");
-            sb.AppendLine("CENTRAL_API_TOKEN=");
+            sb.AppendLine($"CENTRAL_API_TOKEN={edgeToken}");
 
             // NVR/DVR local — solo si el cliente tiene configuración NVR
             var storageType = client.LocalStorageType ?? "nvr";
