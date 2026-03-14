@@ -42,3 +42,6 @@ TODO.md
 # Observability — dashboard local, no subir al repo
 logs/
 scripts/start-observability.sh
+
+# Git worktrees
+.worktrees/
