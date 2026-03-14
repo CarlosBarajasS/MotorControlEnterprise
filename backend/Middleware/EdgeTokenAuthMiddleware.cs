@@ -28,8 +28,10 @@ namespace MotorControlEnterprise.Api.Middleware
             }
 
             // Find client with matching edgeToken in Metadata JSONB
+            // Use JsonSerializer to safely build the JSON contains clause (prevents injection)
+            var containsJson = JsonSerializer.Serialize(new { edgeToken = token });
             var client = await db.Clients
-                .Where(c => EF.Functions.JsonContains(c.Metadata!, $"{{\"edgeToken\":\"{token}\"}}"))
+                .Where(c => EF.Functions.JsonContains(c.Metadata!, containsJson))
                 .FirstOrDefaultAsync();
 
             if (client == null)
