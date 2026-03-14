@@ -139,7 +139,7 @@ namespace MotorControlEnterprise.Api.Services
             var args =
                 $"-rtsp_transport tcp " +
                 $"-i {inputUrl} " +
-                $"-c copy " +
+                $"-c:v copy -an " +    // copy video, drop audio (G.711/pcm_alaw not supported in MP4)
                 $"-f segment " +
                 $"-segment_time {segSec} " +
                 $"-segment_format mp4 " +
