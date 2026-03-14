@@ -91,7 +91,7 @@ namespace MotorControlEnterprise.Api.Controllers
                 mqttUser,
                 centralRtspHost = centralRtsp,
                 centralRtspPort = centralPort,
-                env             = BuildEnv(client, gatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location, edgeToken),
+                env             = BuildEnv(client, gatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location, edgeToken, centralRtsp, centralPort),
                 dockerCompose   = BuildDockerCompose(centralRtsp, centralPort, pushUser, pushPass),
                 mediamtxYml     = BuildMediamtxYml(cameras, gatewayId),
                 localStorageType = client.LocalStorageType ?? "nvr"
@@ -126,7 +126,8 @@ namespace MotorControlEnterprise.Api.Controllers
             string mqttHost, string mqttPort,
             string mqttUser, string mqttPass,
             string centralApi, string location,
-            string edgeToken)
+            string edgeToken,
+            string centralRtspHost, string centralRtspPort)
         {
             var sb = new StringBuilder();
             sb.AppendLine("# ===================================================");
@@ -154,6 +155,8 @@ namespace MotorControlEnterprise.Api.Controllers
             sb.AppendLine("# ===================================================");
             sb.AppendLine();
             sb.AppendLine("MEDIAMTX_API_URL=http://mediamtx:9997");
+            sb.AppendLine("MEDIAMTX_USERNAME=edge");
+            sb.AppendLine("MEDIAMTX_PASSWORD=edge123");
             sb.AppendLine();
             sb.AppendLine("# ===================================================");
             sb.AppendLine("# SERVIDOR HTTP DEL EDGE");
@@ -168,6 +171,13 @@ namespace MotorControlEnterprise.Api.Controllers
             sb.AppendLine();
             sb.AppendLine($"CENTRAL_API_URL={centralApi}");
             sb.AppendLine($"CENTRAL_API_TOKEN={edgeToken}");
+            sb.AppendLine();
+            sb.AppendLine("# ===================================================");
+            sb.AppendLine("# RELAY RTSP → CENTRAL MEDIAMTX");
+            sb.AppendLine("# ===================================================");
+            sb.AppendLine();
+            sb.AppendLine($"CENTRAL_RTSP_HOST={centralRtspHost}");
+            sb.AppendLine($"CENTRAL_RTSP_PORT={centralRtspPort}");
 
             // NVR/DVR local — solo si el cliente tiene configuración NVR
             var storageType = client.LocalStorageType ?? "nvr";

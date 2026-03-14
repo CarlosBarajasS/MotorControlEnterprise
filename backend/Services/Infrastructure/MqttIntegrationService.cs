@@ -253,12 +253,19 @@ namespace MotorControlEnterprise.Api.Services
                             if (rtspUrl == null && root.TryGetProperty("rtspUrl", out var ru))
                                 rtspUrl = ru.GetString();
 
-                            streamsJson = JsonSerializer.Serialize(new
-                            {
-                                rtsp   = rtspUrl,
-                                hls    = hlsUrl,
-                                webrtc = webrtcUrl
-                            });
+                            // Only use relay URLs (central host) — ignore local IPs from edge-agent
+                            // local mode sends e.g. rtsp://TU_IP_AQUI:8554/... which is not routable from server
+                            bool isLocalUrl(string? u) => string.IsNullOrEmpty(u)
+                                || u.Contains("TU_IP_AQUI") || u.Contains("localhost")
+                                || u.Contains("127.0.0.1");
+
+                            if (!isLocalUrl(hlsUrl))
+                                streamsJson = JsonSerializer.Serialize(new
+                                {
+                                    rtsp   = isLocalUrl(rtspUrl) ? null : rtspUrl,
+                                    hls    = hlsUrl,
+                                    webrtc = isLocalUrl(webrtcUrl) ? null : webrtcUrl
+                                });
                         }
                         catch { /* payload no es JSON válido, usar null */ }
 

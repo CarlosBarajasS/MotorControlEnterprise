@@ -168,10 +168,13 @@ export class WizardComponent implements OnInit {
 
   get canContinueFromStep4(): boolean {
     const status = this.discoveryStatus();
-    if (!status?.gatewayOnline) return false;
-    return status?.cameras?.every((c: any) =>
+    if (!status?.cameras?.length) return false;
+    const allTerminal = status.cameras.every((c: any) =>
       ['discovered', 'onvif_failed', 'manual'].includes(c.status)
-    ) ?? false;
+    );
+    // Allow continuing if all cameras reached a terminal state,
+    // even if the gateway heartbeat wasn't detected during this polling window.
+    return allTerminal || status.gatewayOnline;
   }
 
   async retryDiscovery(cameraId?: number) {
