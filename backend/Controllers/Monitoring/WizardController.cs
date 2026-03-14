@@ -337,7 +337,7 @@ networks:
                     {
                         id        = c.Id,
                         cameraKey = c.CameraKey,
-                        ip        = ExtractIpFromStreams(c.Streams),
+                        ip        = ExtractCameraIp(c.Streams, c.Metadata),
                         onvifPort = onvif?.port ?? 8000,
                         user      = onvif?.user,
                         pass      = onvif?.pass
@@ -408,8 +408,25 @@ networks:
             catch { return null; }
         }
 
-        private static string? ExtractIpFromStreams(string? streams)
+        private static string? ExtractCameraIp(string? streams, string? metadata)
         {
+            // Primary: read from Metadata.onvif.ip (reliable for pending cameras)
+            if (!string.IsNullOrEmpty(metadata))
+            {
+                try
+                {
+                    var doc = JsonDocument.Parse(metadata);
+                    if (doc.RootElement.TryGetProperty("onvif", out var o) &&
+                        o.TryGetProperty("ip", out var ipEl))
+                    {
+                        var ip = ipEl.GetString();
+                        if (!string.IsNullOrEmpty(ip)) return ip;
+                    }
+                }
+                catch { }
+            }
+
+            // Fallback: extract host from RTSP URL (only works after discovery)
             if (string.IsNullOrEmpty(streams)) return null;
             try
             {

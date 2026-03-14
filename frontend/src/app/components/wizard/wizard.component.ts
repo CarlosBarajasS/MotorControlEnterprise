@@ -334,6 +334,7 @@ export class WizardComponent implements OnInit {
             onvifPort: cam.onvifPort || 8000,
             onvifUser: cam.onvifUser,
             onvifPass: cam.onvifPass,
+            onvifIp: cam.ip,
             ptz: false,
             isRecordingOnly: false,
             clientId: this.clientId()
@@ -356,6 +357,7 @@ export class WizardComponent implements OnInit {
               onvifPort: cam.onvifPort || 8000,
               onvifUser: cam.onvifUser,
               onvifPass: cam.onvifPass,
+              onvifIp: cam.ip,
               ptz: false,
               isRecordingOnly: true,
               clientId: this.clientId()

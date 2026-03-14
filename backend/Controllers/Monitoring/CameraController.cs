@@ -31,7 +31,8 @@ namespace MotorControlEnterprise.Api.Controllers
             // ONVIF credentials (new)
             int? OnvifPort = 8000,
             string? OnvifUser = null,
-            string? OnvifPass = null
+            string? OnvifPass = null,
+            string? OnvifIp = null
         );
 
         // Extrae la URL RTSP del campo Streams (jsonb { "rtsp": "...", "hls": "..." })
@@ -56,11 +57,11 @@ namespace MotorControlEnterprise.Api.Controllers
         }
 
         // Construye el JSON de Metadata con credenciales ONVIF y estado de discovery
-        private static string BuildCameraMetadata(int? onvifPort, string? onvifUser, string? onvifPass, string discoveryStatus)
+        private static string BuildCameraMetadata(int? onvifPort, string? onvifUser, string? onvifPass, string discoveryStatus, string? onvifIp = null)
         {
             return JsonSerializer.Serialize(new
             {
-                onvif = new { port = onvifPort ?? 8000, user = onvifUser, pass = onvifPass },
+                onvif = new { port = onvifPort ?? 8000, user = onvifUser, pass = onvifPass, ip = onvifIp },
                 discovery = new { status = discoveryStatus }
             });
         }
@@ -253,7 +254,7 @@ namespace MotorControlEnterprise.Api.Controllers
                 var centralHls = $"http://central-mediamtx:8888/{client.GatewayId}/{cameraKey}/index.m3u8";
 
                 streams  = BuildStreams("pending_onvif_discovery", centralHls);
-                metadata = BuildCameraMetadata(dto.OnvifPort, dto.OnvifUser, dto.OnvifPass, "pending");
+                metadata = BuildCameraMetadata(dto.OnvifPort, dto.OnvifUser, dto.OnvifPass, "pending", dto.OnvifIp);
                 status   = "pending";
             }
 
