@@ -262,6 +262,60 @@
     }
 }
 
+/* Discovery badge — ONVIF status per camera */
+.discovery-badge {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(100, 116, 139, 0.1);
+    color: var(--muted);
+
+    &.discovered {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    &.onvif_failed {
+        background: rgba(234, 179, 8, 0.12);
+        color: #b45309;
+    }
+
+    &.discovering {
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--accent);
+    }
+
+    &.manual {
+        background: rgba(100, 116, 139, 0.1);
+        color: var(--muted);
+    }
+}
+
+/* Ghost button */
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--outline);
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--muted);
+    font-family: inherit;
+    transition: all 0.15s;
+
+    &:hover {
+        background: rgba(99, 102, 241, 0.08);
+        border-color: rgba(99, 102, 241, 0.3);
+        color: var(--accent);
+    }
+
+    &.btn-sm {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+}
+
 /* Toggle Switch — BENDI-4 */
 .toggle-switch {
     position: relative;

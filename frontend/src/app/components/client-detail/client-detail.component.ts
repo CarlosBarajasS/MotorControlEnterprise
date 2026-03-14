@@ -119,4 +119,20 @@ export class ClientDetailComponent implements OnInit {
       error: (err: any) => console.error('Error toggling cloud storage:', err)
     });
   }
+
+  parseDiscovery(metadata: string | null | undefined): any {
+    try {
+      const m = JSON.parse(metadata || '{}');
+      return m.discovery || { status: 'pending' };
+    } catch { return { status: 'pending' }; }
+  }
+
+  async reScanOnvif(clientId: number, cameraId: number) {
+    const token = localStorage.getItem('motor_control_token');
+    await fetch(`/api/admin/clients/${clientId}/trigger-discovery?cameraId=${cameraId}`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    setTimeout(() => this.loadClientDetails(), 3000);
+  }
 }

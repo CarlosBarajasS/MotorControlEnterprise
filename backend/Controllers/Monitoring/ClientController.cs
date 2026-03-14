@@ -65,7 +65,7 @@ namespace MotorControlEnterprise.Api.Controllers
 
             var cameras = await _db.Cameras
                 .Where(c => c.ClientId == id)
-                .Select(c => new { c.Id, c.Name, c.Status, c.LastSeen, c.CameraId })
+                .Select(c => new { c.Id, c.Name, c.Status, c.LastSeen, c.CameraId, c.Metadata })
                 .ToListAsync();
 
             return Ok(new { client, cameras });

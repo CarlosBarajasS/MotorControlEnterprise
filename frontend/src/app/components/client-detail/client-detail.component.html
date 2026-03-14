@@ -81,6 +81,18 @@
                 <td style="padding: 12px 0; font-weight: 500;">
                     <a [routerLink]="['/cameras', cam.id]" class="client-link">{{
                         cam.name }}</a>
+                    <span class="discovery-badge"
+                        [ngClass]="parseDiscovery(cam.metadata).status">
+                        <ng-container [ngSwitch]="parseDiscovery(cam.metadata).status">
+                            <ng-container *ngSwitchCase="'discovered'">
+                                ✅ {{ parseDiscovery(cam.metadata).brand }}{{ parseDiscovery(cam.metadata).model ? ' ' + parseDiscovery(cam.metadata).model : '' }}<ng-container *ngIf="parseDiscovery(cam.metadata).resolution"> · {{ parseDiscovery(cam.metadata).resolution }}</ng-container>
+                            </ng-container>
+                            <ng-container *ngSwitchCase="'onvif_failed'">⚠️ ONVIF fallido</ng-container>
+                            <ng-container *ngSwitchCase="'discovering'">🔍 Descubriendo...</ng-container>
+                            <ng-container *ngSwitchCase="'manual'">✏️ URL manual</ng-container>
+                            <ng-container *ngSwitchDefault>⏳ Pendiente</ng-container>
+                        </ng-container>
+                    </span>
                 </td>
                 <td style="padding: 12px 0;">
                     <span class="badge" [class.online]="cam.status === 'online'"
@@ -90,7 +102,7 @@
                 </td>
                 <td style="padding: 12px 0; color: var(--muted);">{{ cam.lastSeen ? (cam.lastSeen | date:'short') :
                     'N/A' }}</td>
-                <td style="padding: 12px 0; text-align: right; display:flex; gap:6px; justify-content:end;">
+                <td style="padding: 12px 0; text-align: right; display:flex; gap:6px; justify-content:end; align-items:center;">
                     <button class="btn-secondary"
                         style="font-size: 12px; padding: 6px 12px; border-color:transparent; background:rgba(37,99,235,0.08); color:var(--accent);"
                         [routerLink]="['/cameras', cam.id]">👁 Ver En Vivo</button>
@@ -98,6 +110,11 @@
                         [routerLink]="cam.recordingCameraId ? ['/recordings', cam.recordingCameraId] : null"
                         [disabled]="!cam.recordingCameraId"
                         [title]="!cam.recordingCameraId ? 'Esta cámara no tiene almacenamiento en nube' : ''">Grabaciones</button>
+                    <button class="btn-ghost btn-sm" style="font-size: 12px; padding: 6px 12px;"
+                        (click)="reScanOnvif(clientData().id, cam.id)"
+                        title="Re-escanear ONVIF — útil si cambió la contraseña o se reemplazó la cámara">
+                        🔄 Re-escanear
+                    </button>
                 </td>
             </tr>
         </tbody>
