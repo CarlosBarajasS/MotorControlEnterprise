@@ -52,7 +52,7 @@ export class WizardComponent implements OnInit {
   userCreated = signal<boolean>(false);
 
   // Step 3: Cameras
-  cameras = signal<any[]>([{ id: 'cam1', ip: '', user: 'admin', password: '', rtspPath: '/Streaming/Channels/101' }]);
+  cameras = signal<any[]>([{ id: 'cam1', ip: '', onvifPort: 8000, onvifUser: 'admin', onvifPass: '' }]);
 
   // Step 4: Files
   activeTab = signal<'env' | 'mediamtx' | 'compose'>('env');
@@ -183,7 +183,7 @@ export class WizardComponent implements OnInit {
 
   // --- Step 3 ---
   addCamera() {
-    this.cameras.update(c => [...c, { id: 'cam' + (c.length + 1), ip: '', user: 'admin', password: '', rtspPath: '/Streaming/Channels/101' }]);
+    this.cameras.update(c => [...c, { id: 'cam' + (c.length + 1), ip: '', onvifPort: 8000, onvifUser: 'admin', onvifPass: '' }]);
   }
 
   removeCamera(index: number) {
@@ -196,10 +196,12 @@ export class WizardComponent implements OnInit {
       return false;
     }
     for (const cam of this.cameras()) {
-      if (!cam.id || !cam.ip || !cam.rtspPath) {
-        this.showAlert(2, 'error', 'Completa el nombre, IP y ruta RTSP de todas las cámaras');
+      if (!cam.id?.trim() || !cam.ip?.trim() || !cam.onvifUser?.trim()) {
+        this.showAlert(2, 'error', 'Completa el nombre, IP y usuario ONVIF de todas las cámaras');
         return false;
       }
+      // Default port to 8000 if blank
+      if (!cam.onvifPort) cam.onvifPort = 8000;
     }
     return true;
   }
@@ -207,7 +209,6 @@ export class WizardComponent implements OnInit {
   async createCamerasInApi() {
     const token = localStorage.getItem('motor_control_token');
     for (const cam of this.cameras()) {
-      const rtspUrl = `rtsp://${cam.user || 'admin'}:${cam.password || ''}@${cam.ip}${cam.rtspPath}`;
       try {
         // Cámara live (alta calidad, vista en vivo)
         await fetch(`${this.API_URL}/cameras`, {
@@ -217,7 +218,9 @@ export class WizardComponent implements OnInit {
             name: cam.id,
             cameraId: cam.id,
             location: this.clientData.location,
-            rtspUrl,
+            onvifPort: cam.onvifPort || 8000,
+            onvifUser: cam.onvifUser,
+            onvifPass: cam.onvifPass,
             ptz: false,
             isRecordingOnly: false,
             clientId: this.clientId()
@@ -237,7 +240,9 @@ export class WizardComponent implements OnInit {
               name: `${cam.id}-low`,
               cameraId: `${cam.id}-low`,
               location: this.clientData.location,
-              rtspUrl,
+              onvifPort: cam.onvifPort || 8000,
+              onvifUser: cam.onvifUser,
+              onvifPass: cam.onvifPass,
               ptz: false,
               isRecordingOnly: true,
               clientId: this.clientId()
