@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotorControlEnterprise.Api.Data;
 using MotorControlEnterprise.Api.Models;
+using MotorControlEnterprise.Api.Services;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -16,11 +17,13 @@ namespace MotorControlEnterprise.Api.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly IConfiguration _config;
+        private readonly IMqttPublisherService _mqtt;
 
-        public WizardController(ApplicationDbContext db, IConfiguration config)
+        public WizardController(ApplicationDbContext db, IConfiguration config, IMqttPublisherService mqtt)
         {
             _db    = db;
             _config = config;
+            _mqtt  = mqtt;
         }
 
         /// <summary>
@@ -288,6 +291,166 @@ networks:
             sb.AppendLine("  # edge-agent calls POST /v3/config/paths/add/{name} after ONVIF discovery");
             sb.AppendLine("  all_others: ~");
             return sb.ToString();
+        }
+
+        // POST /api/admin/clients/{id}/trigger-discovery
+        [HttpPost("{id:int}/trigger-discovery")]
+        public async Task<IActionResult> TriggerDiscovery(int id, [FromQuery] int? cameraId = null)
+        {
+            var client = await _db.Clients.FindAsync(id);
+            if (client == null) return NotFound();
+            if (string.IsNullOrEmpty(client.GatewayId))
+                return BadRequest(new { message = "Client has no gateway configured." });
+
+            // Load cameras to discover (all, or specific one)
+            var query = _db.Cameras.Where(c => c.ClientId == id);
+            if (cameraId.HasValue) query = query.Where(c => c.Id == cameraId.Value);
+            var cameras = await query.ToListAsync();
+
+            if (!cameras.Any())
+                return BadRequest(new { message = "No cameras found for this client." });
+
+            // Mark cameras as "discovering" (prevents stale "pending" in UI)
+            foreach (var cam in cameras)
+            {
+                var meta = ParseMetaDict(cam.Metadata);
+                var disc = ExtractDiscovery(cam.Metadata);
+                // Only set discovering if not already discovered
+                if (disc?.status != "discovered")
+                {
+                    meta["discovery"] = new { status = "discovering" };
+                    cam.Metadata  = JsonSerializer.Serialize(meta);
+                    cam.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+            await _db.SaveChangesAsync();
+
+            // Build and publish MQTT payload
+            var requestId = Guid.NewGuid().ToString("N");
+            var payload = JsonSerializer.Serialize(new
+            {
+                requestId,
+                cameras = cameras.Select(c =>
+                {
+                    var onvif = ExtractOnvifFromMeta(c.Metadata);
+                    return new
+                    {
+                        id        = c.Id,
+                        cameraKey = c.CameraKey,
+                        ip        = ExtractIpFromStreams(c.Streams),
+                        onvifPort = onvif?.port ?? 8000,
+                        user      = onvif?.user,
+                        pass      = onvif?.pass
+                    };
+                })
+            });
+
+            var topic = $"gateway/{client.GatewayId}/cmd/discover-onvif";
+            await _mqtt.PublishAsync(topic, payload);
+
+            return Ok(new { requestId, cameraCount = cameras.Count, gatewayId = client.GatewayId });
+        }
+
+        // GET /api/admin/clients/{id}/discovery-status
+        [HttpGet("{id:int}/discovery-status")]
+        public async Task<IActionResult> DiscoveryStatus(int id)
+        {
+            var client = await _db.Clients.FindAsync(id);
+            if (client == null) return NotFound();
+
+            // Check gateway online: lastHeartbeatAt within 60 seconds
+            var lastHb = ExtractLastHeartbeat(client.Metadata);
+            var gatewayOnline = lastHb.HasValue &&
+                                (DateTime.UtcNow - lastHb.Value).TotalSeconds < 60;
+
+            var cameras = await _db.Cameras
+                .Where(c => c.ClientId == id)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            var cameraStatuses = cameras.Select(c =>
+            {
+                var disc = ExtractDiscovery(c.Metadata);
+                return new
+                {
+                    c.Id,
+                    c.Name,
+                    c.CameraKey,
+                    status     = disc?.status ?? "pending",
+                    brand      = disc?.brand,
+                    model      = disc?.model,
+                    resolution = disc?.resolution,
+                    fps        = disc?.fps
+                };
+            });
+
+            return Ok(new { gatewayOnline, cameras = cameraStatuses });
+        }
+
+        private static Dictionary<string, object?> ParseMetaDict(string? json)
+        {
+            if (string.IsNullOrEmpty(json)) return new();
+            try { return JsonSerializer.Deserialize<Dictionary<string, object?>>(json) ?? new(); }
+            catch { return new(); }
+        }
+
+        private static (int port, string? user, string? pass)? ExtractOnvifFromMeta(string? metadata)
+        {
+            if (string.IsNullOrEmpty(metadata)) return null;
+            try
+            {
+                var doc = JsonDocument.Parse(metadata);
+                if (!doc.RootElement.TryGetProperty("onvif", out var o)) return null;
+                return (o.TryGetProperty("port", out var p) ? p.GetInt32() : 8000,
+                        o.TryGetProperty("user", out var u) ? u.GetString() : null,
+                        o.TryGetProperty("pass", out var pw) ? pw.GetString() : null);
+            }
+            catch { return null; }
+        }
+
+        private static string? ExtractIpFromStreams(string? streams)
+        {
+            if (string.IsNullOrEmpty(streams)) return null;
+            try
+            {
+                var doc = JsonDocument.Parse(streams);
+                if (!doc.RootElement.TryGetProperty("rtsp", out var el)) return null;
+                var rtsp = el.GetString();
+                if (string.IsNullOrEmpty(rtsp) || rtsp == "pending_onvif_discovery") return null;
+                return new Uri(rtsp).Host;
+            }
+            catch { return null; }
+        }
+
+        private static DateTime? ExtractLastHeartbeat(string? metadata)
+        {
+            if (string.IsNullOrEmpty(metadata)) return null;
+            try
+            {
+                var doc = JsonDocument.Parse(metadata);
+                if (!doc.RootElement.TryGetProperty("lastHeartbeatAt", out var el)) return null;
+                return DateTime.TryParse(el.GetString(), out var dt) ? dt : null;
+            }
+            catch { return null; }
+        }
+
+        private static (string? status, string? brand, string? model, string? resolution, int? fps)?
+            ExtractDiscovery(string? metadata)
+        {
+            if (string.IsNullOrEmpty(metadata)) return null;
+            try
+            {
+                var doc = JsonDocument.Parse(metadata);
+                if (!doc.RootElement.TryGetProperty("discovery", out var d)) return null;
+                return (
+                    d.TryGetProperty("status",     out var s)  ? s.GetString()  : null,
+                    d.TryGetProperty("brand",      out var b)  ? b.GetString()  : null,
+                    d.TryGetProperty("model",      out var m)  ? m.GetString()  : null,
+                    d.TryGetProperty("resolution", out var r)  ? r.GetString()  : null,
+                    d.TryGetProperty("fps",        out var f)  ? f.GetInt32()   : null
+                );
+            }
+            catch { return null; }
         }
     }
 }
