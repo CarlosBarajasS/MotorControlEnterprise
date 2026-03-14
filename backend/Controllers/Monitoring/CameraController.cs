@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MotorControlEnterprise.Api.Data;
 using MotorControlEnterprise.Api.Models;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
@@ -22,11 +23,15 @@ namespace MotorControlEnterprise.Api.Controllers
         public record CameraUpsertDto(
             string Name,
             string? Location,
-            string? RtspUrl,
+            string? RtspUrl,       // kept for backward compat — null when using ONVIF
             int? ClientId,
             bool Ptz = false,
             bool IsRecordingOnly = false,
-            string? CameraId = null
+            string? CameraId = null,
+            // ONVIF credentials (new)
+            int? OnvifPort = 8000,
+            string? OnvifUser = null,
+            string? OnvifPass = null
         );
 
         // Extrae la URL RTSP del campo Streams (jsonb { "rtsp": "...", "hls": "..." })
@@ -41,9 +46,32 @@ namespace MotorControlEnterprise.Api.Controllers
             catch { return null; }
         }
 
-        // Construye el JSON de Streams a partir de una URL RTSP
-        private static string BuildStreams(string rtspUrl)
-            => JsonSerializer.Serialize(new { rtsp = rtspUrl });
+        // Construye el JSON de Streams a partir de una URL RTSP (y URLs opcionales de relay)
+        private static string BuildStreams(string rtsp, string? centralHls = null, string? centralRtsp = null)
+        {
+            var obj = new Dictionary<string, string?> { ["rtsp"] = rtsp };
+            if (!string.IsNullOrEmpty(centralHls))  obj["centralHls"]  = centralHls;
+            if (!string.IsNullOrEmpty(centralRtsp)) obj["centralRtsp"] = centralRtsp;
+            return JsonSerializer.Serialize(obj);
+        }
+
+        // Construye el JSON de Metadata con credenciales ONVIF y estado de discovery
+        private static string BuildCameraMetadata(int? onvifPort, string? onvifUser, string? onvifPass, string discoveryStatus)
+        {
+            return JsonSerializer.Serialize(new
+            {
+                onvif = new { port = onvifPort ?? 8000, user = onvifUser, pass = onvifPass },
+                discovery = new { status = discoveryStatus }
+            });
+        }
+
+        // Convierte un nombre en un slug alfanumérico con guiones
+        private static string Slugify(string input)
+        {
+            var slug = System.Text.RegularExpressions.Regex.Replace(input.ToLowerInvariant(), @"[^a-z0-9\-]", "-");
+            slug = System.Text.RegularExpressions.Regex.Replace(slug, @"-{2,}", "-");
+            return slug.Trim('-');
+        }
 
         // GET api/cameras — admin ve todas, usuario solo las suyas
         [HttpGet]
@@ -197,6 +225,38 @@ namespace MotorControlEnterprise.Api.Controllers
             var userIdStr = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
             _ = int.TryParse(userIdStr, out var userId);
 
+            // Compute stable camera key from CameraId or Name
+            var cameraKey = Slugify(dto.CameraId ?? dto.Name);
+
+            string? streams;
+            string? metadata = null;
+            string status;
+
+            if (!string.IsNullOrWhiteSpace(dto.RtspUrl))
+            {
+                // Legacy path: full RTSP URL provided
+                streams = BuildStreams(dto.RtspUrl);
+                status  = "active";
+            }
+            else
+            {
+                // ONVIF path: compute centralHls from client's GatewayId
+                var gatewayId = dto.ClientId.HasValue
+                    ? await _db.Clients
+                        .Where(c => c.Id == dto.ClientId.Value)
+                        .Select(c => c.GatewayId)
+                        .FirstOrDefaultAsync()
+                    : null;
+
+                var centralHls = gatewayId != null
+                    ? $"http://central-mediamtx:8888/{gatewayId}/{cameraKey}/index.m3u8"
+                    : null;
+
+                streams  = BuildStreams("pending_onvif_discovery", centralHls);
+                metadata = BuildCameraMetadata(dto.OnvifPort, dto.OnvifUser, dto.OnvifPass, "pending");
+                status   = "pending";
+            }
+
             var camera = new Camera
             {
                 Name            = dto.Name,
@@ -204,10 +264,12 @@ namespace MotorControlEnterprise.Api.Controllers
                 Ptz             = dto.Ptz,
                 IsRecordingOnly = dto.IsRecordingOnly,
                 CameraId        = dto.CameraId,
+                CameraKey       = cameraKey,
                 ClientId        = dto.ClientId,
                 UserId          = userId,
-                Streams         = dto.RtspUrl != null ? BuildStreams(dto.RtspUrl) : null,
-                Status          = "active",
+                Streams         = streams,
+                Metadata        = metadata,
+                Status          = status,
                 CreatedAt       = DateTime.UtcNow,
                 UpdatedAt       = DateTime.UtcNow
             };
@@ -218,7 +280,8 @@ namespace MotorControlEnterprise.Api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = camera.Id }, new
             {
                 camera.Id, camera.Name, camera.Location, camera.Status,
-                camera.Ptz, camera.IsRecordingOnly, camera.ClientId, camera.Streams, camera.CreatedAt,
+                camera.CameraKey, camera.Ptz, camera.IsRecordingOnly, camera.ClientId,
+                camera.Streams, camera.Metadata, camera.CreatedAt,
                 RtspUrl = ExtractRtspUrl(camera.Streams)
             });
         }
