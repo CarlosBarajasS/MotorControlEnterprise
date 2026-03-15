@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
+import { WebrtcViewerComponent } from '../camera-viewer/webrtc-viewer.component';
 
 const API_URL = '/api';
 
 @Component({
     selector: 'app-client-nvr',
     standalone: true,
-    imports: [CommonModule, RouterModule, CameraViewerComponent],
+    imports: [CommonModule, RouterModule, CameraViewerComponent, WebrtcViewerComponent],
     templateUrl: './client-nvr.component.html',
     styleUrls: ['./client-nvr.component.scss']
 })
@@ -25,6 +26,7 @@ export class ClientNvrComponent implements OnInit {
     loadError   = signal(false);
     selectedCam = signal<any>(null);
     ptzPresets  = signal<any[]>([]);
+    gatewayId   = '';
 
     onlineCount  = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
     offlineCount = computed(() => this.cameras().length - this.onlineCount());
@@ -63,6 +65,7 @@ export class ClientNvrComponent implements OnInit {
             next: (clients) => {
                 const client = (clients || []).find(c => c.id === this.clientId);
                 this.clientName.set(client?.name ?? `Cliente #${this.clientId}`);
+                this.gatewayId = client?.gatewayId ?? '';
             },
             error: () => {}
         });
@@ -85,6 +88,11 @@ export class ClientNvrComponent implements OnInit {
 
     getHlsUrl(cam: any): string {
         return `${API_URL}/stream/${cam.id}/hls`;
+    }
+
+    getWebrtcPath(cam: any): string {
+        const key = cam.cameraId ?? cam.cameraKey ?? cam.name;
+        return `${this.gatewayId}/${key}`;
     }
 
     toggleFullscreen(event: MouseEvent, cell: HTMLDivElement) {
