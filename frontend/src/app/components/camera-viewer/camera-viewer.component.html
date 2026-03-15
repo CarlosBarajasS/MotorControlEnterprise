@@ -2,8 +2,7 @@
 
     <div class="loading-state" *ngIf="isLoading">
         <div class="spinner"></div>
-        <p>Conectando al stream en tiempo real...</p>
-        <small>Bypasseando NAT vía Relay...</small>
+        <p>Conectando...</p>
     </div>
 
     <div class="error-state" *ngIf="hasError">
@@ -12,7 +11,7 @@
         <button (click)="retry()">Reintentar conexión</button>
     </div>
 
-    <video #videoEl controls autoplay muted playsinline class="stream-frame"
+    <video #videoEl autoplay muted playsinline class="stream-frame"
         [class.hidden]="isLoading || hasError">
     </video>
 
