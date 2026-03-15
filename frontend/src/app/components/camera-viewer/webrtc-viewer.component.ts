@@ -1,7 +1,6 @@
 import { Component, Input, OnDestroy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-const WHEP_BASE = 'http://177.247.175.4:8891';
 
 /**
  * WebRTC viewer via WHEP (WebRTC-HTTP Egress Protocol).
@@ -100,7 +99,7 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
             const offer = await this.pc.createOffer();
             await this.pc.setLocalDescription(offer);
 
-            const whepUrl = `${WHEP_BASE}/${this.streamPath}/whep`;
+            const whepUrl = `/${this.streamPath}/whep`;
             const res = await fetch(whepUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/sdp' },

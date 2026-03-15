@@ -83,11 +83,6 @@
         <button class="panel-close" (click)="selectCam(null)" title="Cerrar">✕</button>
       </div>
 
-      <!-- WebRTC live preview (tiempo real) -->
-      <div class="panel-live" *ngIf="gatewayId">
-        <app-webrtc-viewer [streamPath]="getWebrtcPath(selectedCam())"></app-webrtc-viewer>
-      </div>
-
       <!-- Camera metadata -->
       <div class="panel-section" *ngIf="selectedCam().metadata?.discovery?.brand">
         <p class="panel-meta">{{ camSummary(selectedCam()) }}</p>
