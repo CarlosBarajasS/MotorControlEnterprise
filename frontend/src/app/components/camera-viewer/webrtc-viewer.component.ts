@@ -115,13 +115,12 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
                 }
             });
 
-            const whepUrl = `http://${window.location.hostname}:8891/${this.streamPath}/whep`;
+            // WHEP va por nginx (mismo origen, puerto 8080)
+            // nginx agrega las credenciales de MediaMTX internamente — nunca expuestas al browser
+            const whepUrl = `/${this.streamPath}/whep`;
             const res = await fetch(whepUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/sdp',
-                    'Authorization': 'Basic ' + btoa('viewer:MCE-watch-2026')
-                },
+                headers: { 'Content-Type': 'application/sdp' },
                 body: this.pc!.localDescription!.sdp
             });
 
