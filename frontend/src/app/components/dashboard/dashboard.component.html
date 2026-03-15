@@ -102,7 +102,7 @@
       <div class="gw-cam-label">Cámaras vinculadas</div>
       <div class="gw-cam-list">
         <button class="cam-chip online" *ngFor="let cam of getCamerasForGw(gw)"
-          (click)="openCameraModal('/api/admin/stream/' + cam.id + '/hls')">
+          (click)="openCameraModal(cam)">
           <span class="cam-dot"></span>{{ cam.name }}
         </button>
         <span class="gw-no-cams" *ngIf="getCamerasForGw(gw).length === 0">Sin cámaras asignadas</span>
@@ -154,14 +154,14 @@
 </div>
 
 <!-- MODAL VISOR -->
-<div class="modal-overlay" *ngIf="selectedCameraStream" (click)="closeCameraModal()">
+<div class="modal-overlay" *ngIf="selectedCameraPath" (click)="closeCameraModal()">
   <div class="modal-content cam-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>Visualización en Vivo</h3>
       <button class="close-btn" (click)="closeCameraModal()">✕</button>
     </div>
     <div class="modal-body" style="padding:0;">
-      <app-camera-viewer [streamUrl]="selectedCameraStream"></app-camera-viewer>
+      <app-webrtc-viewer [streamPath]="selectedCameraPath"></app-webrtc-viewer>
     </div>
   </div>
 </div>

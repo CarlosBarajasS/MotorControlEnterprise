@@ -15,11 +15,11 @@
     <!-- Video Player Column -->
     <div class="video-card">
       <div class="video-wrapper">
-        <video #videoElement controls autoplay muted playsinline class="video-player"></video>
+        <app-webrtc-viewer *ngIf="streamPath()" [streamPath]="streamPath()"></app-webrtc-viewer>
       </div>
       <div class="video-footer">
         <p class="source-url" title="URL del Stream">{{ camera().rtspUrl }}</p>
-        <span class="badge hls-badge">HLS en Vivo (Edge)</span>
+        <span class="badge hls-badge">WebRTC en Vivo (Edge)</span>
       </div>
     </div>
 

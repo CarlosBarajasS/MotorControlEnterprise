@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
+import { WebrtcViewerComponent } from '../camera-viewer/webrtc-viewer.component';
 
 const API_URL = '/api';
 
@@ -10,7 +10,7 @@ const API_URL = '/api';
     selector: 'app-dashboard',
     standalone: true,
     // ⚠️ AI_RULES: NO importar MotorControlComponent ni TelemetryDashboardComponent aquí
-    imports: [CommonModule, RouterModule, CameraViewerComponent],
+    imports: [CommonModule, RouterModule, WebrtcViewerComponent],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.scss'
 })
@@ -54,6 +54,8 @@ export class DashboardComponent implements OnInit {
     });
 
     selectedCameraStream: string | null = null;
+    selectedCameraPath: string | null = null;
+    private gatewayIdMap = new Map<number, string>();
 
     ngOnInit() {
         this.refreshAll();
@@ -70,6 +72,7 @@ export class DashboardComponent implements OnInit {
             next: (data) => {
                 const clients = data || [];
                 this.gateways.set(clients);
+                clients.forEach(c => this.gatewayIdMap.set(c.id, c.gatewayId));
                 const active = clients.filter(c => this.isActive(c)).length;
                 this.stats.set({ active, total: clients.length });
             },
@@ -99,12 +102,14 @@ export class DashboardComponent implements OnInit {
         return this.cameras().filter(c => c.clientId === gw.id);
     }
 
-    openCameraModal(streamUrl: string) {
-        this.selectedCameraStream = streamUrl;
+    openCameraModal(cam: any) {
+        this.selectedCameraPath = `${this.gatewayIdMap.get(cam.clientId) ?? ''}/${cam.cameraId ?? cam.cameraKey ?? cam.name}`;
+        this.selectedCameraStream = this.selectedCameraPath;
     }
 
     closeCameraModal() {
         this.selectedCameraStream = null;
+        this.selectedCameraPath = null;
     }
 
     // Legacy alias

@@ -62,10 +62,9 @@
       background: #000;
       position: relative;
 
-      .video-player {
+      app-webrtc-viewer {
         width: 100%;
         height: 100%;
-        object-fit: contain;
         display: block;
       }
     }
