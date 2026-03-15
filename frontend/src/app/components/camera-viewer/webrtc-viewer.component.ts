@@ -118,7 +118,10 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
             const whepUrl = `http://${window.location.hostname}:8891/${this.streamPath}/whep`;
             const res = await fetch(whepUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/sdp' },
+                headers: {
+                    'Content-Type': 'application/sdp',
+                    'Authorization': 'Basic ' + btoa('viewer:MCE-watch-2026')
+                },
                 body: this.pc!.localDescription!.sdp
             });
 
