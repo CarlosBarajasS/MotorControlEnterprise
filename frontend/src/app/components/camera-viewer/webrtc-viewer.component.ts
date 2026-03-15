@@ -1,7 +1,7 @@
 import { Component, Input, OnDestroy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-const WHEP_BASE = 'http://177.247.175.4:8889';
+const WHEP_BASE = 'http://177.247.175.4:8891';
 
 /**
  * WebRTC viewer via WHEP (WebRTC-HTTP Egress Protocol).
