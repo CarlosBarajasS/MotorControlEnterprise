@@ -21,7 +21,6 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
     private reconnectAttempts = 0;
     private readonly MAX_RECONNECT_ATTEMPTS = 8;
     private reconnectTimer: any = null;
-    private liveSnapInterval: any = null;
     private safariLoadedHandler: (() => void) | null = null;
     private safariErrorHandler: (() => void) | null = null;
 
@@ -66,15 +65,6 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
             this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 this.isLoading = false;
                 video.play().catch(() => { });
-                // Snap to live edge every 5s if drift > 8s
-                this.liveSnapInterval = setInterval(() => {
-                    if (!video.paused && video.seekable.length > 0) {
-                        const liveEdge = video.seekable.end(video.seekable.length - 1);
-                        if (liveEdge - video.currentTime > 8) {
-                            video.currentTime = liveEdge - 0.5;
-                        }
-                    }
-                }, 5000);
             });
             this.hls.on(Hls.Events.ERROR, (_, data) => {
                 if (!data.fatal) return;
@@ -136,10 +126,6 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
             clearTimeout(this.reconnectTimer);
             this.reconnectTimer = null;
         }
-        if (this.liveSnapInterval) {
-            clearInterval(this.liveSnapInterval);
-            this.liveSnapInterval = null;
-        }
         if (this.hls) {
             this.hls.destroy();
             this.hls = null;
@@ -178,9 +164,6 @@ export class CameraViewerComponent implements AfterViewInit, OnDestroy {
     ngOnDestroy() {
         if (this.reconnectTimer) {
             clearTimeout(this.reconnectTimer);
-        }
-        if (this.liveSnapInterval) {
-            clearInterval(this.liveSnapInterval);
         }
         const videoEl = this.videoEl?.nativeElement;
         if (videoEl) {
