@@ -2,12 +2,14 @@ import { Component, OnInit, OnDestroy, inject, signal, ViewChild, ElementRef, Af
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
+import { WebrtcViewerComponent } from '../camera-viewer/webrtc-viewer.component';
+
+const API_URL = '/api';
 
 @Component({
   selector: 'app-client-camera-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, CameraViewerComponent],
+  imports: [CommonModule, RouterModule, WebrtcViewerComponent],
   template: `
     <div class="detail-container" *ngIf="camera()">
       <div class="detail-topbar">
@@ -31,7 +33,7 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
       </div>
 
       <div class="video-wrapper">
-        <app-camera-viewer [streamUrl]="'/api/stream/' + camera().id + '/hls'" class="full-viewer"></app-camera-viewer>
+        <app-webrtc-viewer *ngIf="streamPath()" [streamPath]="streamPath()" class="full-viewer"></app-webrtc-viewer>
       </div>
 
       <!-- PTZ Controls -->
@@ -119,12 +121,36 @@ export class ClientCameraDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   camera = signal<any>(null);
+  streamPath = signal('');
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.http.get<any>(`/api/cameras/${id}`).subscribe({
-        next: (cam) => this.camera.set(cam),
+      this.http.get<any>(`${API_URL}/cameras/${id}`).subscribe({
+        next: (cam) => {
+          this.camera.set(cam);
+          this.http.get<any>(`${API_URL}/client/me`).subscribe({
+            next: (me) => {
+              const gatewayId = me.gatewayId ?? '';
+              const cameraKey = cam.cameraId ?? cam.cameraKey ?? cam.name;
+              if (gatewayId) {
+                this.streamPath.set(`${gatewayId}/${cameraKey}`);
+              } else {
+                // Fallback: look up gatewayId via /api/clients using camera's clientId
+                this.http.get<any[]>(`${API_URL}/clients`).subscribe({
+                  next: (clients) => {
+                    const match = clients.find((c: any) => c.id === cam.clientId);
+                    if (match?.gatewayId) {
+                      this.streamPath.set(`${match.gatewayId}/${cameraKey}`);
+                    }
+                  },
+                  error: (err) => console.error('Error loading clients for gatewayId fallback:', err)
+                });
+              }
+            },
+            error: (err) => console.error('Error loading client profile:', err)
+          });
+        },
         error: (err) => console.error('Error loading camera:', err)
       });
     }

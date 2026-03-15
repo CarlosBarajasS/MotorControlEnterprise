@@ -2,12 +2,14 @@ import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
+import { WebrtcViewerComponent } from '../camera-viewer/webrtc-viewer.component';
+
+const API_URL = '/api';
 
 @Component({
   selector: 'app-client-cameras',
   standalone: true,
-  imports: [CommonModule, RouterModule, CameraViewerComponent],
+  imports: [CommonModule, RouterModule, WebrtcViewerComponent],
   template: `
     <!-- NVR Monitor -->
     <div class="nvr-panel">
@@ -25,8 +27,8 @@ import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component'
 
       <div class="camera-grid" [style.grid-template-columns]="'repeat(' + gridCols + ', 1fr)'">
         <div class="camera-cell" *ngFor="let cam of cameras(); let i = index">
-          <app-camera-viewer [streamUrl]="'/api/stream/' + cam.id + '/hls'"
-                             class="cell-viewer"></app-camera-viewer>
+          <app-webrtc-viewer *ngIf="gatewayId()" [streamPath]="getWebrtcPath(cam)"
+                             class="cell-viewer"></app-webrtc-viewer>
           <div class="cell-overlay">
             <div class="cell-info">
               <span class="cell-name">{{ cam.name }}</span>
@@ -160,15 +162,44 @@ export class ClientCamerasComponent implements OnInit {
   private router = inject(Router);
 
   cameras = signal<any[]>([]);
+  gatewayId = signal('');
   gridCols = 2;
 
   onlineCount = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
 
   ngOnInit() {
-    this.http.get<any[]>('/api/cameras').subscribe({
+    this.http.get<any[]>(`${API_URL}/cameras`).subscribe({
       next: (cams) => this.cameras.set(cams || []),
       error: (err) => console.error('Error loading cameras:', err)
     });
+
+    this.http.get<any>(`${API_URL}/client/me`).subscribe({
+      next: (me) => {
+        if (me.gatewayId) {
+          this.gatewayId.set(me.gatewayId);
+        } else {
+          // Fallback: derive gatewayId from /api/clients using the camera's clientId
+          this.http.get<any[]>(`${API_URL}/clients`).subscribe({
+            next: (clients) => {
+              const cams = this.cameras();
+              if (cams.length > 0) {
+                const clientId = cams[0].clientId;
+                const match = clients.find((c: any) => c.id === clientId);
+                if (match?.gatewayId) {
+                  this.gatewayId.set(match.gatewayId);
+                }
+              }
+            },
+            error: (err) => console.error('Error loading clients for gatewayId fallback:', err)
+          });
+        }
+      },
+      error: (err) => console.error('Error loading client profile:', err)
+    });
+  }
+
+  getWebrtcPath(cam: any): string {
+    return `${this.gatewayId()}/${cam.cameraId ?? cam.cameraKey ?? cam.name}`;
   }
 
   isOnline(cam: any): boolean {
