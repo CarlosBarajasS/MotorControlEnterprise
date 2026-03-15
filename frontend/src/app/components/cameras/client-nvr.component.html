@@ -53,7 +53,14 @@
            [class.selected]="selectedCam()?.id === cam.id"
            (click)="selectCam(cam)">
 
+        <!-- Celda seleccionada con gatewayId → WebRTC (tiempo real para PTZ) -->
+        <app-webrtc-viewer
+          *ngIf="selectedCam()?.id === cam.id && gatewayId"
+          [streamPath]="getWebrtcPath(cam)">
+        </app-webrtc-viewer>
+        <!-- Resto de celdas → HLS -->
         <app-camera-viewer
+          *ngIf="selectedCam()?.id !== cam.id || !gatewayId"
           [streamUrl]="getHlsUrl(cam)"
           [hideOverlay]="true">
         </app-camera-viewer>

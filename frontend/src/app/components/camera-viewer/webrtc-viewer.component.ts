@@ -99,7 +99,8 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
             const offer = await this.pc.createOffer();
             await this.pc.setLocalDescription(offer);
 
-            const whepUrl = `/${this.streamPath}/whep`;
+            // Puerto 8891 directo — sin pasar por nginx para mínimo overhead
+            const whepUrl = `http://${window.location.hostname}:8891/${this.streamPath}/whep`;
             const res = await fetch(whepUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/sdp' },
