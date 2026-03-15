@@ -2,7 +2,6 @@ import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { CameraViewerComponent } from '../camera-viewer/camera-viewer.component';
 import { WebrtcViewerComponent } from '../camera-viewer/webrtc-viewer.component';
 
 const API_URL = '/api';
@@ -10,7 +9,7 @@ const API_URL = '/api';
 @Component({
     selector: 'app-client-nvr',
     standalone: true,
-    imports: [CommonModule, RouterModule, CameraViewerComponent, WebrtcViewerComponent],
+    imports: [CommonModule, RouterModule, WebrtcViewerComponent],
     templateUrl: './client-nvr.component.html',
     styleUrls: ['./client-nvr.component.scss']
 })
@@ -84,10 +83,6 @@ export class ClientNvrComponent implements OnInit {
 
     isOnline(cam: any): boolean {
         return !!cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 90_000;
-    }
-
-    getHlsUrl(cam: any): string {
-        return `${API_URL}/stream/${cam.id}/hls`;
     }
 
     getWebrtcPath(cam: any): string {

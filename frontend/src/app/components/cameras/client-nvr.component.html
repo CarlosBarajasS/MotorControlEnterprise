@@ -53,17 +53,7 @@
            [class.selected]="selectedCam()?.id === cam.id"
            (click)="selectCam(cam)">
 
-        <!-- WebRTC para todas las celdas cuando hay gatewayId -->
-        <app-webrtc-viewer
-          *ngIf="gatewayId"
-          [streamPath]="getWebrtcPath(cam)">
-        </app-webrtc-viewer>
-        <!-- Fallback HLS si no hay gatewayId configurado -->
-        <app-camera-viewer
-          *ngIf="!gatewayId"
-          [streamUrl]="getHlsUrl(cam)"
-          [hideOverlay]="true">
-        </app-camera-viewer>
+        <app-webrtc-viewer [streamPath]="getWebrtcPath(cam)"></app-webrtc-viewer>
 
         <div class="nvr-badge-top">
           <span class="live-dot" [class.online]="isOnline(cam)"></span>
