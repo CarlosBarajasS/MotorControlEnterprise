@@ -41,26 +41,20 @@ namespace MotorControlEnterprise.Api.Controllers
 
             try
             {
-                var gatewayId = camera!.Client?.GatewayId
-                    ?? await GetGatewayId(camera.ClientId);
-
+                var gatewayId = camera!.Client?.GatewayId ?? await GetGatewayId(camera.ClientId);
                 if (string.IsNullOrEmpty(gatewayId))
                     return BadRequest(new { message = "Esta cámara no tiene gateway asignado." });
 
                 var response = await _edge.RequestEdgeAsync(gatewayId, "ptz", "move",
-                    new { cameraId = camera.CameraId ?? camera.CameraKey, pan = req.Pan, tilt = req.Tilt, zoom = req.Zoom },
+                    new { cameraId = camera.CameraId ?? camera.CameraKey,
+                          pan = req.Pan, tilt = req.Tilt, zoom = req.Zoom,
+                          onvif = ExtractOnvif(camera.Metadata) },
                     8000, ct);
 
                 return Ok(new { success = true, response = JsonDocument.Parse(response).RootElement });
             }
-            catch (TimeoutException)
-            {
-                return StatusCode(504, new { message = "El gateway no respondió a tiempo." });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return StatusCode(503, new { message = ex.Message });
-            }
+            catch (TimeoutException) { return StatusCode(504, new { message = "El gateway no respondió a tiempo." }); }
+            catch (InvalidOperationException ex) { return StatusCode(503, new { message = ex.Message }); }
         }
 
         // ─── POST /api/cameras/{cameraId}/ptz/stop ────────────────────────────
@@ -76,20 +70,15 @@ namespace MotorControlEnterprise.Api.Controllers
                 if (string.IsNullOrEmpty(gatewayId))
                     return BadRequest(new { message = "Esta cámara no tiene gateway asignado." });
 
-                var response = await _edge.RequestEdgeAsync(gatewayId, "ptz", "stop",
-                    new { cameraId = camera.CameraId ?? camera.CameraKey },
+                await _edge.RequestEdgeAsync(gatewayId, "ptz", "stop",
+                    new { cameraId = camera.CameraId ?? camera.CameraKey,
+                          onvif = ExtractOnvif(camera.Metadata) },
                     8000, ct);
 
                 return Ok(new { success = true });
             }
-            catch (TimeoutException)
-            {
-                return StatusCode(504, new { message = "El gateway no respondió a tiempo." });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return StatusCode(503, new { message = ex.Message });
-            }
+            catch (TimeoutException) { return StatusCode(504, new { message = "El gateway no respondió a tiempo." }); }
+            catch (InvalidOperationException ex) { return StatusCode(503, new { message = ex.Message }); }
         }
 
         // ─── GET /api/cameras/{cameraId}/ptz/presets ─────────────────────────
@@ -106,19 +95,14 @@ namespace MotorControlEnterprise.Api.Controllers
                     return BadRequest(new { message = "Esta cámara no tiene gateway asignado." });
 
                 var response = await _edge.RequestEdgeAsync(gatewayId, "ptz", "listPresets",
-                    new { cameraId = camera.CameraId ?? camera.CameraKey },
+                    new { cameraId = camera.CameraId ?? camera.CameraKey,
+                          onvif = ExtractOnvif(camera.Metadata) },
                     10000, ct);
 
                 return Ok(JsonDocument.Parse(response).RootElement);
             }
-            catch (TimeoutException)
-            {
-                return StatusCode(504, new { message = "El gateway no respondió a tiempo." });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return StatusCode(503, new { message = ex.Message });
-            }
+            catch (TimeoutException) { return StatusCode(504, new { message = "El gateway no respondió a tiempo." }); }
+            catch (InvalidOperationException ex) { return StatusCode(503, new { message = ex.Message }); }
         }
 
         // ─── POST /api/cameras/{cameraId}/ptz/presets/{presetId}/goto ─────────
@@ -134,23 +118,42 @@ namespace MotorControlEnterprise.Api.Controllers
                 if (string.IsNullOrEmpty(gatewayId))
                     return BadRequest(new { message = "Esta cámara no tiene gateway asignado." });
 
-                var response = await _edge.RequestEdgeAsync(gatewayId, "ptz", "gotoPreset",
-                    new { cameraId = camera.CameraId ?? camera.CameraKey, presetId },
+                await _edge.RequestEdgeAsync(gatewayId, "ptz", "gotoPreset",
+                    new { cameraId = camera.CameraId ?? camera.CameraKey,
+                          presetId, onvif = ExtractOnvif(camera.Metadata) },
                     10000, ct);
 
                 return Ok(new { success = true });
             }
-            catch (TimeoutException)
-            {
-                return StatusCode(504, new { message = "El gateway no respondió a tiempo." });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return StatusCode(503, new { message = ex.Message });
-            }
+            catch (TimeoutException) { return StatusCode(504, new { message = "El gateway no respondió a tiempo." }); }
+            catch (InvalidOperationException ex) { return StatusCode(503, new { message = ex.Message }); }
         }
 
         // ─── Helpers ──────────────────────────────────────────────────────────
+        private static object? ExtractOnvif(string? metadataJson)
+        {
+            if (string.IsNullOrEmpty(metadataJson)) return null;
+            try
+            {
+                var doc = JsonDocument.Parse(metadataJson);
+                if (doc.RootElement.TryGetProperty("onvif", out var onvif))
+                {
+                    onvif.TryGetProperty("ip",   out var ip);
+                    onvif.TryGetProperty("port", out var port);
+                    onvif.TryGetProperty("user", out var user);
+                    onvif.TryGetProperty("pass", out var pass);
+                    var ipVal   = ip.ValueKind   == JsonValueKind.String ? ip.GetString()   : null;
+                    var userVal = user.ValueKind == JsonValueKind.String ? user.GetString() : null;
+                    var passVal = pass.ValueKind == JsonValueKind.String ? pass.GetString() : null;
+                    var portVal = port.ValueKind == JsonValueKind.Number ? port.GetInt32()  : 80;
+                    if (!string.IsNullOrEmpty(ipVal))
+                        return new { ip = ipVal, port = portVal, user = userVal, pass = passVal };
+                }
+            }
+            catch { /* malformed metadata — ignore */ }
+            return null;
+        }
+
         private async Task<(Models.Camera? camera, IActionResult? error)> GetPtzCamera(int cameraId)
         {
             var userId = int.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)
