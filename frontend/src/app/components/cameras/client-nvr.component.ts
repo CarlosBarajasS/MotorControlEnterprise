@@ -19,10 +19,12 @@ export class ClientNvrComponent implements OnInit {
     router = inject(Router);
 
     clientId = 0;
-    clientName = signal('');
-    cameras = signal<any[]>([]);
-    loading = signal(true);
-    loadError = signal(false);
+    clientName  = signal('');
+    cameras     = signal<any[]>([]);
+    loading     = signal(true);
+    loadError   = signal(false);
+    selectedCam = signal<any>(null);
+    ptzPresets  = signal<any[]>([]);
 
     onlineCount  = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
     offlineCount = computed(() => this.cameras().length - this.onlineCount());
@@ -66,6 +68,17 @@ export class ClientNvrComponent implements OnInit {
         });
     }
 
+    selectCam(cam: any | null) {
+        this.selectedCam.set(cam);
+        this.ptzPresets.set([]);
+        if (cam?.ptz) {
+            this.http.get<any[]>(`${API_URL}/cameras/${cam.id}/ptz/presets`).subscribe({
+                next: (p) => this.ptzPresets.set(p || []),
+                error: () => {}
+            });
+        }
+    }
+
     isOnline(cam: any): boolean {
         return !!cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 90_000;
     }
@@ -74,12 +87,43 @@ export class ClientNvrComponent implements OnInit {
         return `${API_URL}/stream/${cam.id}/hls`;
     }
 
-    goToDetail(id: number) {
-        this.router.navigate(['/cameras', id]);
-    }
-
     toggleFullscreen(event: MouseEvent, cell: HTMLDivElement) {
         event.stopPropagation();
         cell.requestFullscreen().catch(() => {});
+    }
+
+    // PTZ
+    ptzMove(pan: number, tilt: number, zoom: number) {
+        const cam = this.selectedCam();
+        if (!cam) return;
+        this.http.post(`${API_URL}/cameras/${cam.id}/ptz/move`, { pan, tilt, zoom }).subscribe();
+    }
+
+    ptzStop() {
+        const cam = this.selectedCam();
+        if (!cam) return;
+        this.http.post(`${API_URL}/cameras/${cam.id}/ptz/stop`, {}).subscribe();
+    }
+
+    gotoPreset(presetId: string) {
+        const cam = this.selectedCam();
+        if (!cam) return;
+        this.http.post(`${API_URL}/cameras/${cam.id}/ptz/presets/${presetId}/goto`, {}).subscribe();
+    }
+
+    takeSnapshot() {
+        const cam = this.selectedCam();
+        if (!cam) return;
+        window.open(`${API_URL}/stream/${cam.id}/snapshot`, '_blank');
+    }
+
+    camSummary(cam: any): string {
+        const d = cam?.metadata?.discovery;
+        if (!d) return '';
+        const parts: string[] = [];
+        if (d.brand) parts.push(d.brand);
+        if (d.model) parts.push(d.model);
+        if (d.resolution) parts.push(d.fps ? `${d.resolution} @ ${d.fps}fps` : d.resolution);
+        return parts.join(' · ');
     }
 }
