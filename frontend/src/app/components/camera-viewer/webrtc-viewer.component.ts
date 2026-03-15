@@ -99,12 +99,27 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
             const offer = await this.pc.createOffer();
             await this.pc.setLocalDescription(offer);
 
-            // Puerto 8891 directo — sin pasar por nginx para mínimo overhead
+            // Esperar a que ICE gathering termine — sin esto el SDP no tiene candidatos
+            // y MediaMTX devuelve 400
+            await new Promise<void>((resolve) => {
+                if (this.pc!.iceGatheringState === 'complete') {
+                    resolve();
+                } else {
+                    const handler = () => {
+                        if (this.pc?.iceGatheringState === 'complete') {
+                            this.pc.removeEventListener('icegatheringstatechange', handler);
+                            resolve();
+                        }
+                    };
+                    this.pc!.addEventListener('icegatheringstatechange', handler);
+                }
+            });
+
             const whepUrl = `http://${window.location.hostname}:8891/${this.streamPath}/whep`;
             const res = await fetch(whepUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/sdp' },
-                body: this.pc.localDescription!.sdp
+                body: this.pc!.localDescription!.sdp
             });
 
             if (!res.ok) throw new Error(`WHEP ${res.status}`);
