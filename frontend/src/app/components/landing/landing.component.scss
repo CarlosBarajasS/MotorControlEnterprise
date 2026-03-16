@@ -7,7 +7,7 @@ $accent: var(--accent);
 $muted: var(--muted);
 $ink: var(--ink);
 $green: var(--green);
-$purple: #8b5cf6;
+$purple: var(--purple);
 $amber: var(--amber);
 
 // ─── Root wrapper ─────────────────────────────────────────────────────────────
@@ -432,7 +432,7 @@ $amber: var(--amber);
     align-items: center;
     justify-content: center;
     padding: 10px 16px;
-    background: #f1f2f5;
+    background: var(--nav);
     border-bottom: 1px solid rgba(var(--ink-rgb), 0.06);
     position: relative;
     border-top-left-radius: 10px;
@@ -440,7 +440,7 @@ $amber: var(--amber);
 
     // Si estamos en dark mode, darle un tono mas oscuro estilo mac
     body:not(.theme-light) & {
-        background: #2a2b30;
+        background: var(--surface);
     }
 }
 
@@ -458,15 +458,15 @@ $amber: var(--amber);
     display: inline-block;
 
     &.red {
-        background: #ff5f56;
+        background: var(--red);
     }
 
     &.yellow {
-        background: #ffbd2e;
+        background: var(--amber);
     }
 
     &.green {
-        background: #27c93f;
+        background: var(--green);
     }
 }
 
@@ -574,7 +574,7 @@ $amber: var(--amber);
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: #00ff00;
+    background: var(--green);
     display: inline-block;
 }
 
@@ -1217,8 +1217,8 @@ $amber: var(--amber);
 
     &.checking {
         color: $muted;
-        background: rgba(148, 163, 184, 0.08);
-        border: 1px solid rgba(148, 163, 184, 0.15);
+        background: rgba(var(--muted-rgb), 0.08);
+        border: 1px solid rgba(var(--muted-rgb), 0.15);
 
         .status-dot {
             background: $muted;
@@ -1309,11 +1309,11 @@ $amber: var(--amber);
     }
 
     &.lp-contact-wa {
-        background: rgba(37, 211, 102, 0.08);
-        border-color: rgba(37, 211, 102, 0.25);
-        color: #22c55e;
-        .lp-contact-icon { background: rgba(37, 211, 102, 0.15); }
-        &:hover { background: rgba(37, 211, 102, 0.14); border-color: rgba(37, 211, 102, 0.45); }
+        background: rgba(var(--whatsapp-rgb), 0.08);
+        border-color: rgba(var(--whatsapp-rgb), 0.25);
+        color: var(--whatsapp);
+        .lp-contact-icon { background: rgba(var(--whatsapp-rgb), 0.15); }
+        &:hover { background: rgba(var(--whatsapp-rgb), 0.14); border-color: rgba(var(--whatsapp-rgb), 0.45); }
     }
 
     &.lp-contact-email {

@@ -22,7 +22,7 @@
         font-size: 28px;
         margin-bottom: 6px;
         margin-top: 0;
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: 'Syne', sans-serif;
         color: var(--ink);
     }
 
@@ -140,7 +140,7 @@
 .step-title {
     font-size: 24px;
     margin-bottom: 6px;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Syne', sans-serif;
     margin-top: 0;
     color: var(--ink);
 }
@@ -280,7 +280,7 @@
 
     &.success {
         background: rgba(var(--green-rgb), 0.08);
-        color: #34d399;
+        color: var(--teal);
         border-color: rgba(var(--green-rgb), 0.2);
     }
 
@@ -442,8 +442,8 @@
 }
 
 .cmd {
-    background: #060a13;
-    color: #38bdf8;
+    background: var(--nav);
+    color: var(--teal);
     padding: 10px 14px;
     border-radius: 8px;
     font-family: 'JetBrains Mono', monospace;
@@ -490,15 +490,15 @@
 .storage-config {
     margin-top: 16px;
     padding: 24px;
-    background: rgba(99, 102, 241, 0.04);
-    border: 1px solid rgba(99, 102, 241, 0.15);
+    background: rgba(var(--accent-rgb), 0.04);
+    border: 1px solid rgba(var(--accent-rgb), 0.15);
     border-radius: 16px;
 }
 
 .storage-title {
     font-size: 16px;
     margin: 0 0 18px;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Syne', sans-serif;
     color: var(--ink);
 }
 
@@ -546,8 +546,8 @@
     }
 
     &:hover {
-        border-color: rgba(99, 102, 241, 0.4);
-        background: rgba(99, 102, 241, 0.05);
+        border-color: rgba(var(--accent-rgb), 0.4);
+        background: rgba(var(--accent-rgb), 0.05);
     }
 
     &.selected {

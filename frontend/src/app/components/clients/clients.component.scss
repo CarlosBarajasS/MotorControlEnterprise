@@ -30,7 +30,7 @@
         gap: 4px;
 
         h1 {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: 'Syne', sans-serif;
             font-size: 24px;
             font-weight: 700;
             color: var(--ink);
@@ -39,7 +39,7 @@
         }
 
         p {
-            font-family: 'IBM Plex Sans', sans-serif;
+            font-family: 'Nunito Sans', sans-serif;
             font-size: 13px;
             color: var(--muted);
             margin: 0;
@@ -55,7 +55,7 @@
         border: none;
         border-radius: 8px;
         padding: 10px 16px;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Nunito Sans', sans-serif;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
@@ -87,7 +87,7 @@
         background: transparent;
         border: none;
         color: var(--ink);
-        font-family: 'IBM Plex Sans', sans-serif;
+        font-family: 'Nunito Sans', sans-serif;
         font-size: 13px;
         width: 100%;
         outline: none;
@@ -129,7 +129,7 @@
     align-items: flex-start;
 
     h3 {
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: 'Syne', sans-serif;
         font-size: 18px;
         font-weight: 600;
         color: var(--ink);
@@ -138,7 +138,7 @@
 
     .role {
         font-size: 12px;
-        color: #3b82f6;
+        color: var(--accent);
         font-weight: 600;
         margin: 0;
     }
@@ -199,7 +199,7 @@
     font-weight: 700;
     letter-spacing: 0.05em;
     background: rgba(var(--red-rgb), 0.15);
-    color: #fca5a5;
+    color: var(--red);
     cursor: pointer;
     transition: opacity 0.2s;
 
@@ -316,7 +316,7 @@
     width: 100%;
     max-width: 500px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: 'Nunito Sans', sans-serif;
 }
 
 .modal-header {
@@ -370,8 +370,8 @@
 
             &:focus {
                 outline: none;
-                border-color: #3b82f6;
-                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
             }
         }
     }
@@ -419,12 +419,12 @@
     font-weight: 700;
 
     &.admin {
-        background: #dbeafe;
-        color: #1e40af;
+        background: rgba(var(--accent-rgb), 0.15);
+        color: var(--accent);
     }
 
     &.client {
-        background: #f1f5f9;
+        background: rgba(var(--ink-rgb), 0.06);
         color: var(--nav-muted);
     }
 }

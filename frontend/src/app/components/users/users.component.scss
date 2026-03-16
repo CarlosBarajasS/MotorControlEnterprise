@@ -34,7 +34,7 @@
     align-items: center;
 
     .search-input {
-        background: rgba(0, 0, 0, 0.2);
+        background: rgba(var(--bg-rgb), 0.3);
         border: 1px solid var(--outline);
         color: var(--ink);
         padding: 8px 16px;
@@ -140,7 +140,7 @@
 
     &.admin {
         background: rgba(var(--amber-rgb), 0.15);
-        color: #fbbf24;
+        color: var(--amber);
         border-color: rgba(var(--amber-rgb), 0.3);
     }
 
@@ -203,7 +203,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(11, 17, 32, 0.8);
+    background: rgba(var(--bg-rgb), 0.8);
     backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
@@ -276,7 +276,7 @@
 }
 
 .form-control {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(var(--bg-rgb), 0.3);
     border: 1px solid rgba(var(--ink-rgb), 0.1);
     color: var(--ink);
     padding: 10px 14px;
@@ -292,7 +292,7 @@
     }
 
     &::placeholder {
-        color: rgba(148, 163, 184, 0.4);
+        color: rgba(var(--muted-rgb), 0.4);
     }
 }
 

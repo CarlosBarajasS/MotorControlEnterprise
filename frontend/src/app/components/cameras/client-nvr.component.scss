@@ -154,8 +154,8 @@
   display: inline-block;
   flex-shrink: 0;
   &.online {
-    background: #22c55e;
-    box-shadow: 0 0 5px #22c55e88;
+    background: var(--green);
+    box-shadow: 0 0 5px rgba(var(--green-rgb), 0.53);
   }
 }
 

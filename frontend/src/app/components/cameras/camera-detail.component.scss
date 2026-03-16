@@ -1,6 +1,6 @@
 .layout-container {
   padding: 30px;
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   color: var(--ink);
 
   @media (max-width: 768px) {
@@ -88,7 +88,7 @@
       }
 
       .hls-badge {
-        background: #3b82f6;
+        background: var(--accent);
         color: white;
         padding: 4px 8px;
         border-radius: 6px;
