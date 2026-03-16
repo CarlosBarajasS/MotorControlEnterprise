@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { timer, Subscription, switchMap } from 'rxjs';
 import { WebrtcViewerComponent } from '../camera-viewer/webrtc-viewer.component';
 
 const API_URL = '/api';
@@ -157,9 +158,10 @@ const API_URL = '/api';
     }
   `]
 })
-export class ClientCamerasComponent implements OnInit {
+export class ClientCamerasComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private pollSub?: Subscription;
 
   cameras = signal<any[]>([]);
   gatewayId = signal('');
@@ -168,15 +170,19 @@ export class ClientCamerasComponent implements OnInit {
   onlineCount = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
 
   ngOnInit() {
-    this.http.get<any>(`${API_URL}/client/me`).subscribe({
+    this.pollSub = timer(0, 20000).pipe(
+      switchMap(() => this.http.get<any>(`${API_URL}/client/me`))
+    ).subscribe({
       next: (me) => {
         this.cameras.set(me.cameras || []);
-        if (me.gatewayId) {
-          this.gatewayId.set(me.gatewayId);
-        }
+        if (me.gatewayId) this.gatewayId.set(me.gatewayId);
       },
       error: (err) => console.error('Error loading client profile:', err)
     });
+  }
+
+  ngOnDestroy() {
+    this.pollSub?.unsubscribe();
   }
 
   getWebrtcPath(cam: any): string {
@@ -184,6 +190,6 @@ export class ClientCamerasComponent implements OnInit {
   }
 
   isOnline(cam: any): boolean {
-    return cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 60000;
+    return !!cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 90000;
   }
 }

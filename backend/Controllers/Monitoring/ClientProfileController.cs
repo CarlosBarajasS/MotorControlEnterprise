@@ -34,7 +34,7 @@ namespace MotorControlEnterprise.Api.Controllers
                 return NotFound(new { error = "Perfil de cliente no encontrado" });
 
             var cameras = await _db.Cameras
-                .Where(c => c.ClientId == client.Id)
+                .Where(c => c.ClientId == client.Id && !c.IsRecordingOnly)
                 .Select(c => new
                 {
                     c.Id,
