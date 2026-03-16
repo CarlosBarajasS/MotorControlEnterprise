@@ -45,3 +45,9 @@ scripts/start-observability.sh
 
 # Git worktrees
 .worktrees/
+
+# Docs internos — planes, specs, sprints, reviews (solo locales)
+docs/plans/
+docs/archived/
+docs/superpowers/
+docs/reviews/
