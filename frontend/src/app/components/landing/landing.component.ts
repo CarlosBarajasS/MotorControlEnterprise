@@ -77,7 +77,7 @@ export class LandingComponent implements OnInit, AfterViewInit {
   checkHealth() {
     this.http.get<{ status: string }>('/health').subscribe({
       next: (res) => {
-        this.serverStatus = res?.status === 'Healthy' ? 'online' : 'offline';
+        this.serverStatus = res?.status === 'healthy' ? 'online' : 'offline';
       },
       error: () => {
         this.serverStatus = 'offline';
