@@ -8,9 +8,10 @@
         </a>
         <div class="lp-nav-links">
             <a href="#plataforma" class="lp-nav-link">Plataforma</a>
-            <a href="#edge" class="lp-nav-link">Edge</a>
-            <a href="#seguridad" class="lp-nav-link">Seguridad</a>
+            <a href="#edge" class="lp-nav-link">Servicios</a>
+            <a href="#seguridad" class="lp-nav-link">Privacidad</a>
             <a href="#filosofia" class="lp-nav-link">Nosotros</a>
+            <a href="#contacto" class="lp-nav-link">Contacto</a>
         </div>
         <div class="lp-nav-right">
             <button class="theme-pill" (click)="toggleTheme()" [class.light]="isLightMode" aria-label="Cambiar tema">
@@ -33,7 +34,7 @@
                     </svg>
                 </div>
             </button>
-            <a routerLink="/login" class="lp-nav-cta">Acceso Clientes →</a>
+            <a routerLink="/login" class="lp-nav-cta">Ya soy cliente →</a>
             <button class="lp-hamburger" (click)="toggleMobileMenu()" [class.open]="isMobileMenuOpen" aria-label="Abrir menú" [attr.aria-expanded]="isMobileMenuOpen">
                 <span></span>
                 <span></span>
@@ -46,17 +47,18 @@
     <div class="lp-mobile-menu" [class.open]="isMobileMenuOpen" (click)="toggleMobileMenu()">
         <div class="lp-mobile-menu-content" (click)="$event.stopPropagation()">
             <a href="#plataforma" class="lp-mobile-link" (click)="toggleMobileMenu()">Plataforma</a>
-            <a href="#edge" class="lp-mobile-link" (click)="toggleMobileMenu()">Edge</a>
-            <a href="#seguridad" class="lp-mobile-link" (click)="toggleMobileMenu()">Seguridad</a>
+            <a href="#edge" class="lp-mobile-link" (click)="toggleMobileMenu()">Servicios</a>
+            <a href="#seguridad" class="lp-mobile-link" (click)="toggleMobileMenu()">Privacidad</a>
             <a href="#filosofia" class="lp-mobile-link" (click)="toggleMobileMenu()">Nosotros</a>
-            <a routerLink="/login" class="lp-btn-primary lp-mobile-cta" (click)="toggleMobileMenu()">Acceso Clientes →</a>
+            <a href="#contacto" class="lp-mobile-link" (click)="toggleMobileMenu()">Contacto</a>
+            <a routerLink="/login" class="lp-btn-primary lp-mobile-cta" (click)="toggleMobileMenu()">Ya soy cliente →</a>
         </div>
     </div>
 
     <!-- ═══ HERO ═══ -->
     <section class="lp-hero" id="plataforma">
         <div class="lp-hero-left">
-            <div class="lp-badge">✦ PLATAFORMA EDGE-FIRST</div>
+            <div class="lp-badge">✦ SERVICIO DE VIDEOVIGILANCIA PROFESIONAL</div>
             <div class="lp-server-status" [class.online]="serverStatus === 'online'"
                 [class.offline]="serverStatus === 'offline'" [class.checking]="serverStatus === 'checking'">
                 <span class="status-dot"></span>
@@ -65,22 +67,20 @@
                 <span *ngIf="serverStatus === 'checking'">Verificando estado...</span>
             </div>
             <h1 class="lp-hero-h1">
-                Videovigilancia<br>
-                <span class="lp-accent">inteligente</span> al borde
+                Protege tu negocio<br>
+                con cámaras que<br>
+                <span class="lp-accent">nunca descansan</span>
             </h1>
             <p class="lp-hero-sub">
-                Unifica tus flujos RTSP, gestiona gateways distribuidos y blinda el
-                acceso con IAM de confianza cero. Todo en un solo panel de cristal.
+                Instalamos, configuramos y monitoreamos tu sistema de cámaras.
+                Tú ves todo desde tu celular o computadora, en tiempo real,
+                desde cualquier lugar.
             </p>
             <div class="lp-hero-ctas">
-                <a routerLink="/login" class="lp-btn-primary">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M23 7l-7 5 7 5V7z" />
-                        <rect x="1" y="5" width="15" height="14" rx="2" />
-                    </svg>
-                    Portal de Clientes
+                <a href="#contacto" class="lp-btn-primary">
+                    Solicitar información →
                 </a>
-                <a href="#plataforma" class="lp-btn-ghost">Explorar Plataforma</a>
+                <a routerLink="/login" class="lp-btn-ghost">¿Ya eres cliente? Ingresa aquí</a>
             </div>
         </div>
         <div class="lp-hero-right">
@@ -115,7 +115,7 @@
 
     <!-- ═══ TRUST BAR ═══ -->
     <div class="lp-trust-bar">
-        <p class="lp-trust-label">LA INFRAESTRUCTURA ELEGIDA POR LÍDERES INDUSTRIALES</p>
+        <p class="lp-trust-label">EMPRESAS Y NEGOCIOS QUE NOS CONFÍAN SU SEGURIDAD</p>
         <div class="lp-trust-logos">
             <span>ACME Corp</span>
             <span>GlobalLogistics</span>
@@ -128,31 +128,31 @@
     <!-- ═══ FEATURES ═══ -->
     <section class="lp-features" id="edge">
         <div class="lp-section-hdr">
-            <p class="lp-section-label">ARQUITECTURA MODULAR</p>
-            <h2>Arquitectura de Próxima Generación</h2>
-            <p class="lp-section-sub">Tres pilares diseñados para operar donde la conexión cloud no llega.</p>
+            <p class="lp-section-label">LO QUE INCLUYE EL SERVICIO</p>
+            <h2>Todo lo que necesitas para estar tranquilo</h2>
+            <p class="lp-section-sub">Nos encargamos de todo, de principio a fin.</p>
         </div>
         <div class="lp-features-grid">
             <div class="lp-feature-card">
                 <div class="lp-feat-icon blue">🎥</div>
-                <h3>NVR Nativo en HLS</h3>
-                <p>Transcodifica feeds RTSP a HLS directamente en el edge. Sin retraso, sin latencia cloud.
-                    Visualización en vivo integrada al dashboard.</p>
-                <div class="lp-feat-tag">Video Edge</div>
+                <h3>Video en vivo desde cualquier lugar</h3>
+                <p>Ve tus cámaras en tiempo real desde tu teléfono o computadora.
+                    Sin retrasos, sin complicaciones.</p>
+                <div class="lp-feat-tag">Video HD en Vivo</div>
             </div>
             <div class="lp-feature-card">
                 <div class="lp-feat-icon green">⚡</div>
-                <h3>Gateways Distribuidos</h3>
-                <p>Administra múltiples nodos edge desde un panel central. Monitoreo de salud, conectividad y alertas en
-                    tiempo real por gateway.</p>
-                <div class="lp-feat-tag">Edge Computing</div>
+                <h3>Instalación y soporte incluido</h3>
+                <p>Nos encargamos de todo: instalación, configuración y mantenimiento.
+                    Tú solo disfruta la tranquilidad.</p>
+                <div class="lp-feat-tag">Servicio Completo</div>
             </div>
             <div class="lp-feature-card" id="seguridad">
                 <div class="lp-feat-icon purple">🔐</div>
-                <h3>IAM de Confianza Cero</h3>
-                <p>Roles granulares por planta, 2FA obligatorio y auditoría completa de accesos por operario. Control de
-                    identidad que no negocia.</p>
-                <div class="lp-feat-tag">Seguridad IAM</div>
+                <h3>Acceso seguro y privado</h3>
+                <p>Solo tú y las personas que autorices pueden ver tus cámaras.
+                    Tu privacidad es nuestra prioridad.</p>
+                <div class="lp-feat-tag">Privacidad Garantizada</div>
             </div>
         </div>
     </section>
@@ -163,38 +163,42 @@
             <div class="lp-philosophy-card">
                 <div class="lp-phil-icon">🎯</div>
                 <h3>Misión</h3>
-                <p>Brindar soluciones de videovigilancia y control de acceso robustas y eficientes en el edge,
-                    garantizando la seguridad, disponibilidad y privacidad de la información para operaciones
-                    industriales críticas.</p>
+                <p>Darte la tranquilidad de saber que tu negocio está protegido,
+                    sin que tengas que ser un experto en tecnología.</p>
             </div>
             <div class="lp-philosophy-card">
                 <div class="lp-phil-icon">🔭</div>
                 <h3>Visión</h3>
-                <p>Ser el estándar líder en plataformas de seguridad IoT para el sector corporativo, transformando
-                    arquitecturas tradicionales en ecosistemas modernos, unificados e hiper-escalables de confianza
-                    cero.</p>
+                <p>Ser la empresa de videovigilancia más confiable de la región,
+                    combinando tecnología moderna con atención humana.</p>
             </div>
             <div class="lp-philosophy-card">
                 <div class="lp-phil-icon">⚖️</div>
                 <h3>Políticas</h3>
-                <p>Nos regimos por la excelencia operativa, transparencia con nuestros clientes y el compromiso
-                    inquebrantable de proteger sus datos mediante sistemas On-Premise/Cloud auditables y seguros.</p>
+                <p>Trabajamos con discreción, honestidad y respeto por tu privacidad.
+                    Tus imágenes son tuyas.</p>
             </div>
         </div>
     </section>
 
-    <!-- ═══ FINAL CTA ═══ -->
-    <section class="lp-cta-section" id="acceso">
+    <!-- ═══ CONTACTO ═══ -->
+    <section class="lp-cta-section" id="contacto">
         <div class="lp-cta-card">
-            <p class="lp-section-label">ACCESO A LA PLATAFORMA</p>
-            <h2>¿Listo para ver tu red<br>en tiempo real?</h2>
-            <p>Monitorea tu infraestructura de videovigilancia distribuida con capacidades edge el mismo día. Exclusivo
-                para clientes corporativos.
-            </p>
-            <a routerLink="/login" class="lp-btn-primary lp-btn-lg">
-                Acceder al Portal
-            </a>
-            <p class="lp-cta-note">Seguridad garantizada · Autenticación 2FA · Soporte 24/7 disponible</p>
+            <p class="lp-section-label">CONTÁCTANOS</p>
+            <h2>¿Listo para proteger<br>tu negocio?</h2>
+            <p>Respondemos en menos de 24 horas. Sin compromisos.</p>
+            <div class="lp-hero-ctas">
+                <a href="https://wa.me/XXXXXXXXXX" target="_blank" rel="noopener" class="lp-btn-primary lp-btn-lg">
+                    📱 WhatsApp
+                </a>
+                <a href="mailto:contacto@nirmgroup.com" class="lp-btn-ghost">
+                    ✉️ Correo
+                </a>
+                <a href="tel:+XXXXXXXXXX" class="lp-btn-ghost">
+                    📞 Llamada
+                </a>
+            </div>
+            <p class="lp-cta-note">¿Ya tienes servicio activo? <a routerLink="/login" style="color: inherit; font-weight: 700;">Accede a tu portal aquí →</a></p>
         </div>
     </section>
 
@@ -206,14 +210,15 @@
                     <div class="lp-brand-icon sm">m</div>
                     <span>NIRM GROUP</span>
                 </div>
-                <p>Plataforma de videovigilancia IoT y monitoreo edge distribuido.</p>
+                <p>Servicio profesional de instalación y monitoreo de cámaras de seguridad.</p>
             </div>
             <div class="lp-footer-col">
                 <h4>PLATAFORMA</h4>
-                <a href="#plataforma">Dashboard</a>
-                <a href="#edge">Edge Gateway</a>
-                <a href="#edge">NVR en Vivo</a>
-                <a href="#seguridad">Seguridad IAM</a>
+                <a href="#plataforma">Inicio</a>
+                <a href="#edge">Servicios</a>
+                <a href="#edge">Video en Vivo</a>
+                <a href="#seguridad">Privacidad y Acceso</a>
+                <a href="#contacto">Contacto</a>
             </div>
             <div class="lp-footer-col">
                 <h4>COMPAÑÍA</h4>
