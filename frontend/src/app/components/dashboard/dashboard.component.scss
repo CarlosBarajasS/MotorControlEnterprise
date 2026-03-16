@@ -1,3 +1,25 @@
+// ─── PAGE ENTRANCE ANIMATION ─────────────────────────────────────────────────
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-wrap {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.fade-section {
+  opacity: 0;
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
 // ─── TOPBAR ACTIONS ──────────────────────────────────────────────────────────
 .topbar-actions {
   display: flex;
@@ -172,6 +194,18 @@
   background: var(--accent);
   border-radius: 4px;
   transition: width 0.5s ease;
+
+  &--green {
+    background: var(--green);
+  }
+
+  &--teal {
+    background: var(--teal);
+  }
+
+  &--red {
+    background: var(--red);
+  }
 }
 
 // ─── SECTION HEADER ──────────────────────────────────────────────────────────
@@ -416,6 +450,21 @@
 
     &:nth-child(even) {
       background: rgba(var(--ink-rgb), 0.02);
+    }
+
+    &.row-online {
+      background: rgba(var(--green-rgb), 0.03);
+      border-left: 2px solid rgba(var(--green-rgb), 0.3);
+    }
+
+    &.row-offline {
+      background: rgba(var(--red-rgb), 0.03);
+      border-left: 2px solid rgba(var(--red-rgb), 0.25);
+    }
+
+    &.row-stream {
+      background: rgba(var(--teal-rgb), 0.03);
+      border-left: 2px solid rgba(var(--teal-rgb), 0.25);
     }
   }
 

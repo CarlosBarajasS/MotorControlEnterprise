@@ -2,6 +2,12 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
+    animation: fadeInUp 0.4s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .topbar-actions {
@@ -23,6 +29,7 @@
     border: 1px solid var(--outline);
     padding: 0;
     overflow: hidden;
+    animation: fadeInUp 0.4s ease-out 0.08s both;
 }
 
 .filters-bar {
@@ -181,6 +188,19 @@
     color: var(--muted);
 }
 
+.action-cell {
+    white-space: nowrap;
+
+    .actions-btn {
+        opacity: 0.4;
+        transition: opacity 0.15s;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+}
+
 .actions-btn {
     background: transparent;
     border: none;
@@ -196,6 +216,11 @@
     }
 }
 
+.actions-btn.danger:hover {
+    background: rgba(var(--red-rgb), 0.12);
+    color: var(--red);
+}
+
 /* Modal Estilos Ajustados a Dark Mode */
 .modal-overlay {
     position: fixed;
@@ -209,6 +234,7 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    animation: overlayFadeIn 0.2s ease-out forwards;
 }
 
 .modal-content {
@@ -218,6 +244,17 @@
     width: 480px;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
     overflow: hidden;
+    animation: modalScaleIn 0.22s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+
+@keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes modalScaleIn {
+    from { opacity: 0; transform: scale(0.94) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .modal-header {
@@ -338,6 +375,10 @@ option {
     .form-row {
         flex-direction: column;
         gap: 0;
+    }
+
+    .action-cell .actions-btn {
+        opacity: 0.8;
     }
 }
 

@@ -96,6 +96,18 @@ body.theme-light {
     box-sizing: border-box;
 }
 
+/* Focus ring — keyboard navigation */
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* Remove default outline for mouse users */
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
 body {
     font-family: 'Nunito Sans', sans-serif;
     background:
@@ -237,4 +249,25 @@ h3 {
     background: rgba(var(--amber-rgb), 0.12);
     color: var(--amber);
     border-color: rgba(var(--amber-rgb), 0.2);
+}
+
+/* Modal entrance animations — reusable across all components */
+@keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes modalScaleIn {
+    from { opacity: 0; transform: scale(0.95) translateY(6px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes skPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
 }

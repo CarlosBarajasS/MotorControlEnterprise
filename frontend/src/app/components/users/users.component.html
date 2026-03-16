@@ -78,8 +78,8 @@
                     <td class="last-login">
                         {{ u.name ? 'Hace 2 horas' : 'Nunca' }}
                     </td>
-                    <td>
-                        <button class="actions-btn" (click)="deleteUser(u.id)">
+                    <td class="action-cell">
+                        <button class="actions-btn danger" (click)="deleteUser(u.id)">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <circle cx="12" cy="12" r="1" />

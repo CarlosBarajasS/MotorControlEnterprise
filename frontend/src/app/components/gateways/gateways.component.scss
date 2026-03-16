@@ -4,19 +4,17 @@
     flex-direction: column;
     gap: 24px;
     padding-bottom: 40px;
-    animation: fadeIn 0.4s ease-out forwards;
+    animation: fadeInUp 0.4s ease-out forwards;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.reveal-section {
+    opacity: 0;
+    animation: fadeInUp 0.4s ease-out forwards;
 }
 
 /* ─── TOP HEADER ─────────────────────── */
@@ -194,13 +192,13 @@
     .gw-icon {
         width: 44px;
         height: 44px;
-        background: rgba(var(--nav-rgb), 0.6);
-        border: 1px solid rgba(var(--ink-rgb), 0.06);
+        background: rgba(var(--accent-rgb), 0.08);
+        border: 1px solid rgba(var(--accent-rgb), 0.15);
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--muted);
+        color: var(--accent);
     }
 
     .gw-identity {

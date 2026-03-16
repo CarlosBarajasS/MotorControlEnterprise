@@ -1,5 +1,7 @@
 <!-- ⚠️ MÓDULO 1 — SOLO Sistema de Monitoreo. SIN motores, SIN telemetría HMI. Ver AI_RULES.md -->
 
+<div class="dashboard-wrap">
+
 <!-- TOPBAR -->
 <div class="topbar">
   <div>
@@ -17,7 +19,7 @@
 </div>
 
 <!-- STAT CARDS (4) -->
-<div class="stats-grid">
+<div class="stats-grid fade-section" style="animation-delay: 0.05s">
   <div class="stat-card">
     <div class="stat-icon green">
       <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -29,6 +31,10 @@
       <div class="stat-value">{{ stats().active }}<span class="stat-total"> / {{ stats().total }}</span></div>
       <div class="stat-label">Gateways Activos</div>
       <div class="stat-sub">nodos edge registrados</div>
+      <div class="stat-progress">
+        <div class="stat-progress-bar stat-progress-bar--green"
+          [style.width.%]="stats().total > 0 ? (stats().active / stats().total) * 100 : 0"></div>
+      </div>
     </div>
   </div>
   <div class="stat-card">
@@ -42,6 +48,10 @@
       <div class="stat-value">{{ camerasOnline() }}</div>
       <div class="stat-label">Cámaras Online</div>
       <div class="stat-sub">transmitiendo ahora</div>
+      <div class="stat-progress">
+        <div class="stat-progress-bar stat-progress-bar--teal"
+          [style.width.%]="cameras().length > 0 ? (camerasOnline() / cameras().length) * 100 : 0"></div>
+      </div>
     </div>
   </div>
   <div class="stat-card">
@@ -55,6 +65,10 @@
       <div class="stat-value">{{ camerasOffline() }}</div>
       <div class="stat-label">Cámaras Offline</div>
       <div class="stat-sub">sin señal actualmente</div>
+      <div class="stat-progress">
+        <div class="stat-progress-bar stat-progress-bar--red"
+          [style.width.%]="cameras().length > 0 ? (camerasOffline() / cameras().length) * 100 : 0"></div>
+      </div>
     </div>
   </div>
   <div class="stat-card">
@@ -75,6 +89,7 @@
 </div>
 
 <!-- GATEWAYS GRID -->
+<div class="fade-section" style="animation-delay: 0.1s">
 <div class="section-hdr">
   <h2>Gateways Edge</h2>
   <span class="section-count">{{ gateways().length }} nodos registrados</span>
@@ -122,8 +137,10 @@
     <p>Configura un nuevo nodo edge desde el Wizard de instalación.</p>
   </div>
 </div>
+</div><!-- /.fade-section gateways -->
 
 <!-- ACTIVIDAD RECIENTE -->
+<div class="fade-section" style="animation-delay: 0.15s">
 <div class="section-hdr" style="margin-top: 32px;">
   <h2>Actividad Reciente</h2>
   <span class="section-count">Últimos eventos del sistema</span>
@@ -139,7 +156,10 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let ev of recentActivity()">
+      <tr *ngFor="let ev of recentActivity()"
+        [class.row-online]="ev.type === 'online'"
+        [class.row-offline]="ev.type === 'offline'"
+        [class.row-stream]="ev.type === 'stream'">
         <td class="font-medium">{{ ev.event }}</td>
         <td class="text-muted mono">{{ ev.gateway }}</td>
         <td><span class="badge" [class.online]="ev.type === 'online'" [class.offline]="ev.type === 'offline'"
@@ -152,6 +172,9 @@
     </tbody>
   </table>
 </div>
+</div><!-- /.fade-section activity -->
+
+</div><!-- /.dashboard-wrap -->
 
 <!-- MODAL VISOR -->
 <div class="modal-overlay" *ngIf="selectedCameraPath" (click)="closeCameraModal()">
