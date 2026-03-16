@@ -57,7 +57,7 @@
 
     <!-- ═══ HERO ═══ -->
     <section class="lp-hero" id="plataforma">
-        <div class="lp-hero-left">
+        <div class="lp-hero-left reveal">
             <div class="lp-badge">✦ SERVICIO DE VIDEOVIGILANCIA PROFESIONAL</div>
             <div class="lp-server-status" [class.online]="serverStatus === 'online'"
                 [class.offline]="serverStatus === 'offline'" [class.checking]="serverStatus === 'checking'">
@@ -83,7 +83,7 @@
                 <a routerLink="/login" class="lp-btn-ghost">¿Ya eres cliente? Ingresa aquí</a>
             </div>
         </div>
-        <div class="lp-hero-right">
+        <div class="lp-hero-right reveal reveal-delay-2">
             <div class="lp-dashboard-mock">
                 <!-- NVR panel mockup inside hero -->
                 <div class="mock-nav">
@@ -116,23 +116,32 @@
     <!-- ═══ TRUST BAR ═══ -->
     <div class="lp-trust-bar">
         <p class="lp-trust-label">EMPRESAS Y NEGOCIOS QUE NOS CONFÍAN SU SEGURIDAD</p>
-        <div class="lp-trust-logos">
-            <span>ACME Corp</span>
-            <span>GlobalLogistics</span>
-            <span>TechFab</span>
-            <span>NIRM Systems</span>
-            <span>IndustrialX</span>
+        <div class="lp-trust-track">
+            <div class="lp-trust-logos">
+                <span>ACME Corp</span>
+                <span>GlobalLogistics</span>
+                <span>TechFab</span>
+                <span>NIRM Systems</span>
+                <span>IndustrialX</span>
+            </div>
+            <div class="lp-trust-logos" aria-hidden="true">
+                <span>ACME Corp</span>
+                <span>GlobalLogistics</span>
+                <span>TechFab</span>
+                <span>NIRM Systems</span>
+                <span>IndustrialX</span>
+            </div>
         </div>
     </div>
 
     <!-- ═══ FEATURES ═══ -->
     <section class="lp-features" id="edge">
-        <div class="lp-section-hdr">
+        <div class="lp-section-hdr reveal">
             <p class="lp-section-label">LO QUE INCLUYE EL SERVICIO</p>
             <h2>Todo lo que necesitas para estar tranquilo</h2>
             <p class="lp-section-sub">Nos encargamos de todo, de principio a fin.</p>
         </div>
-        <div class="lp-features-grid">
+        <div class="lp-features-grid reveal reveal-delay-1">
             <div class="lp-feature-card">
                 <div class="lp-feat-icon blue">🎥</div>
                 <h3>Video en vivo desde cualquier lugar</h3>
@@ -159,7 +168,7 @@
 
     <!-- ═══ FILOSOFÍA ═══ -->
     <section class="lp-philosophy" id="filosofia">
-        <div class="lp-philosophy-grid">
+        <div class="lp-philosophy-grid reveal">
             <div class="lp-philosophy-card">
                 <div class="lp-phil-icon">🎯</div>
                 <h3>Misión</h3>
@@ -183,19 +192,34 @@
 
     <!-- ═══ CONTACTO ═══ -->
     <section class="lp-cta-section" id="contacto">
-        <div class="lp-cta-card">
+        <div class="lp-cta-card reveal">
             <p class="lp-section-label">CONTÁCTANOS</p>
             <h2>¿Listo para proteger<br>tu negocio?</h2>
             <p>Respondemos en menos de 24 horas. Sin compromisos.</p>
-            <div class="lp-hero-ctas">
-                <a href="https://wa.me/XXXXXXXXXX" target="_blank" rel="noopener" class="lp-btn-primary lp-btn-lg">
-                    📱 WhatsApp
+            <div class="lp-contact-channels">
+                <a href="https://wa.me/XXXXXXXXXX" target="_blank" rel="noopener" class="lp-contact-card lp-contact-wa">
+                    <div class="lp-contact-icon">📱</div>
+                    <div class="lp-contact-info">
+                        <span class="lp-contact-label">WhatsApp</span>
+                        <span class="lp-contact-sub">Respuesta inmediata</span>
+                    </div>
+                    <span class="lp-contact-arrow">→</span>
                 </a>
-                <a href="mailto:contacto@nirmgroup.com" class="lp-btn-ghost">
-                    ✉️ Correo
+                <a href="mailto:contacto@nirmgroup.com" class="lp-contact-card lp-contact-email">
+                    <div class="lp-contact-icon">✉️</div>
+                    <div class="lp-contact-info">
+                        <span class="lp-contact-label">Correo</span>
+                        <span class="lp-contact-sub">En menos de 24 horas</span>
+                    </div>
+                    <span class="lp-contact-arrow">→</span>
                 </a>
-                <a href="tel:+XXXXXXXXXX" class="lp-btn-ghost">
-                    📞 Llamada
+                <a href="tel:+XXXXXXXXXX" class="lp-contact-card lp-contact-phone">
+                    <div class="lp-contact-icon">📞</div>
+                    <div class="lp-contact-info">
+                        <span class="lp-contact-label">Llamada</span>
+                        <span class="lp-contact-sub">Lun–Vie, 9am–6pm</span>
+                    </div>
+                    <span class="lp-contact-arrow">→</span>
                 </a>
             </div>
             <p class="lp-cta-note">¿Ya tienes servicio activo? <a routerLink="/login" style="color: inherit; font-weight: 700;">Accede a tu portal aquí →</a></p>

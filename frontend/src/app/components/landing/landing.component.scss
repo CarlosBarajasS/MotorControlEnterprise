@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Nunito+Sans:wght@400;500;600;700&display=swap');
 
 // ─── Variables ────────────────────────────────────────────────────────────────
 $bg: var(--bg);
@@ -14,7 +14,7 @@ $amber: var(--amber);
 .lp-root {
     background: $bg;
     color: $ink;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Nunito Sans', sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
 
@@ -33,7 +33,7 @@ $amber: var(--amber);
     h1,
     h2,
     h3 {
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: 'Syne', sans-serif;
         letter-spacing: -0.02em;
     }
 }
@@ -81,7 +81,7 @@ $amber: var(--amber);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Syne', sans-serif;
     font-size: 18px;
     font-weight: 700;
     color: #fff;
@@ -95,7 +95,7 @@ $amber: var(--amber);
 }
 
 .lp-brand-name {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Syne', sans-serif;
     font-size: 15px;
     font-weight: 500;
     color: $ink;
@@ -357,7 +357,7 @@ $amber: var(--amber);
     box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.35);
     cursor: pointer;
     border: none;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Nunito Sans', sans-serif;
 
     &:hover {
         background: var(--accent-hover);
@@ -608,38 +608,44 @@ $amber: var(--amber);
     text-transform: uppercase;
 }
 
+.lp-trust-track {
+    overflow: hidden;
+    width: 100%;
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+
 .lp-trust-logos {
     display: flex;
-    gap: 56px;
+    gap: 64px;
     align-items: center;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-shrink: 0;
+    animation: marquee-scroll 22s linear infinite;
 
     span {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 20px;
+        font-family: 'Syne', sans-serif;
+        font-size: 18px;
         font-weight: 700;
         color: $ink;
-        opacity: 0.45;
-        transition: opacity 0.2s;
+        opacity: 0.4;
+        white-space: nowrap;
         cursor: default;
+        transition: opacity 0.2s;
 
         &:hover {
             opacity: 0.7;
         }
     }
+}
 
-    @media (max-width: 900px) {
-        gap: 32px;
-    }
+.lp-trust-track {
+    display: flex;
+    gap: 64px;
+}
 
-    @media (max-width: 640px) {
-        gap: 20px;
-
-        span {
-            font-size: 14px;
-        }
-    }
+@keyframes marquee-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-100%); }
 }
 
 // ─── FEATURES ─────────────────────────────────────────────────────────────────
@@ -1103,7 +1109,7 @@ $amber: var(--amber);
     display: flex;
     align-items: center;
     gap: 8px;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Syne', sans-serif;
     font-size: 14px;
     font-weight: 600;
     color: $ink;
@@ -1119,7 +1125,7 @@ $amber: var(--amber);
         font-weight: 600;
         letter-spacing: 0.1em;
         color: $ink;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Nunito Sans', sans-serif;
         margin-bottom: 4px;
     }
 
@@ -1221,3 +1227,124 @@ $amber: var(--amber);
         }
     }
 }
+
+// ─── FEATURE CARDS — ACCENT BORDER ────────────────────────────────────────────
+.lp-features-grid {
+    .lp-feature-card:nth-child(1) {
+        border-top: 2px solid rgba(var(--accent-rgb), 0.5);
+        &:hover { border-top-color: rgba(var(--accent-rgb), 0.9); }
+    }
+    .lp-feature-card:nth-child(2) {
+        border-top: 2px solid rgba(var(--green-rgb), 0.5);
+        &:hover { border-top-color: rgba(var(--green-rgb), 0.9); }
+    }
+    .lp-feature-card:nth-child(3) {
+        border-top: 2px solid rgba(var(--purple-rgb), 0.5);
+        &:hover { border-top-color: rgba(var(--purple-rgb), 0.9); }
+    }
+}
+
+// ─── CONTACT CHANNELS ─────────────────────────────────────────────────────────
+.lp-contact-channels {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.lp-contact-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 24px;
+    border-radius: 14px;
+    text-decoration: none;
+    transition: all 0.22s ease;
+    border: 1px solid transparent;
+
+    .lp-contact-icon {
+        font-size: 22px;
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: transform 0.22s ease;
+    }
+
+    .lp-contact-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1;
+        text-align: left;
+    }
+
+    .lp-contact-label {
+        font-size: 15px;
+        font-weight: 700;
+        font-family: 'Syne', sans-serif;
+    }
+
+    .lp-contact-sub {
+        font-size: 12px;
+        opacity: 0.65;
+    }
+
+    .lp-contact-arrow {
+        font-size: 18px;
+        font-weight: 700;
+        opacity: 0.5;
+        transition: transform 0.22s ease, opacity 0.22s ease;
+    }
+
+    &:hover {
+        transform: translateX(4px);
+        .lp-contact-arrow { transform: translateX(4px); opacity: 1; }
+        .lp-contact-icon { transform: scale(1.08); }
+    }
+
+    &.lp-contact-wa {
+        background: rgba(37, 211, 102, 0.08);
+        border-color: rgba(37, 211, 102, 0.25);
+        color: #22c55e;
+        .lp-contact-icon { background: rgba(37, 211, 102, 0.15); }
+        &:hover { background: rgba(37, 211, 102, 0.14); border-color: rgba(37, 211, 102, 0.45); }
+    }
+
+    &.lp-contact-email {
+        background: rgba(var(--accent-rgb), 0.08);
+        border-color: rgba(var(--accent-rgb), 0.25);
+        color: var(--accent);
+        .lp-contact-icon { background: rgba(var(--accent-rgb), 0.12); }
+        &:hover { background: rgba(var(--accent-rgb), 0.14); border-color: rgba(var(--accent-rgb), 0.45); }
+    }
+
+    &.lp-contact-phone {
+        background: rgba(var(--purple-rgb), 0.08);
+        border-color: rgba(var(--purple-rgb), 0.25);
+        color: $purple;
+        .lp-contact-icon { background: rgba(var(--purple-rgb), 0.12); }
+        &:hover { background: rgba(var(--purple-rgb), 0.14); border-color: rgba(var(--purple-rgb), 0.45); }
+    }
+}
+
+// ─── SCROLL REVEAL ────────────────────────────────────────────────────────────
+.reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
