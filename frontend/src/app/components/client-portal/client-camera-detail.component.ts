@@ -131,21 +131,9 @@ export class ClientCameraDetailComponent implements OnInit {
           this.camera.set(cam);
           this.http.get<any>(`${API_URL}/client/me`).subscribe({
             next: (me) => {
-              const gatewayId = me.gatewayId ?? '';
               const cameraKey = cam.cameraId ?? cam.cameraKey ?? cam.name;
-              if (gatewayId) {
-                this.streamPath.set(`${gatewayId}/${cameraKey}`);
-              } else {
-                // Fallback: look up gatewayId via /api/clients using camera's clientId
-                this.http.get<any[]>(`${API_URL}/clients`).subscribe({
-                  next: (clients) => {
-                    const match = clients.find((c: any) => c.id === cam.clientId);
-                    if (match?.gatewayId) {
-                      this.streamPath.set(`${match.gatewayId}/${cameraKey}`);
-                    }
-                  },
-                  error: (err) => console.error('Error loading clients for gatewayId fallback:', err)
-                });
+              if (me.gatewayId) {
+                this.streamPath.set(`${me.gatewayId}/${cameraKey}`);
               }
             },
             error: (err) => console.error('Error loading client profile:', err)

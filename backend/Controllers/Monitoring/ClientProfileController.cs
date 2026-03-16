@@ -49,6 +49,7 @@ namespace MotorControlEnterprise.Api.Controllers
             return Ok(new
             {
                 client.Id,
+                client.GatewayId,
                 client.Name,
                 client.BusinessType,
                 client.City,

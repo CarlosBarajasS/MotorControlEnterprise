@@ -168,30 +168,11 @@ export class ClientCamerasComponent implements OnInit {
   onlineCount = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
 
   ngOnInit() {
-    this.http.get<any[]>(`${API_URL}/cameras`).subscribe({
-      next: (cams) => this.cameras.set(cams || []),
-      error: (err) => console.error('Error loading cameras:', err)
-    });
-
     this.http.get<any>(`${API_URL}/client/me`).subscribe({
       next: (me) => {
+        this.cameras.set(me.cameras || []);
         if (me.gatewayId) {
           this.gatewayId.set(me.gatewayId);
-        } else {
-          // Fallback: derive gatewayId from /api/clients using the camera's clientId
-          this.http.get<any[]>(`${API_URL}/clients`).subscribe({
-            next: (clients) => {
-              const cams = this.cameras();
-              if (cams.length > 0) {
-                const clientId = cams[0].clientId;
-                const match = clients.find((c: any) => c.id === clientId);
-                if (match?.gatewayId) {
-                  this.gatewayId.set(match.gatewayId);
-                }
-              }
-            },
-            error: (err) => console.error('Error loading clients for gatewayId fallback:', err)
-          });
         }
       },
       error: (err) => console.error('Error loading client profile:', err)
