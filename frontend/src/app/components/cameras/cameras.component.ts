@@ -101,6 +101,6 @@ export class CamerasComponent implements OnInit {
     }
 
     isOnline(cam: any): boolean {
-        return !!cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 90_000;
+        return cam.status === 'active';
     }
 }

@@ -23,16 +23,14 @@ export class DashboardComponent implements OnInit {
 
     stats = signal<{ active: number, total: number }>({ active: 0, total: 0 });
 
-    camerasOnline = computed(() => this.cameras().filter(c =>
-        c.lastSeen && (Date.now() - new Date(c.lastSeen).getTime()) < 60000
-    ).length);
+    camerasOnline = computed(() => this.cameras().filter(c => c.status === 'active').length);
 
     camerasOffline = computed(() => this.cameras().length - this.camerasOnline());
 
     recentActivity = computed(() => {
         const events: any[] = [];
         this.cameras().slice(0, 10).forEach(c => {
-            const online = c.lastSeen && (Date.now() - new Date(c.lastSeen).getTime()) < 60000;
+            const online = c.status === 'active';
             events.push({
                 event: `Cámara ${c.name}`,
                 gateway: c.gatewayId || 'N/A',

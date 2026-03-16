@@ -145,8 +145,7 @@ export class ClientCameraDetailComponent implements OnInit {
   }
 
   isOnline(): boolean {
-    const cam = this.camera();
-    return cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 60000;
+    return this.camera()?.status === 'active';
   }
 
   ptzMove(pan: number, tilt: number, zoom: number) {

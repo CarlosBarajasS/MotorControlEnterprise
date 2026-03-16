@@ -92,7 +92,7 @@ export class ClientNvrComponent implements OnInit, OnDestroy {
     }
 
     isOnline(cam: any): boolean {
-        return !!cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 90_000;
+        return cam.status === 'active';
     }
 
     getWebrtcPath(cam: any): string {

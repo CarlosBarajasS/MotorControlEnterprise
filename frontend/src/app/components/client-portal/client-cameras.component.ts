@@ -190,6 +190,6 @@ export class ClientCamerasComponent implements OnInit, OnDestroy {
   }
 
   isOnline(cam: any): boolean {
-    return !!cam.lastSeen && (Date.now() - new Date(cam.lastSeen).getTime()) < 90000;
+    return cam.status === 'active';
   }
 }
