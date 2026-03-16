@@ -38,7 +38,7 @@ AGENTS.md
 frontend/CLAUDE.md
 AI_RULES.md
 TODO.md
-
+.superpowers/
 # Observability — dashboard local, no subir al repo
 logs/
 scripts/start-observability.sh
