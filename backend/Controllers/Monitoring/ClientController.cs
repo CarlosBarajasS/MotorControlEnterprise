@@ -28,6 +28,7 @@ namespace MotorControlEnterprise.Api.Controllers
         {
             var clients = await _db.Clients
                 .Include(c => c.User)
+                .Where(c => c.DeletedAt == null)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
@@ -142,7 +143,7 @@ namespace MotorControlEnterprise.Api.Controllers
             var client = await _db.Clients.FindAsync(id);
             if (client == null) return NotFound();
 
-            // Soft-delete: marcar cliente y sus cámaras como inactivo
+            client.DeletedAt = DateTime.UtcNow;
             client.Status    = "inactive";
             client.UpdatedAt = DateTime.UtcNow;
 
@@ -156,6 +157,75 @@ namespace MotorControlEnterprise.Api.Controllers
                 cam.UpdatedAt = DateTime.UtcNow;
             }
 
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // GET api/clients/trash
+        [HttpGet("trash")]
+        public async Task<IActionResult> GetTrash()
+        {
+            var deleted = await _db.Clients
+                .Include(c => c.User)
+                .Where(c => c.DeletedAt != null)
+                .OrderByDescending(c => c.DeletedAt)
+                .ToListAsync();
+
+            return Ok(deleted.Select(c => new {
+                c.Id, c.Name, c.GatewayId, c.BusinessType,
+                c.ContactName, c.City, c.DeletedAt,
+                DaysUntilPurge = Math.Max(0, 30 - (int)(DateTime.UtcNow - c.DeletedAt!.Value).TotalDays),
+                PermanentDeleteDate = c.DeletedAt!.Value.AddDays(30)
+            }));
+        }
+
+        // PATCH api/clients/{id}/restore
+        [HttpPatch("{id:int}/restore")]
+        public async Task<IActionResult> Restore(int id)
+        {
+            var client = await _db.Clients.FindAsync(id);
+            if (client == null) return NotFound();
+            if (client.DeletedAt == null) return BadRequest(new { message = "El cliente no está eliminado." });
+
+            client.DeletedAt = null;
+            client.Status    = "active";
+            client.UpdatedAt = DateTime.UtcNow;
+
+            var cameras = await _db.Cameras
+                .Where(c => c.ClientId == id && c.Status == "inactive")
+                .ToListAsync();
+
+            foreach (var cam in cameras)
+            {
+                cam.Status    = "offline";
+                cam.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _db.SaveChangesAsync();
+            return Ok(new { client.Id, client.Name, client.Status, client.DeletedAt });
+        }
+
+        // DELETE api/clients/{id}/permanent
+        [HttpDelete("{id:int}/permanent")]
+        public async Task<IActionResult> PermanentDelete(int id)
+        {
+            var client = await _db.Clients
+                .Include(c => c.Cameras)
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (client == null) return NotFound();
+            if (client.DeletedAt == null) return BadRequest(new { message = "Solo se pueden eliminar permanentemente clientes en la papelera." });
+
+            _db.Cameras.RemoveRange(client.Cameras);
+
+            if (client.User != null)
+            {
+                client.User.IsActive  = false;
+                client.User.UpdatedAt = DateTime.UtcNow;
+            }
+
+            _db.Clients.Remove(client);
             await _db.SaveChangesAsync();
 
             return NoContent();
@@ -180,11 +250,11 @@ namespace MotorControlEnterprise.Api.Controllers
         [HttpGet("stats")]
         public async Task<IActionResult> GetStats()
         {
-            var total     = await _db.Clients.CountAsync();
-            var active    = await _db.Clients.CountAsync(c => c.Status == "active");
-            var inactive  = await _db.Clients.CountAsync(c => c.Status == "inactive");
-            var suspended = await _db.Clients.CountAsync(c => c.Status == "suspended");
-            var withCloud = await _db.Clients.CountAsync(c => c.CloudStorageActive);
+            var total     = await _db.Clients.CountAsync(c => c.DeletedAt == null);
+            var active    = await _db.Clients.CountAsync(c => c.Status == "active"    && c.DeletedAt == null);
+            var inactive  = await _db.Clients.CountAsync(c => c.Status == "inactive"  && c.DeletedAt == null);
+            var suspended = await _db.Clients.CountAsync(c => c.Status == "suspended" && c.DeletedAt == null);
+            var withCloud = await _db.Clients.CountAsync(c => c.CloudStorageActive    && c.DeletedAt == null);
             var totalCam  = await _db.Cameras.CountAsync(c => !c.IsRecordingOnly);
             var activeCam = await _db.Cameras.CountAsync(c => c.Status == "active" && !c.IsRecordingOnly);
 

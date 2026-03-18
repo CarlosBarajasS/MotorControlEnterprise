@@ -15,7 +15,7 @@
     </div>
 
     <!-- SEARCH & FILTERS -->
-    <div style="margin: 24px 0; display:flex; gap:12px; align-items:center;">
+    <div style="margin: 24px 0; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
         <div class="search-box">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -25,6 +25,15 @@
                 [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
         </div>
         <span style="font-size:13px; color:var(--muted); font-weight: 500;">{{ filtered().length }} resultados</span>
+        <button class="trash-toggle-btn" [class.active]="showTrash()" (click)="toggleTrash()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6l-1 14H6L5 6"></path>
+                <path d="M10 11v6M14 11v6"></path>
+            </svg>
+            Papelera
+            <span class="trash-count" *ngIf="trashClients().length > 0">{{ trashClients().length }}</span>
+        </button>
     </div>
 
     <!-- CLIENT GRID DE TARJETAS -->
@@ -94,6 +103,45 @@
         </div>
     </div>
 
+
+    <!-- Trash section -->
+    <div class="trash-section" *ngIf="showTrash()">
+        <div class="trash-header">
+            <div class="trash-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14H6L5 6"></path>
+                    <path d="M10 11v6M14 11v6"></path>
+                </svg>
+                Papelera
+                <span class="trash-subtitle">Los clientes se eliminan permanentemente después de 30 días</span>
+            </div>
+        </div>
+
+        <div class="trash-loading" *ngIf="trashLoading()">Cargando papelera...</div>
+
+        <div class="trash-empty" *ngIf="!trashLoading() && trashClients().length === 0">
+            La papelera está vacía
+        </div>
+
+        <div class="trash-grid" *ngIf="!trashLoading() && trashClients().length > 0">
+            <div class="trash-card" *ngFor="let c of trashClients()">
+                <div class="trash-card-name">{{ c.name }}</div>
+                <div class="trash-card-meta">{{ c.gatewayId || 'Sin gateway' }}</div>
+                <div class="trash-card-timer" [class.urgent]="c.daysUntilPurge <= 7">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    {{ c.daysUntilPurge }} días para borrado permanente
+                </div>
+                <div class="trash-card-actions">
+                    <button class="restore-btn" (click)="restoreClient(c.id)">Restaurar</button>
+                    <button class="perm-delete-btn" (click)="permanentDelete(c.id)">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Formulario -->
     <div class="modal-overlay" *ngIf="showModal()">

@@ -469,6 +469,185 @@
     }
 }
 
+// ─── TRASH TOGGLE BUTTON ──────────────────────────────────────────────────────
+.trash-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid rgba(var(--ink-rgb), 0.12);
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+
+    &:hover {
+        color: var(--red);
+        border-color: rgba(var(--red-rgb), 0.3);
+        background: rgba(var(--red-rgb), 0.04);
+    }
+
+    &.active {
+        color: var(--red);
+        border-color: rgba(var(--red-rgb), 0.4);
+        background: rgba(var(--red-rgb), 0.06);
+    }
+}
+
+.trash-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--red);
+    color: #fff;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+// ─── TRASH SECTION ────────────────────────────────────────────────────────────
+.trash-section {
+    margin-top: 32px;
+    border-top: 1px solid rgba(var(--ink-rgb), 0.08);
+    padding-top: 28px;
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+.trash-header {
+    margin-bottom: 20px;
+}
+
+.trash-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--red);
+}
+
+.trash-subtitle {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-left: 4px;
+}
+
+.trash-loading,
+.trash-empty {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 24px 0;
+    text-align: center;
+}
+
+.trash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+.trash-card {
+    background: rgba(var(--surface-rgb), 0.4);
+    border: 1px solid rgba(var(--ink-rgb), 0.06);
+    border-left: 3px solid rgba(var(--red-rgb), 0.4);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: rgba(var(--red-rgb), 0.03);
+        border-left-color: rgba(var(--red-rgb), 0.7);
+    }
+}
+
+.trash-card-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.trash-card-meta {
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.trash-card-timer {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: color 0.2s;
+
+    &.urgent {
+        color: var(--red);
+    }
+}
+
+.trash-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.restore-btn {
+    flex: 1;
+    background: rgba(var(--green-rgb), 0.12);
+    color: var(--green);
+    border: 1px solid rgba(var(--green-rgb), 0.25);
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: rgba(var(--green-rgb), 0.22);
+        border-color: rgba(var(--green-rgb), 0.4);
+    }
+}
+
+.perm-delete-btn {
+    flex: 1;
+    background: rgba(var(--red-rgb), 0.08);
+    color: var(--red);
+    border: 1px solid rgba(var(--red-rgb), 0.2);
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: rgba(var(--red-rgb), 0.18);
+        border-color: rgba(var(--red-rgb), 0.4);
+    }
+}
+
 // ─── RESPONSIVE ───────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
     .new-top {

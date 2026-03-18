@@ -31,6 +31,10 @@ export class ClientsComponent implements OnInit {
     modalMode = signal<'create' | 'edit'>('create');
     currentClient = signal<any>({});
 
+    showTrash = signal(false);
+    trashClients = signal<any[]>([]);
+    trashLoading = signal(false);
+
     ngOnInit() {
         this.loadData();
     }
@@ -77,10 +81,51 @@ export class ClientsComponent implements OnInit {
     deleteClient(id: string) {
         if (confirm('¿Estás seguro de inhabilitar/eliminar a este cliente?')) {
             this.http.delete(`${API_URL}/clients/${id}`).subscribe({
-                next: () => this.loadData(),
+                next: () => {
+                    this.loadData();
+                    if (this.showTrash()) { this.loadTrash(); }
+                },
                 error: (err) => alert('Error al eliminar')
             });
         }
+    }
+
+    loadTrash() {
+        this.trashLoading.set(true);
+        this.http.get<any[]>(`${API_URL}/clients/trash`).subscribe({
+            next: (res) => {
+                this.trashClients.set(res || []);
+                this.trashLoading.set(false);
+            },
+            error: (err) => {
+                console.error(err);
+                this.trashLoading.set(false);
+            }
+        });
+    }
+
+    restoreClient(id: number) {
+        this.http.patch(`${API_URL}/clients/${id}/restore`, {}).subscribe({
+            next: () => {
+                this.loadData();
+                this.loadTrash();
+            },
+            error: (err) => alert('Error al restaurar cliente')
+        });
+    }
+
+    permanentDelete(id: number) {
+        if (confirm('¿Borrar permanentemente? Esta acción no se puede deshacer.')) {
+            this.http.delete(`${API_URL}/clients/${id}/permanent`).subscribe({
+                next: () => this.loadTrash(),
+                error: (err) => alert('Error al eliminar permanentemente')
+            });
+        }
+    }
+
+    toggleTrash() {
+        this.showTrash.update(v => !v);
+        if (this.showTrash()) { this.loadTrash(); }
     }
 
     toggleStatus(client: any) {

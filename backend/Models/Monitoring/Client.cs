@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -97,5 +98,10 @@ namespace MotorControlEnterprise.Api.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("deleted_at")]
+        public DateTime? DeletedAt { get; set; }
+
+        public ICollection<Camera> Cameras { get; set; } = new List<Camera>();
     }
 }
