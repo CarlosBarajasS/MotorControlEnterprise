@@ -210,14 +210,14 @@ namespace MotorControlEnterprise.Api.Controllers
         public async Task<IActionResult> PermanentDelete(int id)
         {
             var client = await _db.Clients
-                .Include(c => c.Cameras)
                 .Include(c => c.User)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (client == null) return NotFound();
             if (client.DeletedAt == null) return BadRequest(new { message = "Solo se pueden eliminar permanentemente clientes en la papelera." });
 
-            _db.Cameras.RemoveRange(client.Cameras);
+            var cameras = await _db.Cameras.Where(c => c.ClientId == id).ToListAsync();
+            _db.Cameras.RemoveRange(cameras);
 
             if (client.User != null)
             {

@@ -101,7 +101,5 @@ namespace MotorControlEnterprise.Api.Models
 
         [Column("deleted_at")]
         public DateTime? DeletedAt { get; set; }
-
-        public ICollection<Camera> Cameras { get; set; } = new List<Camera>();
     }
 }
