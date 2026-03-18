@@ -20,7 +20,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
 # ffmpeg requerido por StreamRecorderService para grabación de streams
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+RUN apt-get update -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true \
+    && apt-get install -y --no-install-recommends --allow-unauthenticated ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=publish /app/publish .
