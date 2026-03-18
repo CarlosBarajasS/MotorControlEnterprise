@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { ToastService } from '../../services/toast.service';
+import { ConfirmService } from '../../services/confirm.service';
 
 const API_URL = '/api';
 
@@ -15,6 +17,8 @@ const API_URL = '/api';
 })
 export class ClientsComponent implements OnInit {
     http = inject(HttpClient);
+    private toast   = inject(ToastService);
+    private confirm = inject(ConfirmService);
 
     clients = signal<any[]>([]);
     stats = signal<any>(null);
@@ -74,20 +78,26 @@ export class ClientsComponent implements OnInit {
                 this.showModal.set(false);
                 this.loadData();
             },
-            error: (err) => alert('Error al guardar: ' + (err.error?.message || err.message))
+            error: (err) => this.toast.error(err.error?.message || 'Error al guardar los datos')
         });
     }
 
-    deleteClient(id: string) {
-        if (confirm('¿Estás seguro de inhabilitar/eliminar a este cliente?')) {
-            this.http.delete(`${API_URL}/clients/${id}`).subscribe({
-                next: () => {
-                    this.loadData();
-                    if (this.showTrash()) { this.loadTrash(); }
-                },
-                error: (err) => alert('Error al eliminar')
-            });
-        }
+    async deleteClient(id: string) {
+        const ok = await this.confirm.show({
+            title: 'Mover a papelera',
+            message: 'El cliente y sus cámaras serán desactivados y movidos a la papelera. Podrás recuperarlos dentro de los próximos 30 días.',
+            confirmLabel: 'Mover a papelera',
+            danger: true
+        });
+        if (!ok) return;
+        this.http.delete(`${API_URL}/clients/${id}`).subscribe({
+            next: () => {
+                this.toast.success('Cliente movido a la papelera');
+                this.loadData();
+                if (this.showTrash()) { this.loadTrash(); }
+            },
+            error: () => this.toast.error('Error al eliminar el cliente')
+        });
     }
 
     loadTrash() {
@@ -107,20 +117,26 @@ export class ClientsComponent implements OnInit {
     restoreClient(id: number) {
         this.http.patch(`${API_URL}/clients/${id}/restore`, {}).subscribe({
             next: () => {
+                this.toast.success('Cliente restaurado correctamente');
                 this.loadData();
                 this.loadTrash();
             },
-            error: (err) => alert('Error al restaurar cliente')
+            error: () => this.toast.error('Error al restaurar el cliente')
         });
     }
 
-    permanentDelete(id: number) {
-        if (confirm('¿Borrar permanentemente? Esta acción no se puede deshacer.')) {
-            this.http.delete(`${API_URL}/clients/${id}/permanent`).subscribe({
-                next: () => this.loadTrash(),
-                error: (err) => alert('Error al eliminar permanentemente')
-            });
-        }
+    async permanentDelete(id: number) {
+        const ok = await this.confirm.show({
+            title: 'Eliminar permanentemente',
+            message: 'Esta acción es irreversible. El cliente, sus cámaras y todos sus datos serán eliminados definitivamente del sistema.',
+            confirmLabel: 'Eliminar para siempre',
+            danger: true
+        });
+        if (!ok) return;
+        this.http.delete(`${API_URL}/clients/${id}/permanent`).subscribe({
+            next: () => { this.toast.success('Cliente eliminado permanentemente'); this.loadTrash(); },
+            error: () => this.toast.error('Error al eliminar permanentemente')
+        });
     }
 
     toggleTrash() {
@@ -131,16 +147,16 @@ export class ClientsComponent implements OnInit {
     toggleStatus(client: any) {
         const newStatus = client.status === 'active' ? 'inactive' : 'active';
         this.http.patch(`${API_URL}/clients/${client.id}/status`, { status: newStatus }).subscribe({
-            next: () => this.loadData(),
-            error: (res) => alert('Error actualizando estado')
+            next: () => { this.toast.success('Estado actualizado'); this.loadData(); },
+            error: () => this.toast.error('Error al actualizar el estado')
         });
     }
 
     toggleCloudStorage(client: any) {
         const newState = !client.cloudStorageActive;
         this.http.patch(`${API_URL}/clients/${client.id}/cloud-storage`, { active: newState }).subscribe({
-            next: () => this.loadData(),
-            error: (res) => alert('Error actualizando almacenamiento cloud')
+            next: () => { this.toast.success('Almacenamiento cloud actualizado'); this.loadData(); },
+            error: () => this.toast.error('Error al actualizar almacenamiento cloud')
         });
     }
 }

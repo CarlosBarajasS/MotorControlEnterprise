@@ -2,11 +2,13 @@ import { Component, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router } from '@angular/router';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { ToastContainerComponent } from './components/shared/toast-container/toast-container.component';
+import { ConfirmDialogComponent } from './components/shared/confirm-dialog/confirm-dialog.component';
 
 @Component({
     selector: 'app-root',
     standalone: true,
-    imports: [CommonModule, RouterOutlet, SidebarComponent],
+    imports: [CommonModule, RouterOutlet, SidebarComponent, ToastContainerComponent, ConfirmDialogComponent],
     templateUrl: './app.component.html',
     styleUrl: './app.component.scss'
 })
