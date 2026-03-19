@@ -22,6 +22,11 @@ authInternalUsers:
       - action: publish
       - action: read
 
+  - user: "viewer"
+    pass: ""
+    permissions:
+      - action: read
+
 hlsSegmentCount: 10
 hlsSegmentDuration: 4s
 

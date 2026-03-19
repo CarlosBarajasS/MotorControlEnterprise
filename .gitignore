@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 mosquitto-passwd
+nginx/secrets/mediamtx-auth.conf
 
 # .NET build output
 bin/
