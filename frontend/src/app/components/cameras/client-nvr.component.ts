@@ -130,6 +130,10 @@ export class ClientNvrComponent implements OnInit, OnDestroy {
         window.open(`${API_URL}/stream/${cam.id}/snapshot`, '_blank');
     }
 
+    trackByCamId(_: number, cam: any): number | string {
+        return cam.id ?? cam.cameraId ?? cam.cameraKey;
+    }
+
     camSummary(cam: any): string {
         const d = cam?.metadata?.discovery;
         if (!d) return '';

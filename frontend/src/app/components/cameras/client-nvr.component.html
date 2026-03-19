@@ -49,7 +49,7 @@
          [class.panel-open]="selectedCam() !== null">
 
       <div class="nvr-cell" #cell
-           *ngFor="let cam of cameras()"
+           *ngFor="let cam of cameras(); trackBy: trackByCamId"
            [class.selected]="selectedCam()?.id === cam.id"
            (click)="selectCam(cam)">
 
