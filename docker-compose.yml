@@ -105,7 +105,7 @@ services:
       Email__ResendApiKey:    ${Email__ResendApiKey:-}
       Email__AdminAlertEmail: ${Email__AdminAlertEmail:-}
       Email__From:            ${Email__From:-}
-      App__FrontendUrl:       ${App__FrontendUrl:-http://177.247.175.4:8080}
+      App__FrontendUrl:       ${App__FrontendUrl:-https://nirmgroup.net}
       # EdgeDefaults — configuración generada para nuevos edge gateways
       EdgeDefaults__MqttPublicHost:   "177.247.175.4"
       EdgeDefaults__MqttPublicPort:   "1885"
@@ -115,7 +115,7 @@ services:
       EdgeDefaults__CentralRtspPort:  "8556"
       EdgeDefaults__MediamtxPushUser: "edge-relay"
       EdgeDefaults__MediamtxPushPass: "${MEDIAMTX_RELAY_PASS:-CHANGE_THIS}"
-      EdgeDefaults__CentralApiUrl:    "http://177.247.175.4/api"
+      EdgeDefaults__CentralApiUrl:    "https://nirmgroup.net/api"
       # Primer admin — eliminar del .env después del primer login
       Seed__AdminEmail:    ${Seed__AdminEmail:-}
       Seed__AdminPassword: ${Seed__AdminPassword:-}
@@ -214,6 +214,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /home/victormanuel/certs:/etc/nginx/certs:ro
     logging:
       driver: json-file
       options:
