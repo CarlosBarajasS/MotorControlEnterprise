@@ -62,6 +62,7 @@ services:
       - ./mediamtx/central-mediamtx.yml.template:/mediamtx.yml.template:ro
     ports:
       - "8556:8554"   # RTSP (push desde edge)
+      - "8189:8189/udp" # WebRTC ICE media
     logging:
       driver: json-file
       options:
