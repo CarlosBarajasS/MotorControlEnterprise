@@ -156,6 +156,15 @@ const API_URL = '/api';
       font-size: 11px; color: var(--muted);
       .dot.online { background: #10b981; box-shadow: 0 0 6px #10b981; }
     }
+    @media (max-width: 768px) {
+      .camera-grid { min-height: 260px; }
+      .nvr-toolbar { padding: 10px 14px; gap: 8px; }
+    }
+    @media (max-width: 480px) {
+      .nvr-toolbar-title { font-size: 12px; }
+      .nvr-layout-btns { flex-wrap: wrap; }
+      .nvr-statusbar { flex-wrap: wrap; gap: 8px; padding: 8px 14px; }
+    }
   `]
 })
 export class ClientCamerasComponent implements OnInit, OnDestroy {

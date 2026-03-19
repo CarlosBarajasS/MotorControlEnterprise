@@ -116,8 +116,8 @@
 }
 
 .stat-icon {
-  width: 48px;
-  height: 48px;
+  width: clamp(36px, 8vw, 48px);
+  height: clamp(36px, 8vw, 48px);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -156,7 +156,7 @@
 
 .stat-value {
   font-family: 'Syne', sans-serif;
-  font-size: 28px;
+  font-size: clamp(20px, 6vw, 28px);
   font-weight: 700;
   color: var(--ink);
   line-height: 1;
@@ -230,7 +230,7 @@
 // ─── GATEWAYS GRID ───────────────────────────────────────────────────────────
 .gateways-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 18px;
   margin-bottom: 32px;
 }
@@ -581,8 +581,8 @@
 }
 
 @media (max-width: 480px) {
-  .stat-value {
-    font-size: 22px;
+  .activity-table-wrap {
+    overflow-x: auto;
   }
 
   .activity-table {

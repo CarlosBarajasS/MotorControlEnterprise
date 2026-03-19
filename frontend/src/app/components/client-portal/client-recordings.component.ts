@@ -320,6 +320,10 @@ import { HttpClient } from '@angular/common/http';
         cursor: default !important;
       }
     }
+    @media (max-width: 480px) {
+      .rec-grid { grid-template-columns: 1fr; }
+      .rec-list { padding: 14px; }
+    }
   `]
 })
 export class ClientRecordingsComponent implements OnInit, OnDestroy {

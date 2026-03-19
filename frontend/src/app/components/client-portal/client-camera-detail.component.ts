@@ -114,6 +114,14 @@ const API_URL = '/api';
     .zoom-controls {
       display: flex; gap: 6px; justify-content: center;
     }
+    @media (max-width: 768px) {
+      .detail-topbar { flex-direction: column; gap: 12px; }
+      .btn-recordings { width: 100%; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      h1 { font-size: 1.2rem; }
+      .ptz-panel { padding: 14px; }
+    }
   `]
 })
 export class ClientCameraDetailComponent implements OnInit {

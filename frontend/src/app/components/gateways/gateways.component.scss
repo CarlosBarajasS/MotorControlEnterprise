@@ -111,6 +111,7 @@
     border: 1px solid rgba(var(--ink-rgb), 0.08);
     border-radius: 10px;
     padding: 10px 14px;
+    max-width: min(100%, 400px);
 
     svg {
         color: var(--muted);
@@ -334,5 +335,18 @@
 
     .metric {
         min-width: 80px;
+    }
+
+    .gw-card {
+        padding: 16px;
+    }
+
+    .search-box {
+        max-width: 100%;
+    }
+
+    .filter-pills .pill {
+        padding: 6px 10px;
+        font-size: 12px;
     }
 }

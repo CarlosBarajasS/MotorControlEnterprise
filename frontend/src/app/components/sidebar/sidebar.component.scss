@@ -377,3 +377,19 @@
         margin-left: 0;
     }
 }
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 240px;
+  }
+  .sidebar-logo {
+    padding: 16px 14px;
+    gap: 8px;
+  }
+  .logo-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+  }
+}

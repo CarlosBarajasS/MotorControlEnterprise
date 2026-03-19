@@ -76,8 +76,8 @@
     border: 1px solid rgba(var(--ink-rgb), 0.08);
     border-radius: 10px;
     padding: 10px 14px;
-    width: 100%;
-    max-width: 380px;
+    width: min(100%, 380px);
+    max-width: unset;
 
     svg {
         color: var(--muted);
@@ -649,6 +649,12 @@
 }
 
 // ─── RESPONSIVE ───────────────────────────────────────────────────────────────
+@media (max-width: 1000px) {
+    .client-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 768px) {
     .new-top {
         flex-direction: column;
@@ -677,5 +683,14 @@
 @media (max-width: 480px) {
     .client-grid {
         grid-template-columns: 1fr;
+    }
+
+    .trash-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .new-top .header-btn {
+        width: 100%;
+        justify-content: center;
     }
 }
