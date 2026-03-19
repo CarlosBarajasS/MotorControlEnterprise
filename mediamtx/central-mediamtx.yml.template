@@ -36,7 +36,7 @@ webrtcAddress: :8889
 webrtcAdditionalHosts:
   - 177.247.175.4
 # Puerto UDP fijo para ICE media (debe estar expuesto en docker-compose y firewall)
-webrtcICEUDPMuxAddress: :8189
+webrtcICEUDPMuxAddress: :8190
 
 pathDefaults:
   record: no
