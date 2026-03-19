@@ -27,7 +27,7 @@ const API_URL = '/api';
       </div>
 
       <div class="camera-grid" [style.grid-template-columns]="'repeat(' + gridCols + ', 1fr)'">
-        <div class="camera-cell" *ngFor="let cam of cameras(); let i = index">
+        <div class="camera-cell" *ngFor="let cam of cameras(); let i = index; trackBy: trackByCamId">
           <app-webrtc-viewer *ngIf="gatewayId()" [streamPath]="getWebrtcPath(cam)"
                              class="cell-viewer"></app-webrtc-viewer>
           <div class="cell-overlay">
@@ -200,5 +200,9 @@ export class ClientCamerasComponent implements OnInit, OnDestroy {
 
   isOnline(cam: any): boolean {
     return cam.status === 'active';
+  }
+
+  trackByCamId(_: number, cam: any): string {
+    return cam.id ?? cam.cameraId ?? cam.cameraKey;
   }
 }
