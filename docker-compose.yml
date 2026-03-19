@@ -69,8 +69,9 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - mce-net
-      - shared-edge-network
+      mce-net:
+        ipv4_address: 172.20.0.20   # IP fija — necesaria para bindear WebRTC UDP mux
+      shared-edge-network: {}
 
   # ─── API .NET 8 ──────────────────────────────────────────────
   backend:
@@ -234,6 +235,9 @@ services:
 networks:
   mce-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16   # Subnet fija para permitir IP estática en central-mediamtx
   shared-edge-network:
     external: true   # Red compartida con edge devices (debe existir)
 

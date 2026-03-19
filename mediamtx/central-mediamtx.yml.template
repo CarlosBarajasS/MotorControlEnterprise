@@ -35,10 +35,14 @@ webrtcAddress: :8889
 # NAT 1:1 — reemplaza todas las IPs internas (Docker, loopback) con la IP pública
 # del servidor en los candidatos ICE. Sin esto, el browser recibe 127.0.0.1 o
 # 172.x.x.x y la conexión cae a los ~20s por fallo en el consent check.
+# NAT 1:1 — la IP fija del contenedor (172.20.0.20) se anuncia como la IP pública
+# en los candidatos ICE que recibe el browser
 webrtcICEHostNAT1To1IPs:
   - 177.247.175.4
-# Puerto UDP fijo para ICE media (debe estar expuesto en docker-compose y firewall)
-webrtcICEUDPMuxAddress: :8190
+# Bindear UDP mux SOLO a la IP fija del contenedor en mce-net.
+# Esto elimina 127.0.0.1 como candidato ICE — las respuestas STUN desde
+# loopback no pueden llegar al browser y causaban drops cada ~20s.
+webrtcICEUDPMuxAddress: 172.20.0.20:8190
 
 pathDefaults:
   record: no
