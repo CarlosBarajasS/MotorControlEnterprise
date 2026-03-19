@@ -125,7 +125,7 @@ namespace MotorControlEnterprise.Api.Services
             var nasPath  = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/recordings";
             var segSec   = _config["StreamRecorder:SegmentSeconds"] ?? "900";
             var rtspUser = _config["Mediamtx:User"] ?? "edge";
-            var rtspPass = _config["Mediamtx:Password"] ?? "edge123";
+            var rtspPass = _config["Mediamtx:Password"] ?? "CHANGE_THIS";
             var rtspHost = _config["StreamRecorder:MediamtxHost"] ?? "central-mediamtx";
             var rtspPort = _config["StreamRecorder:MediamtxPort"] ?? "8554";
 

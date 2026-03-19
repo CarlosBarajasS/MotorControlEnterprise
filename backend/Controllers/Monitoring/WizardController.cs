@@ -62,6 +62,21 @@ namespace MotorControlEnterprise.Api.Controllers
                 await _db.SaveChangesAsync();
             }
 
+            // Generate mediamtx local password if not yet present
+            var mediamtxPass = ExtractMediamtxPass(client.Metadata);
+            if (string.IsNullOrEmpty(mediamtxPass))
+            {
+                mediamtxPass = GenerateSecurePassword(24);
+                var metaMx = string.IsNullOrEmpty(client.Metadata)
+                    ? new Dictionary<string, object>()
+                    : (JsonSerializer.Deserialize<Dictionary<string, object>>(client.Metadata)
+                       ?? new Dictionary<string, object>());
+                metaMx["mediamtxLocalPass"] = mediamtxPass;
+                client.Metadata  = JsonSerializer.Serialize(metaMx);
+                client.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+            }
+
             // Cámaras registradas para este cliente
             var cameras = await _db.Cameras
                 .Where(c => c.ClientId == id)
@@ -91,9 +106,9 @@ namespace MotorControlEnterprise.Api.Controllers
                 mqttUser,
                 centralRtspHost = centralRtsp,
                 centralRtspPort = centralPort,
-                env             = BuildEnv(client, gatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location, edgeToken, centralRtsp, centralPort),
-                dockerCompose   = BuildDockerCompose(centralRtsp, centralPort, pushUser, pushPass),
-                mediamtxYml     = BuildMediamtxYml(cameras, gatewayId),
+                env             = BuildEnv(client, gatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location, edgeToken, centralRtsp, centralPort, mediamtxPass),
+                dockerCompose   = BuildDockerCompose(centralRtsp, centralPort, pushUser, pushPass, mediamtxPass),
+                mediamtxYml     = BuildMediamtxYml(cameras, gatewayId, mediamtxPass),
                 localStorageType = client.LocalStorageType ?? "nvr"
             });
         }
@@ -108,6 +123,25 @@ namespace MotorControlEnterprise.Api.Controllers
                     ? el.GetString() : null;
             }
             catch { return null; }
+        }
+
+        private static string? ExtractMediamtxPass(string? metadata)
+        {
+            if (string.IsNullOrEmpty(metadata)) return null;
+            try
+            {
+                var doc = JsonDocument.Parse(metadata);
+                return doc.RootElement.TryGetProperty("mediamtxLocalPass", out var el)
+                    ? el.GetString() : null;
+            }
+            catch { return null; }
+        }
+
+        private static string GenerateSecurePassword(int length)
+        {
+            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var bytes = RandomNumberGenerator.GetBytes(length);
+            return new string(bytes.Select(b => chars[b % chars.Length]).ToArray());
         }
 
         private static string? ExtractRtspFromStreams(string? streams)
@@ -127,7 +161,8 @@ namespace MotorControlEnterprise.Api.Controllers
             string mqttUser, string mqttPass,
             string centralApi, string location,
             string edgeToken,
-            string centralRtspHost, string centralRtspPort)
+            string centralRtspHost, string centralRtspPort,
+            string mediamtxPass)
         {
             var sb = new StringBuilder();
             sb.AppendLine("# ===================================================");
@@ -156,7 +191,7 @@ namespace MotorControlEnterprise.Api.Controllers
             sb.AppendLine();
             sb.AppendLine("MEDIAMTX_API_URL=http://mediamtx:9997");
             sb.AppendLine("MEDIAMTX_USERNAME=edge");
-            sb.AppendLine("MEDIAMTX_PASSWORD=edge123");
+            sb.AppendLine($"MEDIAMTX_PASSWORD={mediamtxPass}");
             sb.AppendLine();
             sb.AppendLine("# ===================================================");
             sb.AppendLine("# SERVIDOR HTTP DEL EDGE");
@@ -202,7 +237,8 @@ namespace MotorControlEnterprise.Api.Controllers
 
         private static string BuildDockerCompose(
             string centralRtsp, string centralPort,
-            string pushUser, string pushPass)
+            string pushUser, string pushPass,
+            string mediamtxPass)
         {
             return
 $@"services:
@@ -218,7 +254,7 @@ $@"services:
       - ""9997:9997""   # API MediaMTX
     environment:
       - MEDIAMTX_USERNAME=edge
-      - MEDIAMTX_PASSWORD=edge123
+      - MEDIAMTX_PASSWORD={mediamtxPass}
       - MEDIAMTX_PUSH_USER={pushUser}
       - MEDIAMTX_PUSH_PASS={pushPass}
       - CENTRAL_RTSP_HOST={centralRtsp}
@@ -259,7 +295,7 @@ networks:
 ";
         }
 
-        private static string BuildMediamtxYml(List<Camera> cameras, string gatewayId)
+        private static string BuildMediamtxYml(List<Camera> cameras, string gatewayId, string mediamtxPass)
         {
             var sb = new StringBuilder();
             sb.AppendLine($"# MediaMTX config — gateway: {gatewayId}");
@@ -272,7 +308,7 @@ networks:
             sb.AppendLine();
             sb.AppendLine("authInternalUsers:");
             sb.AppendLine("  - user: edge");
-            sb.AppendLine("    pass: edge123");
+            sb.AppendLine($"    pass: {mediamtxPass}");
             sb.AppendLine("    permissions:");
             sb.AppendLine("      - action: api");
             sb.AppendLine("      - action: read");
