@@ -4,6 +4,7 @@
 !.env.example
 mosquitto-passwd
 nginx/secrets/mediamtx-auth.conf
+mediamtx/central-mediamtx.yml
 
 # .NET build output
 bin/

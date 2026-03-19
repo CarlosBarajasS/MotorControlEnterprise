@@ -1,0 +1,40 @@
+###############################################
+# Central MediaMTX - Enterprise
+# Recibe push RTSP de edge gateways y sirve HLS al API proxy
+###############################################
+
+logLevel: info
+
+api: yes
+apiAddress: 0.0.0.0:9997
+
+# Credenciales inyectadas en tiempo de ejecución via envsubst (ver docker-compose.yml)
+authInternalUsers:
+  - user: "edge"
+    pass: "${MEDIAMTX_EDGE_PASS}"
+    permissions:
+      - action: read
+      - action: api
+  - user: "edge-relay"
+    pass: "${MEDIAMTX_RELAY_PASS}"
+    permissions:
+      - action: publish
+      - action: read
+
+  - user: "viewer"
+    pass: "${MEDIAMTX_VIEWER_PASS}"
+    permissions:
+      - action: read
+
+hlsSegmentCount: 10
+hlsSegmentDuration: 4s
+
+rtspAddress: :8554
+hlsAddress:  :8888
+webrtcAddress: :8889
+
+pathDefaults:
+  record: no
+
+paths:
+  all_others: ~

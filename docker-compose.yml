@@ -49,11 +49,17 @@ services:
   # ─── MediaMTX Central ────────────────────────────────────────
   # Recibe RTSP de edge gateways y sirve HLS al API
   central-mediamtx:
-    image: bluenviron/mediamtx:latest
+    build:
+      context: ./mediamtx
+      dockerfile: Dockerfile
     container_name: mce-central-mediamtx
     restart: unless-stopped
+    environment:
+      MEDIAMTX_EDGE_PASS: ${MEDIAMTX_EDGE_PASS}
+      MEDIAMTX_RELAY_PASS: ${MEDIAMTX_RELAY_PASS}
+      MEDIAMTX_VIEWER_PASS: ${MEDIAMTX_VIEWER_PASS}
     volumes:
-      - ./mediamtx/central-mediamtx.yml:/mediamtx.yml:ro
+      - ./mediamtx/central-mediamtx.yml.template:/mediamtx.yml.template:ro
     ports:
       - "8556:8554"   # RTSP (push desde edge)
     logging:
