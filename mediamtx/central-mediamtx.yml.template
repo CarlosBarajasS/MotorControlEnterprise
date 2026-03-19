@@ -32,8 +32,10 @@ hlsSegmentDuration: 4s
 rtspAddress: :8554
 hlsAddress:  :8888
 webrtcAddress: :8889
-# ICE host público — permite WebRTC desde internet a través de Cloudflare
-webrtcAdditionalHosts:
+# NAT 1:1 — reemplaza todas las IPs internas (Docker, loopback) con la IP pública
+# del servidor en los candidatos ICE. Sin esto, el browser recibe 127.0.0.1 o
+# 172.x.x.x y la conexión cae a los ~20s por fallo en el consent check.
+webrtcICEHostNAT1To1IPs:
   - 177.247.175.4
 # Puerto UDP fijo para ICE media (debe estar expuesto en docker-compose y firewall)
 webrtcICEUDPMuxAddress: :8190
