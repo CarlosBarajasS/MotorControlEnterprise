@@ -43,5 +43,11 @@ export class SidebarComponent {
         }
     }
 
+    onNavClick() {
+        if (window.innerWidth <= 768) {
+            this.closeSidebar.emit();
+        }
+    }
+
     logout() { this.authService.logout(); }
 }

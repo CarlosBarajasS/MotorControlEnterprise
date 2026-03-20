@@ -25,7 +25,7 @@
         <!-- ── MONITOREO ─────────────────── -->
         <div class="nav-group-label">MONITOREO</div>
 
-        <a routerLink="/dashboard" routerLinkActive="active">
+        <a routerLink="/dashboard" routerLinkActive="active" (click)="onNavClick()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="7" height="7" />
                 <rect x="14" y="3" width="7" height="7" />
@@ -35,7 +35,7 @@
             Dashboard
         </a>
 
-        <a routerLink="/cameras" routerLinkActive="active">
+        <a routerLink="/cameras" routerLinkActive="active" (click)="onNavClick()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 7l-7 5 7 5V7z" />
                 <rect x="1" y="5" width="15" height="14" rx="2" />
@@ -43,7 +43,7 @@
             Cámaras
         </a>
 
-        <a routerLink="/recordings" routerLinkActive="active">
+        <a routerLink="/recordings" routerLinkActive="active" (click)="onNavClick()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10" />
                 <polygon points="10 8 16 12 10 16 10 8" />
@@ -51,7 +51,7 @@
             Grabaciones
         </a>
 
-        <a routerLink="/gateways" routerLinkActive="active">
+        <a routerLink="/gateways" routerLinkActive="active" (click)="onNavClick()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
                 <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
@@ -64,7 +64,7 @@
         <!-- ── ADMINISTRACIÓN ──────────────── -->
         <div class="nav-group-label" style="margin-top: 8px;">ADMINISTRACIÓN</div>
 
-        <a routerLink="/clients" routerLinkActive="active">
+        <a routerLink="/clients" routerLinkActive="active" (click)="onNavClick()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
@@ -79,7 +79,7 @@
             <span class="nav-pill" style="margin-left:auto;">WEB</span>
         </a>
 
-        <a routerLink="/users" routerLinkActive="active">
+        <a routerLink="/users" routerLinkActive="active" (click)="onNavClick()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -90,7 +90,7 @@
             Control de Accesos
         </a>
 
-        <a routerLink="/wizard" routerLinkActive="active">
+        <a routerLink="/wizard" routerLinkActive="active" (click)="onNavClick()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />

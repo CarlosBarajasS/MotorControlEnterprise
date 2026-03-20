@@ -280,6 +280,13 @@ h3 {
     50%       { opacity: 0.35; }
 }
 
+/* ─── iOS Safari: prevent auto-zoom on input focus (font-size < 16px triggers zoom) */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
 /* ─── Responsive utilities ─────────────────────────────────── */
 .sr-only {
   position: absolute;
