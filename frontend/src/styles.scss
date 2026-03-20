@@ -90,6 +90,14 @@ body.theme-light {
     --muted-rgb: 100, 117, 160;
 }
 
+/* Logo theme switching */
+.logo-for-light { display: none; }
+.logo-for-dark { display: inline-block; }
+body.theme-light {
+    .logo-for-dark { display: none; }
+    .logo-for-light { display: inline-block; }
+}
+
 * {
     margin: 0;
     padding: 0;

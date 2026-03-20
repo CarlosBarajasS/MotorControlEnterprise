@@ -25,7 +25,8 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
             </svg>
           </button>
           <div class="brand">
-            <div class="brand-icon">m</div>
+            <img src="assets/logo-dark-sm.png" alt="NIRM GROUP" width="28" height="28" class="brand-icon-img logo-for-dark">
+            <img src="assets/logo-light-sm.png" alt="NIRM GROUP" width="28" height="28" class="brand-icon-img logo-for-light">
             <span class="brand-name">NIRM GROUP <strong>Monitor</strong></span>
           </div>
         </div>

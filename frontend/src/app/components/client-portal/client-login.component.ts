@@ -12,9 +12,8 @@ import { HttpClient } from '@angular/common/http';
     <div class="login-container">
       <div class="login-card">
         <div class="login-header">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="1.5">
-            <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
-          </svg>
+          <img src="assets/logo-dark-sm.png" alt="NIRM GROUP" width="48" height="48" class="logo-for-dark">
+          <img src="assets/logo-light-sm.png" alt="NIRM GROUP" width="48" height="48" class="logo-for-light">
           <h1>Portal de Monitoreo</h1>
           <p>Accede a tus cámaras y grabaciones</p>
         </div>
