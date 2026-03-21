@@ -1,3 +1,19 @@
+// ── Host element ─────────────────────────────────────────────────────────
+// Por defecto: bloque que ocupa todo el ancho disponible (portal cliente)
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Admin mode: columna flex que ocupa el espacio restante del NVR full-screen
+:host(.admin-mode) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 // ── Toolbar con layout picker ─────────────────────────────────────────────
 .cgrid-toolbar {
   display: flex;

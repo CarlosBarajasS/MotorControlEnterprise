@@ -76,11 +76,3 @@
   &:hover { opacity: 0.85; }
 }
 
-// El grid compartido ocupa el resto
-app-camera-grid {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-}
