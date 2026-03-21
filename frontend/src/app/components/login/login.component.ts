@@ -26,6 +26,19 @@ export class LoginComponent {
             email: ['', [Validators.required, Validators.email]],
             password: ['', Validators.required]
         });
+
+        // Redirigir si ya hay sesión activa
+        const token = localStorage.getItem('motor_control_token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.role === 'client') {
+                    this.router.navigate(['/client/cameras']);
+                } else if (payload.role === 'admin' || payload.role === 'installer') {
+                    this.router.navigate(['/dashboard']);
+                }
+            } catch { }
+        }
     }
 
     togglePassword() {
@@ -43,17 +56,17 @@ export class LoginComponent {
                 this.loading = false;
                 const role = res.user?.role ?? res.role;
                 if (role === 'client') {
+                    localStorage.setItem('motor_control_client_must_change', res.mustChangePassword ? 'true' : 'false');
                     if (res.mustChangePassword) {
                         this.router.navigate(['/client/change-password']);
                     } else {
                         this.router.navigate(['/client/cameras']);
                     }
                 } else {
+                    localStorage.setItem('motor_control_must_change', res.mustChangePassword ? 'true' : 'false');
                     if (res.mustChangePassword) {
-                        localStorage.setItem('motor_control_must_change', 'true');
                         this.router.navigate(['/change-password']);
                     } else {
-                        localStorage.setItem('motor_control_must_change', 'false');
                         this.router.navigate(['/dashboard']);
                     }
                 }
