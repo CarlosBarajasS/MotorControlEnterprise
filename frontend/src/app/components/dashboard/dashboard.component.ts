@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -14,7 +14,7 @@ const API_URL = '/api';
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
     http = inject(HttpClient);
 
     gateways = signal<any[]>([]);
@@ -26,6 +26,14 @@ export class DashboardComponent implements OnInit {
     camerasOnline = computed(() => this.cameras().filter(c => c.status === 'active').length);
 
     camerasOffline = computed(() => this.cameras().length - this.camerasOnline());
+
+    clientsActive = computed(() => this.gateways().filter(c => c.status === 'active').length);
+
+    topClients = computed(() =>
+        [...this.gateways()]
+            .sort((a, b) => (b.cameraCount ?? b.CameraCount ?? 0) - (a.cameraCount ?? a.CameraCount ?? 0))
+            .slice(0, 5)
+    );
 
     recentActivity = computed(() => {
         const events: any[] = [];
@@ -54,9 +62,15 @@ export class DashboardComponent implements OnInit {
     selectedCameraStream: string | null = null;
     selectedCameraPath: string | null = null;
     private gatewayIdMap = new Map<number, string>();
+    private refreshInterval: any;
 
     ngOnInit() {
         this.refreshAll();
+        this.refreshInterval = setInterval(() => this.refreshAll(), 30_000);
+    }
+
+    ngOnDestroy() {
+        clearInterval(this.refreshInterval);
     }
 
     refreshAll() {

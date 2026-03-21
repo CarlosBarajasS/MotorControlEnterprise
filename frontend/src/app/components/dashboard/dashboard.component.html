@@ -74,15 +74,19 @@
   <div class="stat-card">
     <div class="stat-icon blue">
       <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+        <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+        <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+        <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+        <path d="M10 6h4M10 10h4M10 14h4M10 18h4"/>
       </svg>
     </div>
     <div class="stat-body">
-      <div class="stat-value">{{ cameras().length }}<span class="stat-total"> cáms</span></div>
-      <div class="stat-label">Cloud NAS</div>
+      <div class="stat-value">{{ clientsActive() }}<span class="stat-total"> / {{ gateways().length }}</span></div>
+      <div class="stat-label">Clientes Activos</div>
+      <div class="stat-sub">empresas registradas</div>
       <div class="stat-progress">
         <div class="stat-progress-bar"
-          [style.width.%]="cameras().length > 0 ? (camerasOnline() / cameras().length) * 100 : 0"></div>
+          [style.width.%]="gateways().length > 0 ? (clientsActive() / gateways().length) * 100 : 0"></div>
       </div>
     </div>
   </div>
@@ -173,6 +177,45 @@
   </table>
 </div>
 </div><!-- /.fade-section activity -->
+
+<!-- TOP CLIENTES -->
+<div class="fade-section" style="animation-delay: 0.2s" *ngIf="gateways().length > 0">
+  <div class="section-hdr" style="margin-top: 32px;">
+    <h2>Top Clientes</h2>
+    <span class="section-count">Por número de cámaras</span>
+  </div>
+  <div class="top-clients-wrap">
+    <table class="top-clients-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Cliente</th>
+          <th>Ciudad</th>
+          <th>Cámaras</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let client of topClients(); let i = index">
+          <td class="rank">{{ i + 1 }}</td>
+          <td class="client-name">
+            <div class="client-avatar">{{ client.name?.charAt(0)?.toUpperCase() }}</div>
+            {{ client.name }}
+          </td>
+          <td class="text-muted">{{ client.city || '—' }}</td>
+          <td>
+            <span class="cam-count">{{ client.cameraCount ?? client.CameraCount ?? 0 }}</span>
+          </td>
+          <td>
+            <span class="badge" [class.online]="client.status === 'active'" [class.offline]="client.status !== 'active'">
+              {{ client.status === 'active' ? 'ACTIVO' : 'INACTIVO' }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div><!-- /.top-clients -->
 
 </div><!-- /.dashboard-wrap -->
 
