@@ -72,7 +72,7 @@
                     </svg>
                     <div style="display:flex; flex-direction:column; gap:2px;">
                         <span>{{ client.contactName || 'No definido' }}</span>
-                        <span style="font-size:11px; color:#64748b;">{{ client.contactPhone || '—' }}</span>
+                        <span style="font-size:11px; color:var(--muted);">{{ client.contactPhone || '—' }}</span>
                     </div>
                 </div>
                 <div class="info-row" style="margin-top:4px;">
@@ -87,12 +87,12 @@
             </div>
 
             <div class="card-footer">
-                <span class="status-badge" [class.active]="client.status === 'active'" (click)="toggleStatus(client)">
+                <button class="status-badge" [class.active]="client.status === 'active'" (click)="toggleStatus(client)" type="button" [attr.aria-label]="'Estado: ' + client.status">
                     {{ client.status | uppercase }}
-                </span>
+                </button>
 
                 <div class="cloud-toggle" title="Almacenamiento Cloud">
-                    <span style="font-size:10px; color:#94a3b8; font-weight:600;">CLOUD</span>
+                    <span style="font-size:10px; color:var(--muted); font-weight:600;">CLOUD</span>
                     <label class="toggle-switch">
                         <input type="checkbox" [checked]="client.cloudStorageActive"
                             (change)="toggleCloudStorage(client)">
@@ -144,10 +144,11 @@
     </div>
 
     <!-- Modal Formulario -->
-    <div class="modal-overlay" *ngIf="showModal()">
+    <div class="modal-overlay" *ngIf="showModal()"
+         role="dialog" aria-modal="true" aria-labelledby="client-modal-title">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>{{ modalMode() === 'create' ? 'Crear Nuevo Cliente' : 'Editar Cliente' }}</h2>
+                <h2 id="client-modal-title">{{ modalMode() === 'create' ? 'Crear Nuevo Cliente' : 'Editar Cliente' }}</h2>
                 <button class="close-btn" (click)="showModal.set(false)">✕</button>
             </div>
             <div class="modal-body">
@@ -209,7 +210,7 @@
                 <button class="btn-secondary" (click)="showModal.set(false)">Cancelar</button>
                 <div style="display:flex;gap:8px;">
                     <button *ngIf="modalMode() === 'edit'" class="btn-secondary"
-                        style="color:#ef4444; border-color: rgba(239, 68, 68, 0.3);"
+                        style="color:var(--red); border-color: rgba(var(--red-rgb), 0.3);"
                         (click)="deleteClient(currentClient().id)">Eliminar</button>
                     <button class="btn-primary" (click)="saveClient()">Guardar Datos</button>
                 </div>

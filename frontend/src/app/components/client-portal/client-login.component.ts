@@ -47,57 +47,58 @@ import { HttpClient } from '@angular/common/http';
       justify-content: center;
       min-height: 100vh;
       background:
-        radial-gradient(ellipse at 20% 50%, rgba(37,99,235,0.15), transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.1), transparent 50%),
-        #060a14;
-      font-family: 'IBM Plex Sans', sans-serif;
+        radial-gradient(ellipse at 20% 50%, rgba(var(--accent-rgb), 0.12), transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(var(--accent-rgb), 0.07), transparent 50%),
+        var(--bg);
+      font-family: 'Nunito Sans', sans-serif;
     }
     .login-card {
-      background: rgba(15,23,42,0.8);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--surface);
+      border: 1px solid var(--outline);
       border-radius: 20px;
       padding: 48px 40px;
       width: 100%;
       max-width: 420px;
       backdrop-filter: blur(20px);
-      box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+      box-shadow: var(--shadow);
     }
     .login-header {
       text-align: center;
       margin-bottom: 32px;
       svg { margin-bottom: 16px; }
-      h1 { color: #f1f5f9; font-size: 1.5rem; margin: 0 0 6px; font-family: 'Space Grotesk', sans-serif; }
-      p { color: rgba(248,250,252,0.5); font-size: 14px; margin: 0; }
+      h1 { color: var(--ink); font-size: 1.5rem; margin: 0 0 6px; font-family: 'Syne', sans-serif; }
+      p { color: var(--muted); font-size: 14px; margin: 0; }
     }
     .form-group {
       margin-bottom: 20px;
       label {
         display: block; margin-bottom: 6px;
-        font-size: 13px; font-weight: 600; color: rgba(248,250,252,0.7);
+        font-size: 13px; font-weight: 600; color: var(--muted);
       }
       input {
         width: 100%; padding: 12px 16px;
-        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 10px; color: #f1f5f9;
+        background: rgba(var(--nav-rgb), 0.5); border: 1px solid var(--outline);
+        border-radius: 10px; color: var(--ink);
         font-size: 15px; font-family: inherit;
         transition: border-color 0.2s;
-        &:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
-        &::placeholder { color: rgba(248,250,252,0.3); }
+        &:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15); }
+        &::placeholder { color: var(--muted); opacity: 0.5; }
       }
     }
     .btn-login {
       width: 100%; padding: 13px;
-      background: #2563eb; color: #fff;
+      background: var(--accent); color: #fff;
       border: none; border-radius: 10px;
       font-weight: 600; font-size: 15px;
-      cursor: pointer; transition: background 0.2s;
-      &:hover:not(:disabled) { background: #1d4ed8; }
+      cursor: pointer; transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.3);
+      &:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.4); }
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
     .alert.error {
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.3);
-      color: #fca5a5;
+      background: rgba(var(--red-rgb), 0.1);
+      border: 1px solid rgba(var(--red-rgb), 0.3);
+      color: var(--red);
       padding: 12px 16px;
       border-radius: 10px;
       font-size: 13px;
@@ -107,8 +108,8 @@ import { HttpClient } from '@angular/common/http';
       text-align: center;
       margin-top: 24px;
       a {
-        color: rgba(248,250,252,0.5); font-size: 13px; text-decoration: none;
-        &:hover { color: #93c5fd; }
+        color: var(--muted); font-size: 13px; text-decoration: none;
+        &:hover { color: var(--accent); }
       }
     }
   `]

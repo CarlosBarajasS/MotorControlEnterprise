@@ -230,6 +230,9 @@
     color: var(--red);
     cursor: pointer;
     transition: opacity 0.2s;
+    border: none;
+    font-family: inherit;
+    line-height: inherit;
 
     &:hover {
         opacity: 0.8;

@@ -140,7 +140,7 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
     .brand-icon {
       width: 28px;
       height: 28px;
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
       border-radius: 6px;
       display: flex;
       align-items: center;
@@ -175,7 +175,7 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
       font-size: 13px;
       cursor: pointer;
       transition: all 0.15s;
-      &:hover { background: rgba(239,68,68,0.15); color: #fca5a5; border-color: rgba(239,68,68,0.3); }
+      &:hover { background: rgba(var(--red-rgb), 0.15); color: var(--red); border-color: rgba(var(--red-rgb), 0.3); }
     }
 
     /* BODY LAYOUT */
@@ -220,9 +220,9 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
         color: rgba(var(--ink-rgb), 0.9);
       }
       &.active {
-        background: rgba(37,99,235,0.2);
-        border-left-color: #3b82f6;
-        color: #93c5fd;
+        background: rgba(var(--accent-rgb), 0.18);
+        border-left-color: var(--accent);
+        color: var(--accent);
       }
     }
 

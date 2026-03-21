@@ -12,7 +12,7 @@
     <div class="health-pill" [class.healthy]="health().status === 'Healthy'"
       [class.unhealthy]="health().status !== 'Healthy'">
       <span class="health-dot"></span>
-      <span>{{ health().status === 'Healthy' ? 'Sistema Operativo' : 'Sistema con alertas' }}</span>
+      <span>{{ health().status === 'Healthy' ? 'Sistema en línea' : 'Sistema con alertas' }}</span>
     </div>
     <button class="btn-primary" (click)="refreshAll()">🔄 Actualizar</button>
   </div>
@@ -136,7 +136,16 @@
   </div>
 
   <div class="gateways-empty" *ngIf="gateways().length === 0">
-    <div class="empty-icon">🖧</div>
+    <div class="empty-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.4">
+        <rect x="2" y="3" width="20" height="4" rx="1"/>
+        <rect x="2" y="10" width="20" height="4" rx="1"/>
+        <rect x="2" y="17" width="20" height="4" rx="1"/>
+        <circle cx="20" cy="5" r="0.8" fill="currentColor"/>
+        <circle cx="20" cy="12" r="0.8" fill="currentColor"/>
+        <circle cx="20" cy="19" r="0.8" fill="currentColor"/>
+      </svg>
+    </div>
     <h3>Sin gateways registrados</h3>
     <p>Configura un nuevo nodo edge desde el Wizard de instalación.</p>
   </div>
