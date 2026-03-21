@@ -27,7 +27,13 @@
 }
 
 // ── Body: grid + panel ────────────────────────────────────────────────────
+// Por defecto: flujo natural (portal cliente, dentro de página scrollable)
 .cgrid-body {
+  display: block;
+}
+
+// Admin mode: full-screen NVR — necesita overflow hidden y flex para el panel lateral
+:host(.admin-mode) .cgrid-body {
   flex: 1;
   display: flex;
   overflow: hidden;
@@ -36,18 +42,21 @@
 
 // ── Grid ──────────────────────────────────────────────────────────────────
 .cgrid-grid {
-  flex: 1;
   display: grid;
-  overflow: hidden;
   gap: 2px;
   background: #111;
   transition: flex 0.25s ease;
-  align-content: start;
 
   &.cgrid-grid-1 { grid-template-columns: 1fr; max-width: 900px; margin: 0 auto; width: 100%; }
   &.cgrid-grid-2 { grid-template-columns: repeat(2, 1fr); }
   &.cgrid-grid-3 { grid-template-columns: repeat(3, 1fr); }
   &.cgrid-grid-4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+// En admin mode el grid ocupa el espacio restante del flex body
+:host(.admin-mode) .cgrid-grid {
+  flex: 1;
+  overflow: hidden;
 }
 
 // ── Celda ─────────────────────────────────────────────────────────────────

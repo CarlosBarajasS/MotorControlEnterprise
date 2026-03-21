@@ -1,6 +1,6 @@
 import {
     Component, Input, OnChanges, SimpleChanges,
-    inject, signal, computed, Output, EventEmitter
+    inject, signal, computed, Output, EventEmitter, HostBinding
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -25,6 +25,8 @@ export class CameraGridComponent implements OnChanges {
     @Input() showLayoutPicker = false;
     /** Modo portal cliente: botones de acción (Expandir, Grabaciones) en lugar de panel PTZ */
     @Input() clientMode = false;
+
+    @HostBinding('class.admin-mode') get adminMode() { return !this.clientMode; }
     @Input() loading = false;
     @Input() loadError = false;
     @Input() emptyMessage = 'Sin cámaras configuradas';
