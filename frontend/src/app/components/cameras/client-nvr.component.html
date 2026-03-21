@@ -1,158 +1,26 @@
 <div class="nvr-layout">
 
-  <!-- NVR TOPBAR -->
+  <!-- TOPBAR -->
   <div class="nvr-topbar">
     <button class="btn-back" (click)="router.navigate(['/cameras'])">← Clientes</button>
     <span class="nvr-client-name">{{ clientName() }}</span>
     <div class="nvr-status-badges" *ngIf="!loading() && !loadError()">
-      <span class="status-badge online" *ngIf="onlineCount() > 0">
-        ● {{ onlineCount() }} EN VIVO
-      </span>
-      <span class="status-badge offline" *ngIf="offlineCount() > 0">
-        ○ {{ offlineCount() }} Offline
-      </span>
-      <span class="status-badge muted" *ngIf="cameras().length === 0">
-        Sin cámaras
-      </span>
+      <span class="status-badge online"  *ngIf="onlineCount()  > 0">● {{ onlineCount() }} EN VIVO</span>
+      <span class="status-badge offline" *ngIf="offlineCount() > 0">○ {{ offlineCount() }} Offline</span>
+      <span class="status-badge muted"   *ngIf="cameras().length === 0">Sin cámaras</span>
     </div>
     <div class="nvr-topbar-spacer"></div>
     <button class="btn-add" (click)="router.navigate(['/cameras'])">+ Añadir Cámara</button>
   </div>
 
-  <!-- BODY: grid + side panel -->
-  <div class="nvr-body">
-
-    <!-- LOADING -->
-    <div class="nvr-grid nvr-grid-2" *ngIf="loading()">
-      <div class="nvr-skeleton" *ngFor="let i of skeletonCells"></div>
-    </div>
-
-    <!-- ERROR -->
-    <div class="nvr-center-msg" *ngIf="!loading() && loadError()">
-      <p class="msg-text">Error al cargar cámaras.</p>
-      <button class="btn-retry" (click)="loadData()">Reintentar</button>
-    </div>
-
-    <!-- EMPTY -->
-    <div class="nvr-center-msg" *ngIf="!loading() && !loadError() && cameras().length === 0">
-      <p class="msg-text">Este cliente no tiene cámaras configuradas.</p>
-      <button class="btn-retry" (click)="router.navigate(['/cameras'])">Añadir Cámara</button>
-    </div>
-
-    <!-- NVR GRID -->
-    <div class="nvr-grid"
-         *ngIf="!loading() && !loadError() && cameras().length > 0"
-         [class.nvr-grid-1]="gridCols() === 1"
-         [class.nvr-grid-2]="gridCols() === 2"
-         [class.nvr-grid-3]="gridCols() === 3"
-         [class.nvr-grid-4]="gridCols() === 4"
-         [class.panel-open]="selectedCam() !== null">
-
-      <div class="nvr-cell" #cell
-           *ngFor="let cam of cameras(); trackBy: trackByCamId"
-           [class.selected]="selectedCam()?.id === cam.id"
-           (click)="selectCam(cam)">
-
-        <app-webrtc-viewer [streamPath]="getWebrtcPath(cam)"></app-webrtc-viewer>
-
-        <div class="nvr-offline-overlay" *ngIf="!isOnline(cam)">
-          <div class="nvr-offline-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="1" y1="1" x2="23" y2="23"/>
-              <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
-              <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
-              <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
-              <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
-              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-              <circle cx="12" cy="20" r="1"/>
-            </svg>
-          </div>
-          <p class="nvr-offline-text">Sin señal</p>
-        </div>
-
-        <div class="nvr-badge-top">
-          <span class="live-dot" [class.online]="isOnline(cam)"></span>
-          {{ isOnline(cam) ? 'EN VIVO' : 'OFFLINE' }}
-        </div>
-        <div class="nvr-cam-name">{{ cam.name }}</div>
-
-        <button class="nvr-fullscreen-btn"
-                (click)="toggleFullscreen($event, cell)"
-                title="Pantalla completa">⛶</button>
-
-      </div>
-    </div>
-
-    <!-- SIDE PANEL -->
-    <div class="nvr-side-panel" *ngIf="selectedCam() !== null">
-
-      <!-- Panel header -->
-      <div class="panel-header">
-        <div class="panel-cam-info">
-          <span class="panel-cam-dot" [class.online]="isOnline(selectedCam())"></span>
-          <span class="panel-cam-name">{{ selectedCam().name }}</span>
-        </div>
-        <button class="panel-close" (click)="selectCam(null)" title="Cerrar">✕</button>
-      </div>
-
-      <!-- Camera metadata -->
-      <div class="panel-section" *ngIf="selectedCam().metadata?.discovery?.brand">
-        <p class="panel-meta">{{ camSummary(selectedCam()) }}</p>
-      </div>
-
-      <!-- PTZ CONTROLS -->
-      <div class="panel-section" *ngIf="selectedCam().ptz">
-        <h4 class="panel-section-title">🕹️ Control PTZ</h4>
-        <div class="joystick-grid">
-          <button class="ptz-btn" (mousedown)="ptzMove(-70,  70, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">↖</button>
-          <button class="ptz-btn" (mousedown)="ptzMove(  0, 100, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">▲</button>
-          <button class="ptz-btn" (mousedown)="ptzMove( 70,  70, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">↗</button>
-
-          <button class="ptz-btn" (mousedown)="ptzMove(-100, 0, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">◀</button>
-          <button class="ptz-btn ptz-stop" (click)="ptzStop()">■</button>
-          <button class="ptz-btn" (mousedown)="ptzMove( 100, 0, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">▶</button>
-
-          <button class="ptz-btn" (mousedown)="ptzMove(-70, -70, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">↙</button>
-          <button class="ptz-btn" (mousedown)="ptzMove(  0,-100, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">▼</button>
-          <button class="ptz-btn" (mousedown)="ptzMove( 70, -70, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">↘</button>
-        </div>
-        <div class="zoom-row">
-          <button class="ptz-btn zoom-btn" (mousedown)="ptzMove(0,0, 100)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">＋ Zoom</button>
-          <button class="ptz-btn zoom-btn" (mousedown)="ptzMove(0,0,-100)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">－ Zoom</button>
-        </div>
-        <!-- Presets -->
-        <div class="presets-row" *ngIf="ptzPresets().length > 0">
-          <span class="panel-label">Presets</span>
-          <button class="preset-btn" *ngFor="let p of ptzPresets()" (click)="gotoPreset(p.id)">{{ p.name }}</button>
-        </div>
-      </div>
-
-      <!-- CAPABILITIES (ONVIF cameras) -->
-      <div class="panel-section" *ngIf="selectedCam().metadata?.onvif">
-        <h4 class="panel-section-title">Funciones</h4>
-        <div class="caps-grid">
-          <button class="cap-btn" title="Alarma sonora" disabled>
-            <span class="cap-icon">🔔</span>
-            <span class="cap-label">Alarma</span>
-          </button>
-          <button class="cap-btn" title="Audio bidireccional" disabled>
-            <span class="cap-icon">🎙️</span>
-            <span class="cap-label">Micrófono</span>
-          </button>
-          <button class="cap-btn" title="Luz LED" disabled>
-            <span class="cap-icon">💡</span>
-            <span class="cap-label">Luz</span>
-          </button>
-          <button class="cap-btn" title="Snapshot" (click)="takeSnapshot()">
-            <span class="cap-icon">📷</span>
-            <span class="cap-label">Foto</span>
-          </button>
-        </div>
-        <p class="caps-note">Alarma, micrófono y luz — próximamente</p>
-      </div>
-
-    </div><!-- /nvr-side-panel -->
-
-  </div><!-- /nvr-body -->
+  <!-- GRID COMPARTIDO -->
+  <app-camera-grid
+    [cameras]="cameras()"
+    [gatewayId]="gatewayId"
+    [loading]="loading()"
+    [loadError]="loadError()"
+    emptyMessage="Este cliente no tiene cámaras configuradas"
+    (retryClick)="loadData()">
+  </app-camera-grid>
 
 </div>

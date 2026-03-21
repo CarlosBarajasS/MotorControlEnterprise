@@ -1,0 +1,155 @@
+<!-- LAYOUT PICKER (opcional) -->
+<div class="cgrid-toolbar" *ngIf="showLayoutPicker">
+  <div class="cgrid-layout-btns">
+    <button class="layout-btn" [class.active]="gridCols() === 1" (click)="setManualCols(1)">1×1</button>
+    <button class="layout-btn" [class.active]="gridCols() === 2" (click)="setManualCols(2)">2×2</button>
+    <button class="layout-btn" [class.active]="gridCols() === 3" (click)="setManualCols(3)">3×3</button>
+    <button class="layout-btn" [class.active]="gridCols() === 4" (click)="setManualCols(4)">4×4</button>
+  </div>
+</div>
+
+<div class="cgrid-body">
+
+  <!-- SKELETON -->
+  <div class="cgrid-grid cgrid-grid-2" *ngIf="loading">
+    <div class="cgrid-skeleton" *ngFor="let i of skeletonCells"></div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="cgrid-state" *ngIf="!loading && loadError">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <p class="cgrid-state-title">Error al cargar cámaras</p>
+    <button class="btn-retry" (click)="retryClick.emit()">Reintentar</button>
+  </div>
+
+  <!-- VACÍO -->
+  <div class="cgrid-state" *ngIf="!loading && !loadError && camsValue.length === 0">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+    </svg>
+    <p class="cgrid-state-title">{{ emptyMessage }}</p>
+  </div>
+
+  <!-- GRID -->
+  <div class="cgrid-grid"
+       *ngIf="!loading && !loadError && camsValue.length > 0"
+       [class.cgrid-grid-1]="gridCols() === 1"
+       [class.cgrid-grid-2]="gridCols() === 2"
+       [class.cgrid-grid-3]="gridCols() === 3"
+       [class.cgrid-grid-4]="gridCols() === 4"
+       [class.panel-open]="selectedCam() !== null">
+
+    <div class="cgrid-cell" #cell
+         *ngFor="let cam of camsValue; trackBy: trackByCamId"
+         [class.selected]="selectedCam()?.id === cam.id"
+         (click)="selectCam(cam)">
+
+      <app-webrtc-viewer [streamPath]="getWebrtcPath(cam)"></app-webrtc-viewer>
+
+      <!-- Sin señal -->
+      <div class="cgrid-offline-overlay" *ngIf="!isOnline(cam)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="1" y1="1" x2="23" y2="23"/>
+          <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+          <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+          <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+          <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+          <circle cx="12" cy="20" r="1"/>
+        </svg>
+        <p class="cgrid-offline-text">Sin señal</p>
+      </div>
+
+      <!-- Badge estado -->
+      <div class="cgrid-badge-top">
+        <span class="live-dot" [class.online]="isOnline(cam)"></span>
+        {{ isOnline(cam) ? 'EN VIVO' : 'OFFLINE' }}
+      </div>
+
+      <!-- Nombre -->
+      <div class="cgrid-cam-name">{{ cam.name }}</div>
+
+      <!-- Fullscreen (admin) -->
+      <button class="cgrid-fullscreen-btn"
+              *ngIf="!clientMode"
+              (click)="toggleFullscreen($event, cell)"
+              title="Pantalla completa">⛶</button>
+
+      <!-- Acciones (cliente) -->
+      <div class="cgrid-actions" *ngIf="clientMode">
+        <a [routerLink]="['/client/cameras', cam.id]" class="cgrid-action-btn"
+           (click)="$event.stopPropagation()">⛶ Expandir</a>
+        <a [routerLink]="cam.recordingCameraId ? ['/client/recordings', cam.recordingCameraId] : null"
+           class="cgrid-action-btn"
+           [class.disabled]="!cam.recordingCameraId"
+           (click)="$event.stopPropagation()">🎞 Grabaciones</a>
+      </div>
+
+    </div><!-- /cgrid-cell -->
+  </div><!-- /cgrid-grid -->
+
+  <!-- PANEL LATERAL (solo admin) -->
+  <div class="cgrid-side-panel" *ngIf="!clientMode && selectedCam() !== null">
+
+    <div class="panel-header">
+      <div class="panel-cam-info">
+        <span class="panel-cam-dot" [class.online]="isOnline(selectedCam())"></span>
+        <span class="panel-cam-name">{{ selectedCam().name }}</span>
+      </div>
+      <button class="panel-close" (click)="selectCam(null)">✕</button>
+    </div>
+
+    <div class="panel-section" *ngIf="selectedCam().metadata?.discovery?.brand">
+      <p class="panel-meta">{{ camSummary(selectedCam()) }}</p>
+    </div>
+
+    <!-- PTZ -->
+    <div class="panel-section" *ngIf="selectedCam().ptz">
+      <h4 class="panel-section-title">Control PTZ</h4>
+      <div class="joystick-grid">
+        <button class="ptz-btn" (mousedown)="ptzMove(-70,  70, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">↖</button>
+        <button class="ptz-btn" (mousedown)="ptzMove(  0, 100, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">▲</button>
+        <button class="ptz-btn" (mousedown)="ptzMove( 70,  70, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">↗</button>
+        <button class="ptz-btn" (mousedown)="ptzMove(-100, 0, 0)"  (mouseup)="ptzStop()" (mouseleave)="ptzStop()">◀</button>
+        <button class="ptz-btn ptz-stop" (click)="ptzStop()">■</button>
+        <button class="ptz-btn" (mousedown)="ptzMove( 100, 0, 0)"  (mouseup)="ptzStop()" (mouseleave)="ptzStop()">▶</button>
+        <button class="ptz-btn" (mousedown)="ptzMove(-70, -70, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">↙</button>
+        <button class="ptz-btn" (mousedown)="ptzMove(  0,-100, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">▼</button>
+        <button class="ptz-btn" (mousedown)="ptzMove( 70, -70, 0)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">↘</button>
+      </div>
+      <div class="zoom-row">
+        <button class="ptz-btn zoom-btn" (mousedown)="ptzMove(0,0, 100)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">＋ Zoom</button>
+        <button class="ptz-btn zoom-btn" (mousedown)="ptzMove(0,0,-100)" (mouseup)="ptzStop()" (mouseleave)="ptzStop()">－ Zoom</button>
+      </div>
+      <div class="presets-row" *ngIf="ptzPresets().length > 0">
+        <span class="panel-label">Presets</span>
+        <button class="preset-btn" *ngFor="let p of ptzPresets()" (click)="gotoPreset(p.id)">{{ p.name }}</button>
+      </div>
+    </div>
+
+    <!-- Funciones ONVIF -->
+    <div class="panel-section" *ngIf="selectedCam().metadata?.onvif">
+      <h4 class="panel-section-title">Funciones</h4>
+      <div class="caps-grid">
+        <button class="cap-btn" disabled>
+          <span class="cap-icon">🔔</span><span class="cap-label">Alarma</span>
+        </button>
+        <button class="cap-btn" disabled>
+          <span class="cap-icon">🎙️</span><span class="cap-label">Micrófono</span>
+        </button>
+        <button class="cap-btn" disabled>
+          <span class="cap-icon">💡</span><span class="cap-label">Luz</span>
+        </button>
+        <button class="cap-btn" (click)="takeSnapshot()">
+          <span class="cap-icon">📷</span><span class="cap-label">Foto</span>
+        </button>
+      </div>
+      <p class="caps-note">Alarma, micrófono y luz — próximamente</p>
+    </div>
+
+  </div><!-- /cgrid-side-panel -->
+
+</div><!-- /cgrid-body -->

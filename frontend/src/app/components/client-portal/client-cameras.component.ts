@@ -1,67 +1,32 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { timer, Subscription, switchMap } from 'rxjs';
-import { WebrtcViewerComponent } from '../camera-viewer/webrtc-viewer.component';
+import { CameraGridComponent } from '../shared/camera-grid/camera-grid.component';
 
 const API_URL = '/api';
 
 @Component({
   selector: 'app-client-cameras',
   standalone: true,
-  imports: [CommonModule, RouterModule, WebrtcViewerComponent],
+  imports: [CommonModule, CameraGridComponent],
   template: `
-    <!-- NVR Monitor -->
     <div class="nvr-panel">
       <div class="nvr-toolbar">
         <span class="nvr-toolbar-title">
           Monitor en Vivo
           <span class="nvr-sub">{{ cameras().length }} cámara(s)</span>
         </span>
-        <div class="nvr-layout-btns">
-          <button class="layout-btn" [class.active]="gridCols === 1" (click)="gridCols = 1">1×1</button>
-          <button class="layout-btn" [class.active]="gridCols === 2" (click)="gridCols = 2">2×2</button>
-          <button class="layout-btn" [class.active]="gridCols === 3" (click)="gridCols = 3">3×3</button>
-        </div>
+        <span class="nvr-sub">{{ onlineCount() }}/{{ cameras().length }} activas</span>
       </div>
 
-      <div class="camera-grid" [style.grid-template-columns]="'repeat(' + gridCols + ', 1fr)'">
-        <div class="camera-cell" *ngFor="let cam of cameras(); let i = index; trackBy: trackByCamId">
-          <app-webrtc-viewer *ngIf="gatewayId()" [streamPath]="getWebrtcPath(cam)"
-                             class="cell-viewer"></app-webrtc-viewer>
-          <div class="cell-overlay">
-            <div class="cell-info">
-              <span class="cell-name">{{ cam.name }}</span>
-              <span class="cell-status" [class.online]="isOnline(cam)" [class.offline]="!isOnline(cam)">
-                <span class="dot"></span>
-                {{ isOnline(cam) ? 'EN VIVO' : 'SIN SEÑAL' }}
-              </span>
-            </div>
-          </div>
-          <span class="cell-index">{{ i + 1 }}</span>
-          <div class="cell-actions">
-            <a [routerLink]="['/client/cameras', cam.id]" class="cell-action-btn">⛶ Expandir</a>
-            <a [routerLink]="cam.recordingCameraId ? ['/client/recordings', cam.recordingCameraId] : null" 
-               class="cell-action-btn" [class.disabled]="!cam.recordingCameraId" 
-               [title]="!cam.recordingCameraId ? 'Esta cámara no tiene almacenamiento en nube configurado' : ''">
-               🎞 Grabaciones
-            </a>
-          </div>
-        </div>
-
-        <div class="nvr-state" *ngIf="cameras().length === 0">
-          <div class="nvr-state-icon">📷</div>
-          <div class="nvr-state-title">Sin Cámaras Asignadas</div>
-          <div class="nvr-state-sub">Contacta al administrador para vincular cámaras a tu cuenta</div>
-        </div>
-      </div>
-
-      <div class="nvr-statusbar">
-        <span><span class="dot online"></span> En Línea</span>
-        <span>|</span>
-        <span>{{ onlineCount() }}/{{ cameras().length }} cámaras activas</span>
-      </div>
+      <app-camera-grid
+        [cameras]="cameras()"
+        [gatewayId]="gatewayId()"
+        [showLayoutPicker]="true"
+        [clientMode]="true"
+        emptyMessage="Sin cámaras asignadas — contacta al administrador">
+      </app-camera-grid>
     </div>
   `,
   styles: [`
@@ -73,110 +38,43 @@ const API_URL = '/api';
       flex-direction: column;
       border: 1px solid var(--outline);
       box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+      min-height: 500px;
     }
     .nvr-toolbar {
-      display: flex; align-items: center; gap: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
       padding: 14px 20px;
       background: rgba(var(--ink-rgb), 0.02);
       border-bottom: 1px solid var(--outline);
       flex-wrap: wrap;
     }
     .nvr-toolbar-title {
-      font-size: 14px; font-weight: 600; color: rgba(var(--ink-rgb), 1);
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(var(--ink-rgb), 1);
       margin-right: auto;
-      display: flex; align-items: center; gap: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .nvr-sub { font-size: 12px; color: rgba(var(--ink-rgb), 0.5); font-weight: 400; }
-    .nvr-layout-btns { display: flex; gap: 6px; }
-    .layout-btn {
-      padding: 5px 10px; border-radius: 7px;
-      background: transparent; border: 1px solid var(--outline);
-      color: var(--muted); font-size: 12px; cursor: pointer;
-      transition: all 0.15s;
-      &:hover { background: rgba(var(--ink-rgb), 0.08); color: rgba(var(--ink-rgb), 1); }
-      &.active { background: rgba(37,99,235,0.25); border-color: #3b82f6; color: #93c5fd; }
-    }
-    .camera-grid {
-      display: grid; gap: 3px; padding: 3px;
-      background: var(--bg); min-height: 400px;
-    }
-    .camera-cell {
-      position: relative; aspect-ratio: 16/9;
-      background: var(--surface); overflow: hidden;
-      &:hover { outline: 2px solid #3b82f6; }
-      &:hover .cell-actions { opacity: 1; }
-    }
-    .cell-viewer { width: 100%; height: 100%; display: block; }
-    .cell-overlay {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
-      padding: 20px 10px 8px;
-    }
-    .cell-info { display: flex; justify-content: space-between; align-items: flex-end; }
-    .cell-name { font-size: 11px; font-weight: 600; color: #f1f5f9; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
-    .cell-status {
-      font-size: 10px; font-weight: 700;
-      display: flex; align-items: center; gap: 4px;
-      &.online { color: #10b981; }
-      &.offline { color: #ef4444; }
-    }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
-    .cell-index {
-      position: absolute; top: 6px; left: 8px;
-      font-size: 10px; font-weight: 700;
-      color: rgba(255,255,255,0.5);
-      background: rgba(0,0,0,0.4);
-      padding: 1px 5px; border-radius: 3px;
-    }
-    .cell-actions {
-      position: absolute; top: 6px; right: 8px;
-      display: flex; gap: 4px; opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .cell-action-btn {
-      font-size: 10px; padding: 3px 8px; border-radius: 5px;
-      background: rgba(0,0,0,0.6); color: #93c5fd; text-decoration: none;
-      border: 1px solid rgba(255,255,255,0.15);
-      &:hover:not(.disabled) { background: rgba(37,99,235,0.4); }
-      &.disabled { opacity: 0.5; pointer-events: none; }
-    }
-    .nvr-state {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 10px; padding: 80px 20px; grid-column: 1/-1;
-      color: rgba(var(--ink-rgb), 0.4);
-    }
-    .nvr-state-icon { font-size: 48px; opacity: 0.4; }
-    .nvr-state-title { font-size: 18px; font-weight: 600; }
-    .nvr-state-sub { font-size: 14px; text-align: center; max-width: 300px; }
-    .nvr-statusbar {
-      display: flex; align-items: center; gap: 16px;
-      padding: 8px 20px;
-      background: rgba(var(--ink-rgb), 0.02);
-      border-top: 1px solid var(--outline);
-      font-size: 11px; color: var(--muted);
-      .dot.online { background: #10b981; box-shadow: 0 0 6px #10b981; }
+    .nvr-sub {
+      font-size: 12px;
+      color: rgba(var(--ink-rgb), 0.5);
+      font-weight: 400;
     }
     @media (max-width: 768px) {
-      .camera-grid { min-height: 260px; }
       .nvr-toolbar { padding: 10px 14px; gap: 8px; }
-    }
-    @media (max-width: 480px) {
-      .nvr-toolbar-title { font-size: 12px; }
-      .nvr-layout-btns { flex-wrap: wrap; }
-      .nvr-statusbar { flex-wrap: wrap; gap: 8px; padding: 8px 14px; }
     }
   `]
 })
 export class ClientCamerasComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
-  private router = inject(Router);
   private pollSub?: Subscription;
 
-  cameras = signal<any[]>([]);
+  cameras  = signal<any[]>([]);
   gatewayId = signal('');
-  gridCols = 2;
-
-  onlineCount = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
+  onlineCount = computed(() => this.cameras().filter(c => c.status === 'active').length);
 
   ngOnInit() {
     this.pollSub = timer(0, 20000).pipe(
@@ -190,19 +88,5 @@ export class ClientCamerasComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy() {
-    this.pollSub?.unsubscribe();
-  }
-
-  getWebrtcPath(cam: any): string {
-    return `${this.gatewayId()}/${cam.cameraId ?? cam.cameraKey ?? cam.name}`;
-  }
-
-  isOnline(cam: any): boolean {
-    return cam.status === 'active';
-  }
-
-  trackByCamId(_: number, cam: any): string {
-    return cam.id ?? cam.cameraId ?? cam.cameraKey;
-  }
+  ngOnDestroy() { this.pollSub?.unsubscribe(); }
 }
