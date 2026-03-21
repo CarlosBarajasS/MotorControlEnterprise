@@ -22,6 +22,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     health = signal<{ status: string }>({ status: 'checking' });
 
     stats = signal<{ active: number, total: number }>({ active: 0, total: 0 });
+    storageStats = signal<{ totalMb: number, capacityMb: number }>({ totalMb: 0, capacityMb: 0 });
 
     camerasOnline = computed(() => this.cameras().filter(c => c.status === 'active').length);
 
@@ -77,6 +78,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.fetchClients();
         this.fetchCameras();
         this.fetchHealth();
+        this.fetchStorageStats();
     }
 
     fetchClients() {
@@ -103,6 +105,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.http.get<{ status: string }>('/health').subscribe({
             next: (res) => this.health.set(res),
             error: () => this.health.set({ status: 'Unavailable' })
+        });
+    }
+
+    fetchStorageStats() {
+        this.http.get<{ totalMb: number, capacityMb: number }>(`${API_URL}/recordings/storage-stats`).subscribe({
+            next: (res) => this.storageStats.set(res),
+            error: () => {}
         });
     }
 

@@ -92,6 +92,38 @@
   </div>
 </div>
 
+<!-- STORAGE BAR -->
+<div class="storage-bar-section fade-section" style="animation-delay: 0.08s" *ngIf="storageStats().capacityMb > 0 || storageStats().totalMb > 0">
+  <div class="storage-bar-card">
+    <div class="storage-bar-header">
+      <div class="storage-bar-label">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+        Almacenamiento NAS
+      </div>
+      <div class="storage-bar-values">
+        <span class="storage-used">{{ (storageStats().totalMb / 1024).toFixed(1) }} GB usados</span>
+        <span class="storage-sep">de</span>
+        <span class="storage-cap" *ngIf="storageStats().capacityMb > 0">{{ (storageStats().capacityMb / 1024).toFixed(0) }} GB totales</span>
+        <span class="storage-cap" *ngIf="storageStats().capacityMb === 0">capacidad desconocida</span>
+      </div>
+    </div>
+    <div class="storage-track">
+      <div class="storage-fill"
+        [style.width.%]="storageStats().capacityMb > 0 ? (storageStats().totalMb / storageStats().capacityMb) * 100 : 0"
+        [class.warn]="storageStats().capacityMb > 0 && (storageStats().totalMb / storageStats().capacityMb) > 0.7"
+        [class.danger]="storageStats().capacityMb > 0 && (storageStats().totalMb / storageStats().capacityMb) > 0.9">
+      </div>
+    </div>
+    <div class="storage-bar-footer" *ngIf="storageStats().capacityMb > 0">
+      <span>{{ ((storageStats().totalMb / storageStats().capacityMb) * 100).toFixed(1) }}% utilizado</span>
+      <span>{{ ((storageStats().capacityMb - storageStats().totalMb) / 1024).toFixed(1) }} GB libres</span>
+    </div>
+  </div>
+</div>
+
 <!-- GATEWAYS GRID -->
 <div class="fade-section" style="animation-delay: 0.1s">
 <div class="section-hdr">

@@ -208,6 +208,87 @@
   }
 }
 
+// ─── STORAGE BAR ─────────────────────────────────────────────────────────────
+.storage-bar-section {
+  margin-bottom: 32px;
+}
+
+.storage-bar-card {
+  background: rgba(var(--surface-rgb), 0.6);
+  border: 1px solid var(--outline);
+  border-radius: 16px;
+  padding: 18px 22px;
+  backdrop-filter: blur(12px);
+}
+
+.storage-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.storage-bar-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  svg { color: var(--accent); opacity: 0.8; }
+}
+
+.storage-bar-values {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.storage-used {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.storage-sep {
+  color: var(--muted);
+}
+
+.storage-cap {
+  color: var(--muted);
+}
+
+.storage-track {
+  height: 8px;
+  background: rgba(var(--ink-rgb), 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.storage-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 8px;
+  transition: width 0.6s ease;
+  min-width: 2px;
+
+  &.warn  { background: #f59e0b; }
+  &.danger { background: var(--red); }
+}
+
+.storage-bar-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 // ─── TOP CLIENTES ─────────────────────────────────────────────────────────────
 .top-clients-wrap {
   background: var(--surface);
