@@ -86,6 +86,42 @@ namespace MotorControlEnterprise.Api.Data
 
             modelBuilder.Entity<Recording>()
                 .HasIndex(r => r.EndedAt);
+
+            // --- Alert ---
+            modelBuilder.Entity<Alert>()
+                .HasIndex(a => new { a.Fingerprint, a.Status });
+
+            modelBuilder.Entity<Alert>()
+                .HasIndex(a => a.Status);
+
+            modelBuilder.Entity<Alert>()
+                .HasOne(a => a.Client)
+                .WithMany()
+                .HasForeignKey(a => a.ClientId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Alert>()
+                .Property(a => a.Priority)
+                .HasConversion<int>();
+
+            modelBuilder.Entity<Alert>()
+                .Property(a => a.Status)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Alert>()
+                .Property(a => a.EntityType)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Alert>()
+                .Property(a => a.AlertType)
+                .HasConversion<string>();
+
+            // --- AlertPreference ---
+            modelBuilder.Entity<AlertPreference>()
+                .HasOne(p => p.Client)
+                .WithMany()
+                .HasForeignKey(p => p.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
