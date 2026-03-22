@@ -1,12 +1,13 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-client-account',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, FormsModule],
   template: `
     <div class="account-page">
 
@@ -130,6 +131,67 @@ import { Router } from '@angular/router';
           </div>
 
         </div>
+
+        <!-- Alert Preferences -->
+        @if (alertPrefs()) {
+          <div class="prefs-card">
+            <h3 class="card-title">Notificaciones de Alertas</h3>
+            <div class="prefs-rows">
+
+              <div class="pref-row">
+                <div class="pref-label-wrap">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                  </svg>
+                  <span class="pref-label">Alertas en aplicación</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="alertPrefs()!.inAppEnabled"
+                    (change)="updateAlertPrefs({ inAppEnabled: $any($event.target).checked })">
+                  <span class="toggle-track">
+                    <span class="toggle-thumb"></span>
+                  </span>
+                </label>
+              </div>
+
+              <div class="pref-row">
+                <div class="pref-label-wrap">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                  <span class="pref-label">Notificaciones por email</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="alertPrefs()!.emailEnabled"
+                    (change)="updateAlertPrefs({ emailEnabled: $any($event.target).checked })">
+                  <span class="toggle-track">
+                    <span class="toggle-thumb"></span>
+                  </span>
+                </label>
+              </div>
+
+              <div class="pref-row pref-row--select">
+                <div class="pref-label-wrap">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                  <span class="pref-label">Nivel mínimo</span>
+                </div>
+                <select class="pref-select"
+                  [value]="alertPrefs()!.minPriority"
+                  (change)="updateAlertPrefs({ minPriority: +$any($event.target).value })">
+                  <option value="1">Solo críticas (P1)</option>
+                  <option value="2">Altas y superiores (P1–P2)</option>
+                  <option value="3">Medias y superiores (P1–P3)</option>
+                  <option value="4">Todas (P1–P4)</option>
+                </select>
+              </div>
+
+            </div>
+          </div>
+        }
 
         <!-- Actions -->
         <div class="account-actions">
@@ -332,6 +394,100 @@ import { Router } from '@angular/router';
       border: 1px solid rgba(239,68,68,0.3);
     }
 
+    /* ALERT PREFERENCES */
+    .prefs-card {
+      background: var(--surface);
+      border: 1px solid var(--outline);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .prefs-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .pref-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      &:last-child { border-bottom: none; }
+    }
+    .pref-row--select {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .pref-label-wrap {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: rgba(var(--ink-rgb), 0.85);
+      svg { opacity: 0.6; flex-shrink: 0; }
+    }
+    .pref-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* TOGGLE SWITCH */
+    .toggle {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+    }
+    .toggle-track {
+      width: 40px;
+      height: 22px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 11px;
+      border: 1px solid rgba(255,255,255,0.15);
+      transition: background 0.2s, border-color 0.2s;
+      display: flex;
+      align-items: center;
+      padding: 0 3px;
+    }
+    .toggle-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      transition: transform 0.2s, background 0.2s;
+    }
+    .toggle input:checked ~ .toggle-track {
+      background: rgba(37,99,235,0.55);
+      border-color: rgba(59,130,246,0.5);
+    }
+    .toggle input:checked ~ .toggle-track .toggle-thumb {
+      transform: translateX(18px);
+      background: #93c5fd;
+    }
+
+    /* PREF SELECT */
+    .pref-select {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: rgba(var(--ink-rgb), 1);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+      &:hover { border-color: rgba(59,130,246,0.4); }
+      &:focus { border-color: rgba(59,130,246,0.6); }
+      option { background: #1e293b; color: inherit; }
+    }
+
     /* ACTIONS */
     .account-actions {
       display: flex;
@@ -380,6 +536,7 @@ export class ClientAccountComponent implements OnInit {
   cameras = signal<any[]>([]);
   loading = signal(true);
   error = signal('');
+  alertPrefs = signal<{ inAppEnabled: boolean; emailEnabled: boolean; minPriority: number } | null>(null);
 
   initials = computed(() => {
     const name = this.client()?.name || '';
@@ -398,6 +555,10 @@ export class ClientAccountComponent implements OnInit {
 
   ngOnInit() {
     this.loadProfile();
+    this.http.get<any>('/api/client/me/alert-preferences').subscribe({
+      next: (p) => this.alertPrefs.set(p),
+      error: () => {}
+    });
   }
 
   loadProfile() {
@@ -417,6 +578,13 @@ export class ClientAccountComponent implements OnInit {
         this.error.set(err?.error?.message || 'No se pudo cargar el perfil.');
         this.loading.set(false);
       }
+    });
+  }
+
+  updateAlertPrefs(patch: { inAppEnabled?: boolean; emailEnabled?: boolean; minPriority?: number }) {
+    this.http.patch<any>('/api/client/me/alert-preferences', patch).subscribe({
+      next: (p) => this.alertPrefs.set(p),
+      error: () => {}
     });
   }
 
