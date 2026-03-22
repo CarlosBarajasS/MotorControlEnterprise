@@ -85,6 +85,34 @@ namespace MotorControlEnterprise.Api.Services
             await SendAsync(to, subject, html);
         }
 
+        public async Task SendAlertEmailAsync(string subject, string title, string message, string priority, string[] recipients)
+        {
+            var priorityColor = priority switch {
+                "P1" => "#ef4444",
+                "P2" => "#f97316",
+                "P3" => "#eab308",
+                _    => "#6b7280"
+            };
+
+            var html = $"""
+                <div style="font-family:sans-serif;max-width:560px;margin:0 auto">
+                  <div style="background:{priorityColor};padding:12px 20px;border-radius:8px 8px 0 0">
+                    <span style="color:#fff;font-weight:700;font-size:14px">[{priority}] NIRM GROUP — Sistema de Alertas</span>
+                  </div>
+                  <div style="background:#f9fafb;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px">
+                    <h2 style="margin:0 0 12px;color:#111827;font-size:18px">{title}</h2>
+                    <p style="color:#374151;margin:0 0 20px">{message}</p>
+                    <p style="color:#9ca3af;font-size:12px;margin:0">{DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC</p>
+                  </div>
+                </div>
+                """;
+
+            foreach (var recipient in recipients)
+            {
+                await SendAsync(recipient, subject, html);
+            }
+        }
+
         private async Task SendAsync(string to, string subject, string html)
         {
             var apiKey = _config["Email:ResendApiKey"];

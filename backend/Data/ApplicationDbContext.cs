@@ -15,6 +15,8 @@ namespace MotorControlEnterprise.Api.Data
         public DbSet<Camera> Cameras { get; set; } = null!;
         public DbSet<MotorTelemetry> MotorTelemetry { get; set; } = null!;
         public DbSet<Recording> Recordings { get; set; } = null!;
+        public DbSet<Alert> Alerts { get; set; } = null!;
+        public DbSet<AlertPreference> AlertPreferences { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
