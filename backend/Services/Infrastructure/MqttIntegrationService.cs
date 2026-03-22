@@ -2,6 +2,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MotorControlEnterprise.Api.Data;
+using MotorControlEnterprise.Api.Models;
 using MQTTnet;
 using System.Buffers;
 using System.Text;
@@ -107,6 +108,7 @@ namespace MotorControlEnterprise.Api.Services
                 using var scope   = _serviceProvider.CreateScope();
                 var db            = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var emailService  = scope.ServiceProvider.GetRequiredService<IEmailService>();
+                var alertService  = scope.ServiceProvider.GetRequiredService<AlertService>();
 
                 // gateway/{gatewayId}/heartbeat
                 if (topic.StartsWith("gateway/") && topic.EndsWith("/heartbeat"))
@@ -115,9 +117,19 @@ namespace MotorControlEnterprise.Api.Services
                     var client = db.Clients.FirstOrDefault(c => c.GatewayId == gatewayId);
                     if (client != null)
                     {
-                        client.UpdatedAt = DateTime.UtcNow;
+                        client.UpdatedAt       = DateTime.UtcNow;
+                        client.LastHeartbeatAt = DateTime.UtcNow;
                         await db.SaveChangesAsync();
                         _logger.LogInformation("Heartbeat actualizado para gateway {GatewayId}.", gatewayId);
+
+                        var fingerprint = $"Gateway-{gatewayId}-GatewayDown";
+                        await alertService.ResolveAsync(
+                            fingerprint,
+                            $"Gateway {client.Name} reconectado",
+                            $"El gateway '{gatewayId}' volvió a estar en línea.",
+                            gatewayId,
+                            AlertEntityType.Gateway,
+                            client.Id);
                     }
                 }
 
@@ -150,11 +162,31 @@ namespace MotorControlEnterprise.Api.Services
 
                             await db.SaveChangesAsync();
 
-                            // Alertar por email cuando la cámara pasa a offline
+                            // Alertar cuando la cámara pasa a offline o se recupera
                             if (previousStatus != "offline" && camera.Status == "offline")
-                                _ = emailService.SendCameraAlertAsync(camera.Name, gatewayId, "offline");
+                            {
+                                var fingerprint = $"Camera-{camera.Id}-Offline";
+                                await alertService.TryCreateAsync(
+                                    fingerprint,
+                                    AlertEntityType.Camera,
+                                    camera.Id.ToString(),
+                                    AlertType.Offline,
+                                    AlertPriority.P2,
+                                    $"Cámara '{camera.Name}' offline",
+                                    $"La cámara '{camera.Name}' (gateway: {gatewayId}) perdió la señal.",
+                                    camera.ClientId);
+                            }
                             else if (previousStatus == "offline" && camera.Status == "active")
-                                _ = emailService.SendCameraAlertAsync(camera.Name, gatewayId, "online");
+                            {
+                                var fingerprint = $"Camera-{camera.Id}-Offline";
+                                await alertService.ResolveAsync(
+                                    fingerprint,
+                                    $"Cámara '{camera.Name}' reconectada",
+                                    $"La cámara '{camera.Name}' (gateway: {gatewayId}) volvió a estar activa.",
+                                    camera.Id.ToString(),
+                                    AlertEntityType.Camera,
+                                    camera.ClientId);
+                            }
                         }
                     }
                 }
