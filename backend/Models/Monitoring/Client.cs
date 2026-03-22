@@ -99,6 +99,9 @@ namespace MotorControlEnterprise.Api.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        [Column("last_heartbeat_at")]
+        public DateTime? LastHeartbeatAt { get; set; }
+
         [Column("deleted_at")]
         public DateTime? DeletedAt { get; set; }
     }
