@@ -27,9 +27,9 @@ const API_URL = '/api';
       <p>Sin alertas activas</p>
     </div>
 
-    <div class="alert-item" *ngFor="let a of alerts()" [class]="'priority-' + a.priority.toLowerCase()">
+    <div *ngFor="let a of alerts()" [class]="'alert-item priority-' + a.priority.toLowerCase()">
       <div class="alert-item-header">
-        <span class="priority-chip" [class]="'chip-' + a.priority.toLowerCase()">
+        <span [class]="'priority-chip chip-' + a.priority.toLowerCase()">
           {{ a.priority }}
         </span>
         <span class="alert-status" *ngIf="a.status === 'Acknowledged'">ACK</span>
