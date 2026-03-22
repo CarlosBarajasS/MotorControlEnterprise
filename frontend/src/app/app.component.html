@@ -21,7 +21,7 @@
         </div>
         <!-- Overlay backdrop: cierra el drawer al hacer click -->
         <div class="sidebar-overlay" *ngIf="sidebarOpen" (click)="closeSidebar()"></div>
-        <app-sidebar [class.open]="sidebarOpen" (closeSidebar)="closeSidebar()"></app-sidebar>
+        <app-sidebar [class.open]="sidebarOpen" (closeSidebar)="closeSidebar()" (bellClick)="adminDrawerOpen = !adminDrawerOpen"></app-sidebar>
         <main class="main-content">
             <router-outlet></router-outlet>
         </main>
@@ -30,6 +30,12 @@
 <ng-template #loginOnly>
     <router-outlet></router-outlet>
 </ng-template>
+
+<app-alert-drawer
+    *ngIf="adminDrawerOpen && showSidebar()"
+    [isAdmin]="true"
+    (close)="adminDrawerOpen = false">
+</app-alert-drawer>
 
 <app-toast-container></app-toast-container>
 <app-confirm-dialog></app-confirm-dialog>

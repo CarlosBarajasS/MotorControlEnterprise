@@ -3,24 +3,23 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-import { AlertDrawerComponent } from '../shared/alert-drawer/alert-drawer.component';
 
 @Component({
     selector: 'app-sidebar',
     standalone: true,
-    imports: [CommonModule, RouterModule, AlertDrawerComponent],
+    imports: [CommonModule, RouterModule],
     templateUrl: './sidebar.component.html',
     styleUrls: ['./sidebar.component.scss']
 })
 export class SidebarComponent implements OnInit, OnDestroy {
     @Input() isOpen = false;
     @Output() closeSidebar = new EventEmitter<void>();
+    @Output() bellClick = new EventEmitter<void>();
 
     authService = inject(AuthService);
     private http = inject(HttpClient);
 
     unreadAlerts = signal(0);
-    drawerOpen = signal(false);
     private alertInterval: any;
 
     ngOnInit() {
@@ -38,9 +37,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
             error: () => {}
         });
     }
-
-    toggleDrawer() { this.drawerOpen.set(!this.drawerOpen()); }
-    closeDrawer()  { this.drawerOpen.set(false); }
 
     get userName(): string {
         try {

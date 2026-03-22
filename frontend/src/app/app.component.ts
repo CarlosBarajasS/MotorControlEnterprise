@@ -4,11 +4,12 @@ import { RouterOutlet, Router } from '@angular/router';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { ToastContainerComponent } from './components/shared/toast-container/toast-container.component';
 import { ConfirmDialogComponent } from './components/shared/confirm-dialog/confirm-dialog.component';
+import { AlertDrawerComponent } from './components/shared/alert-drawer/alert-drawer.component';
 
 @Component({
     selector: 'app-root',
     standalone: true,
-    imports: [CommonModule, RouterOutlet, SidebarComponent, ToastContainerComponent, ConfirmDialogComponent],
+    imports: [CommonModule, RouterOutlet, SidebarComponent, ToastContainerComponent, ConfirmDialogComponent, AlertDrawerComponent],
     templateUrl: './app.component.html',
     styleUrl: './app.component.scss'
 })
@@ -16,6 +17,7 @@ export class AppComponent {
     title = 'NirmGroup';
     router = inject(Router);
     sidebarOpen = false;
+    adminDrawerOpen = false;
 
     isLoggedIn(): boolean {
         return !!localStorage.getItem('motor_control_token');
