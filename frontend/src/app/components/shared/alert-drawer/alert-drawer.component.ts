@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
@@ -128,21 +128,17 @@ const API_URL = '/api';
 .ack-info { margin-top: 8px; font-size: 11px; color: var(--muted); font-style: italic; }
     `]
 })
-export class AlertDrawerComponent implements OnInit, OnDestroy {
+export class AlertDrawerComponent implements OnInit {
     @Input() isAdmin = false;
     @Output() close = new EventEmitter<void>();
 
     private http = inject(HttpClient);
     alerts  = signal<any[]>([]);
     loading = signal(true);
-    private refreshInterval: any;
 
     ngOnInit() {
         this.loadAlerts();
-        this.refreshInterval = setInterval(() => this.loadAlerts(), 30_000);
     }
-
-    ngOnDestroy() { clearInterval(this.refreshInterval); }
 
     loadAlerts() {
         const url = this.isAdmin
