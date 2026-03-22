@@ -130,7 +130,7 @@ namespace MotorControlEnterprise.Api.Controllers
             if (pref != null && !pref.InAppEnabled) return Ok(Array.Empty<object>());
 
             var alerts = await _db.Alerts
-                .Where(a => a.ClientId == client.Id && a.Status != AlertStatus.Resolved)
+                .Where(a => a.ClientId == client.Id)
                 .OrderBy(a => a.Priority)
                 .ThenByDescending(a => a.CreatedAt)
                 .Take(50)

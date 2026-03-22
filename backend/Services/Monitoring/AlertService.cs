@@ -145,8 +145,8 @@ namespace MotorControlEnterprise.Api.Services
         {
             AlertType.GatewayDown     => AlertType.GatewayUp,
             AlertType.Offline         => AlertType.Online,
-            AlertType.StorageCritical => AlertType.Online,
-            AlertType.StorageHigh     => AlertType.Online,
+            AlertType.StorageCritical => AlertType.StorageHigh,
+            AlertType.StorageHigh     => AlertType.StorageHigh,
             _                         => AlertType.Online
         };
 

@@ -57,6 +57,7 @@ namespace MotorControlEnterprise.Api.Services
             var offlineGateways  = await db.Clients
                 .Where(c => c.Status == "active" &&
                             c.DeletedAt == null &&
+                            c.GatewayId != null &&
                             c.LastHeartbeatAt != null &&
                             c.LastHeartbeatAt < gatewayThreshold)
                 .ToListAsync(ct);
