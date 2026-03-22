@@ -1,11 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { AlertDrawerComponent } from '../shared/alert-drawer/alert-drawer.component';
 
 @Component({
   selector: 'app-client-shell',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterModule, RouterLink, RouterLinkActive, AlertDrawerComponent],
   template: `
     <div class="client-app" [class.sidebar-open]="sidebarOpen()">
 
@@ -32,6 +34,17 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
         </div>
         <div class="topbar-right">
           <span class="user-greeting">{{ userName() }}</span>
+          <button class="bell-btn" (click)="toggleDrawer()" title="Alertas" style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--outline);border-radius:10px;color:var(--muted);cursor:pointer;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            @if (unreadAlerts() > 0) {
+              <span style="position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">
+                {{ unreadAlerts() > 99 ? '99+' : unreadAlerts() }}
+              </span>
+            }
+          </button>
           <button class="btn-logout" (click)="logout()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
@@ -40,6 +53,13 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
           </button>
         </div>
       </header>
+
+      @if (drawerOpen()) {
+        <app-alert-drawer
+          [isAdmin]="false"
+          (close)="closeDrawer()">
+        </app-alert-drawer>
+      }
 
       <!-- BODY: sidebar + content -->
       <div class="client-body">
@@ -272,11 +292,15 @@ import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/rou
     }
   `]
 })
-export class ClientShellComponent {
+export class ClientShellComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private http = inject(HttpClient);
 
   userName = signal('Cliente');
   sidebarOpen = signal(false);
+  unreadAlerts = signal(0);
+  drawerOpen = signal(false);
+  private alertInterval: any;
 
   constructor() {
     try {
@@ -287,6 +311,25 @@ export class ClientShellComponent {
       }
     } catch { }
   }
+
+  ngOnInit() {
+    this.fetchUnreadCount();
+    this.alertInterval = setInterval(() => this.fetchUnreadCount(), 30_000);
+  }
+
+  ngOnDestroy() {
+    clearInterval(this.alertInterval);
+  }
+
+  fetchUnreadCount() {
+    this.http.get<{ count: number }>('/api/client/me/alerts/unread-count').subscribe({
+      next: (res) => this.unreadAlerts.set(res.count),
+      error: () => {}
+    });
+  }
+
+  toggleDrawer() { this.drawerOpen.set(!this.drawerOpen()); }
+  closeDrawer()  { this.drawerOpen.set(false); }
 
   closeSidebarOnMobile() {
     if (window.innerWidth <= 768) {
