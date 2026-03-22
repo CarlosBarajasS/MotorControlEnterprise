@@ -35,6 +35,7 @@ builder.Services.AddHttpClient();  // default factory para ResendEmailService
 // Email service (Resend.dev) — alertas de cámaras
 builder.Services.AddScoped<MotorControlEnterprise.Api.Services.IEmailService,
                             MotorControlEnterprise.Api.Services.ResendEmailService>();
+builder.Services.AddScoped<MotorControlEnterprise.Api.Services.AlertService>();
 
 // Seeder: crea el primer admin desde env vars (corre antes que MQTT)
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.AdminSeederService>();
