@@ -81,6 +81,7 @@ namespace MotorControlEnterprise.Api.Services
             var offlineCameras  = await db.Cameras
                 .Include(c => c.Client)
                 .Where(c => c.Status == "active" &&
+                            c.IsRecordingOnly != true &&
                             c.LastSeen != null &&
                             c.LastSeen < cameraThreshold)
                 .ToListAsync(ct);
