@@ -1,7 +1,10 @@
-import { Component, inject, Input, Output, EventEmitter } from '@angular/core';
+import { Component, inject, Input, Output, EventEmitter, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+// AlertDrawerComponent will be imported when Task 11 creates the file:
+// import { AlertDrawerComponent } from '../shared/alert-drawer/alert-drawer.component';
 
 @Component({
     selector: 'app-sidebar',
@@ -10,11 +13,35 @@ import { AuthService } from '../../services/auth.service';
     templateUrl: './sidebar.component.html',
     styleUrls: ['./sidebar.component.scss']
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit, OnDestroy {
     @Input() isOpen = false;
     @Output() closeSidebar = new EventEmitter<void>();
 
     authService = inject(AuthService);
+    private http = inject(HttpClient);
+
+    unreadAlerts = signal(0);
+    drawerOpen = signal(false);
+    private alertInterval: any;
+
+    ngOnInit() {
+        this.fetchUnreadCount();
+        this.alertInterval = setInterval(() => this.fetchUnreadCount(), 30_000);
+    }
+
+    ngOnDestroy() {
+        clearInterval(this.alertInterval);
+    }
+
+    fetchUnreadCount() {
+        this.http.get<{ count: number }>('/api/alerts/unread-count').subscribe({
+            next: (res) => this.unreadAlerts.set(res.count),
+            error: () => {}
+        });
+    }
+
+    toggleDrawer() { this.drawerOpen.set(!this.drawerOpen()); }
+    closeDrawer()  { this.drawerOpen.set(false); }
 
     get userName(): string {
         try {
