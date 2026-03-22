@@ -3,13 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-// AlertDrawerComponent will be imported when Task 11 creates the file:
-// import { AlertDrawerComponent } from '../shared/alert-drawer/alert-drawer.component';
+import { AlertDrawerComponent } from '../shared/alert-drawer/alert-drawer.component';
 
 @Component({
     selector: 'app-sidebar',
     standalone: true,
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, AlertDrawerComponent],
     templateUrl: './sidebar.component.html',
     styleUrls: ['./sidebar.component.scss']
 })

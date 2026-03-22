@@ -20,7 +20,11 @@
           <span class="bell-badge" *ngIf="unreadAlerts() > 0">{{ unreadAlerts() > 99 ? '99+' : unreadAlerts() }}</span>
         </button>
 
-        <!-- app-alert-drawer will be added here in Task 11 -->
+        <app-alert-drawer
+          *ngIf="drawerOpen()"
+          [isAdmin]="true"
+          (close)="closeDrawer()">
+        </app-alert-drawer>
 
         <!-- Botón cerrar drawer (solo visible en móvil) -->
         <button class="close-sidebar-btn" (click)="closeSidebar.emit()" aria-label="Cerrar menú">
