@@ -54,12 +54,12 @@ namespace MotorControlEnterprise.Api.Services
 
             // ── 1. Gateway offline check ──────────────────────────────────────
             var gatewayThreshold = now - GatewayTimeout;
-            var offlineGateways  = await db.Clients
-                .Where(c => c.Status == "active" &&
-                            c.DeletedAt == null &&
-                            c.GatewayId != null &&
-                            c.LastHeartbeatAt != null &&
-                            c.LastHeartbeatAt < gatewayThreshold)
+            var offlineGateways  = await db.Gateways
+                .Include(g => g.Client)
+                .Where(g => g.Client.Status == "active" &&
+                            g.Client.DeletedAt == null &&
+                            g.LastHeartbeatAt != null &&
+                            g.LastHeartbeatAt < gatewayThreshold)
                 .ToListAsync(ct);
 
             foreach (var gw in offlineGateways)
@@ -68,12 +68,12 @@ namespace MotorControlEnterprise.Api.Services
                 await alertService.TryCreateAsync(
                     fp,
                     AlertEntityType.Gateway,
-                    gw.GatewayId ?? gw.Id.ToString(),
+                    gw.GatewayId,
                     AlertType.GatewayDown,
                     AlertPriority.P1,
                     $"Gateway '{gw.Name}' desconectado",
                     $"El gateway '{gw.GatewayId}' no ha enviado heartbeat en los últimos {GatewayTimeout.TotalMinutes} minutos. Todas las cámaras del cliente pueden estar afectadas.",
-                    gw.Id);
+                    gw.ClientId);
             }
 
             // ── 2. Camera offline check ───────────────────────────────────────
