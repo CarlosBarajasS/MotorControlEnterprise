@@ -28,6 +28,7 @@ namespace MotorControlEnterprise.Api.Controllers
         {
             var clients = await _db.Clients
                 .Include(c => c.User)
+                .Include(c => c.Gateways)
                 .Where(c => c.DeletedAt == null)
                 .OrderBy(c => c.Name)
                 .ToListAsync();

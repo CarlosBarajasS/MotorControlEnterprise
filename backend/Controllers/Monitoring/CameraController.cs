@@ -82,7 +82,7 @@ namespace MotorControlEnterprise.Api.Controllers
             var userIdStr = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
             _ = int.TryParse(userIdStr, out var userId);
 
-            var query = _db.Cameras.Include(c => c.Client).AsQueryable();
+            var query = _db.Cameras.Include(c => c.Client).ThenInclude(cl => cl.Gateways).AsQueryable();
 
             // Si no es admin, filtrar por clientId del cliente vinculado al usuario
             if (role != "admin")
@@ -145,7 +145,7 @@ namespace MotorControlEnterprise.Api.Controllers
             _ = int.TryParse(userIdStr, out var userId);
 
             var camera = await _db.Cameras
-                .Include(c => c.Client)
+                .Include(c => c.Client).ThenInclude(cl => cl.Gateways)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (camera == null) return NotFound();

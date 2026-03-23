@@ -49,12 +49,10 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
       next: (cam) => {
         this.camera.set(cam);
         this.checkStatus();
-        this.http.get<any[]>(`${API_URL}/clients`).subscribe(clients => {
-          const c = clients.find(x => x.id === cam.clientId);
-          if (c) {
-            this.streamPath.set(`${c.gatewayId}/${cam.cameraId ?? cam.cameraKey ?? cam.name}`);
-          }
-        });
+        if (cam.gatewayId) {
+          const cameraKey = cam.cameraId ?? cam.cameraKey ?? cam.name;
+          this.streamPath.set(`${cam.gatewayId}/${cameraKey}`);
+        }
       },
       error: (err) => console.error(err)
     });
