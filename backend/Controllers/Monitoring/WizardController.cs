@@ -34,31 +34,41 @@ namespace MotorControlEnterprise.Api.Controllers
         [HttpGet("{id:int}/edge-config")]
         public async Task<IActionResult> GetEdgeConfig(int id)
         {
-            var client = await _db.Clients.FindAsync(id);
+            var client = await _db.Clients
+                .Include(c => c.Gateways)
+                .FirstOrDefaultAsync(c => c.Id == id);
             if (client == null) return NotFound();
 
-            // Asegurar que el cliente tenga un gatewayId
-            var gatewayId = client.GatewayId;
-            if (string.IsNullOrWhiteSpace(gatewayId))
+            // Asegurar que el cliente tenga al menos un gateway registrado
+            var gateway = client.Gateways.FirstOrDefault();
+            if (gateway == null)
             {
-                gatewayId        = $"gateway-{client.Id}";
-                client.GatewayId = gatewayId;
-                client.UpdatedAt = DateTime.UtcNow;
+                gateway = new Gateway
+                {
+                    ClientId  = client.Id,
+                    GatewayId = $"gateway-{client.Id}",
+                    Name      = $"{client.Name} - Gateway",
+                    Status    = "active",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _db.Gateways.Add(gateway);
                 await _db.SaveChangesAsync();
             }
+            var gatewayId = gateway.GatewayId;
 
-            // Generate edge token if not yet present
-            var edgeToken = ExtractEdgeToken(client.Metadata);
+            // Generate edge token if not yet present — stored in Gateway.Metadata
+            var edgeToken = ExtractEdgeToken(gateway.Metadata);
             if (string.IsNullOrEmpty(edgeToken))
             {
                 edgeToken = Guid.NewGuid().ToString("N"); // 32-char hex, no hyphens
-                var meta = string.IsNullOrEmpty(client.Metadata)
+                var meta = string.IsNullOrEmpty(gateway.Metadata)
                     ? new Dictionary<string, object>()
-                    : (JsonSerializer.Deserialize<Dictionary<string, object>>(client.Metadata)
+                    : (JsonSerializer.Deserialize<Dictionary<string, object>>(gateway.Metadata)
                        ?? new Dictionary<string, object>());
                 meta["edgeToken"] = edgeToken;
-                client.Metadata  = JsonSerializer.Serialize(meta);
-                client.UpdatedAt = DateTime.UtcNow;
+                gateway.Metadata  = JsonSerializer.Serialize(meta);
+                gateway.UpdatedAt = DateTime.UtcNow;
                 await _db.SaveChangesAsync();
             }
 
@@ -343,9 +353,12 @@ networks:
         [HttpPost("{id:int}/trigger-discovery")]
         public async Task<IActionResult> TriggerDiscovery(int id, [FromQuery] int? cameraId = null)
         {
-            var client = await _db.Clients.FindAsync(id);
+            var client = await _db.Clients
+                .Include(c => c.Gateways)
+                .FirstOrDefaultAsync(c => c.Id == id);
             if (client == null) return NotFound();
-            if (string.IsNullOrEmpty(client.GatewayId))
+            var gatewayId = client.Gateways.FirstOrDefault()?.GatewayId;
+            if (string.IsNullOrEmpty(gatewayId))
                 return BadRequest(new { message = "Client has no gateway configured." });
 
             // Load cameras to discover (all, or specific one)
@@ -391,10 +404,10 @@ networks:
                 })
             });
 
-            var topic = $"gateway/{client.GatewayId}/cmd/discover-onvif";
+            var topic = $"gateway/{gatewayId}/cmd/discover-onvif";
             await _mqtt.PublishAsync(topic, payload);
 
-            return Ok(new { requestId, cameraCount = cameras.Count, gatewayId = client.GatewayId });
+            return Ok(new { requestId, cameraCount = cameras.Count, gatewayId });
         }
 
         // GET /api/admin/clients/{id}/discovery-status

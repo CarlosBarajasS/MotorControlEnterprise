@@ -245,7 +245,9 @@ namespace MotorControlEnterprise.Api.Controllers
                 if (!dto.ClientId.HasValue)
                     return BadRequest(new { message = "clientId is required for ONVIF camera creation." });
 
-                var client = await _db.Clients.FindAsync(dto.ClientId.Value);
+                var client = await _db.Clients
+                    .Include(c => c.Gateways)
+                    .FirstOrDefaultAsync(c => c.Id == dto.ClientId.Value);
                 if (client == null)
                     return BadRequest(new { message = $"Client {dto.ClientId} not found." });
                 if (string.IsNullOrEmpty(client.GatewayId))

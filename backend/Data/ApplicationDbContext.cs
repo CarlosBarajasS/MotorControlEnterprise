@@ -12,6 +12,7 @@ namespace MotorControlEnterprise.Api.Data
 
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Client> Clients { get; set; } = null!;
+        public DbSet<Gateway> Gateways { get; set; } = null!;
         public DbSet<Camera> Cameras { get; set; } = null!;
         public DbSet<MotorTelemetry> MotorTelemetry { get; set; } = null!;
         public DbSet<Recording> Recordings { get; set; } = null!;
@@ -31,13 +32,24 @@ namespace MotorControlEnterprise.Api.Data
                 .HasIndex(c => c.Name).IsUnique();
 
             modelBuilder.Entity<Client>()
-                .HasIndex(c => c.GatewayId).IsUnique();
-
-            modelBuilder.Entity<Client>()
                 .HasOne(c => c.User)
                 .WithMany(u => u.Clients)
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Client>()
+                .HasMany(c => c.Gateways)
+                .WithOne(g => g.Client)
+                .HasForeignKey(g => g.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // --- Gateway ---
+            modelBuilder.Entity<Gateway>()
+                .HasIndex(g => g.GatewayId).IsUnique();
+
+            modelBuilder.Entity<Gateway>()
+                .Property(g => g.Metadata)
+                .HasColumnType("jsonb");
 
             // --- Camera ---
             modelBuilder.Entity<Camera>()

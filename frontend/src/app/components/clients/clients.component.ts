@@ -5,13 +5,14 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmService } from '../../services/confirm.service';
+import { GatewayModalComponent } from '../gateways/gateway-modal.component';
 
 const API_URL = '/api';
 
 @Component({
     selector: 'app-clients',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule],
+    imports: [CommonModule, FormsModule, RouterModule, GatewayModalComponent],
     templateUrl: './clients.component.html',
     styleUrls: ['./clients.component.scss']
 })
@@ -23,11 +24,12 @@ export class ClientsComponent implements OnInit {
     clients = signal<any[]>([]);
     stats = signal<any>(null);
     searchTerm = signal('');
+    activeGatewayClientId = signal<number | null>(null);
     filtered = computed(() =>
         this.clients().filter(c =>
             c.name.toLowerCase().includes(this.searchTerm().toLowerCase()) ||
-            (c.gatewayId ?? '').toLowerCase().includes(this.searchTerm().toLowerCase()) ||
-            (c.city ?? '').toLowerCase().includes(this.searchTerm().toLowerCase())
+            (c.city ?? '').toLowerCase().includes(this.searchTerm().toLowerCase()) ||
+            (c.businessType ?? '').toLowerCase().includes(this.searchTerm().toLowerCase())
         )
     );
 
@@ -50,7 +52,11 @@ export class ClientsComponent implements OnInit {
         });
 
         this.http.get<any[]>(`${API_URL}/clients`).subscribe({
-            next: (res) => this.clients.set(res || []),
+            next: (res) => {
+                const data = res || [];
+                this.clients.set(data);
+                data.forEach(c => this.loadGateways(c));
+            },
             error: (err) => console.error(err)
         });
     }
@@ -142,6 +148,24 @@ export class ClientsComponent implements OnInit {
     toggleTrash() {
         this.showTrash.update(v => !v);
         if (this.showTrash()) { this.loadTrash(); }
+    }
+
+    loadGateways(client: any) {
+        client.gatewaysLoading = true;
+        this.http.get<any[]>(`${API_URL}/clients/${client.id}/gateways`).subscribe({
+            next: (gws) => { client.gateways = gws; client.gatewaysLoading = false; },
+            error: () => { client.gateways = []; client.gatewaysLoading = false; }
+        });
+    }
+
+    openGatewayModal(clientId: number) {
+        this.activeGatewayClientId.set(clientId);
+    }
+
+    onGatewaySaved(clientId: number) {
+        this.activeGatewayClientId.set(null);
+        const client = this.clients().find(c => c.id === clientId);
+        if (client) this.loadGateways(client);
     }
 
     toggleStatus(client: any) {

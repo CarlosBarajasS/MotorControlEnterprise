@@ -18,18 +18,18 @@ namespace MotorControlEnterprise.Api.Controllers
 
         public EdgeCameraController(ApplicationDbContext db) => _db = db;
 
-        private Client GetEdgeClient() => (Client)HttpContext.Items["EdgeClient"]!;
+        private Gateway GetEdgeGateway() => (Gateway)HttpContext.Items["EdgeGateway"]!;
 
         // GET /api/edge/{gatewayId}/cameras
         // Returns cameras with ONVIF credentials for startup discovery.
         [HttpGet("cameras")]
         public async Task<IActionResult> GetCameras(string gatewayId)
         {
-            var client = GetEdgeClient();
-            if (client.GatewayId != gatewayId) return Forbid();
+            var gateway = GetEdgeGateway();
+            if (gateway.GatewayId != gatewayId) return Forbid();
 
             var cameras = await _db.Cameras
-                .Where(c => c.ClientId == client.Id)
+                .Where(c => c.ClientId == gateway.ClientId)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
@@ -56,11 +56,11 @@ namespace MotorControlEnterprise.Api.Controllers
             string gatewayId, int cameraId,
             [FromBody] StreamDiscoveryDto dto)
         {
-            var client = GetEdgeClient();
-            if (client.GatewayId != gatewayId) return Forbid();
+            var gateway = GetEdgeGateway();
+            if (gateway.GatewayId != gatewayId) return Forbid();
 
             var camera = await _db.Cameras
-                .FirstOrDefaultAsync(c => c.Id == cameraId && c.ClientId == client.Id);
+                .FirstOrDefaultAsync(c => c.Id == cameraId && c.ClientId == gateway.ClientId);
             if (camera == null) return NotFound();
 
             // Update Streams — keep existing centralHls, update rtsp
@@ -87,17 +87,15 @@ namespace MotorControlEnterprise.Api.Controllers
         }
 
         // POST /api/edge/{gatewayId}/heartbeat
-        // Updates gateway's lastHeartbeatAt for online status checks.
+        // Updates Gateway.LastHeartbeatAt for online status checks.
         [HttpPost("heartbeat")]
         public async Task<IActionResult> Heartbeat(string gatewayId)
         {
-            var client = GetEdgeClient();
-            if (client.GatewayId != gatewayId) return Forbid();
+            var gateway = GetEdgeGateway();
+            if (gateway.GatewayId != gatewayId) return Forbid();
 
-            var meta    = ParseMeta(client.Metadata);
-            meta["lastHeartbeatAt"] = DateTime.UtcNow.ToString("o");
-            client.Metadata  = JsonSerializer.Serialize(meta);
-            client.UpdatedAt = DateTime.UtcNow;
+            gateway.LastHeartbeatAt = DateTime.UtcNow;
+            gateway.UpdatedAt       = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
             return Ok(new { ok = true });

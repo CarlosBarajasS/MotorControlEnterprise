@@ -27,24 +27,26 @@ namespace MotorControlEnterprise.Api.Middleware
                 return;
             }
 
-            // Find client with matching edgeToken in Metadata JSONB.
+            // Find gateway with matching edgeToken in Gateways.Metadata JSONB.
             // EF.Functions.JsonContains does not translate for string-typed jsonb columns in
             // Npgsql EF Core 8.x, so we use parameterized raw SQL with the @> operator instead.
             // JsonSerializer.Serialize produces safe JSON — {0} is passed as a db parameter (no injection).
             var containsJson = JsonSerializer.Serialize(new { edgeToken = token });
-            var client = await db.Clients
-                .FromSqlRaw(@"SELECT * FROM ""Clients"" WHERE ""Metadata"" @> {0}::jsonb LIMIT 1", containsJson)
+            var gateway = await db.Gateways
+                .Include(g => g.Client)
+                .FromSqlRaw(@"SELECT * FROM ""Gateways"" WHERE ""Metadata"" @> {0}::jsonb LIMIT 1", containsJson)
                 .FirstOrDefaultAsync();
 
-            if (client == null)
+            if (gateway == null)
             {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsJsonAsync(new { message = "Invalid edge token" });
                 return;
             }
 
-            // Store client in HttpContext for controllers to use
-            context.Items["EdgeClient"] = client;
+            // Store gateway (and its Client nav) in HttpContext for controllers to use
+            context.Items["EdgeGateway"] = gateway;
+            context.Items["EdgeClient"] = gateway.Client;
             await _next(context);
         }
     }

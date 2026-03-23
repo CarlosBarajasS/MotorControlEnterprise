@@ -114,22 +114,24 @@ namespace MotorControlEnterprise.Api.Services
                 if (topic.StartsWith("gateway/") && topic.EndsWith("/heartbeat"))
                 {
                     var gatewayId = topic.Split('/')[1];
-                    var client = db.Clients.FirstOrDefault(c => c.GatewayId == gatewayId);
-                    if (client != null)
+                    var gateway = db.Gateways
+                        .Include(g => g.Client)
+                        .FirstOrDefault(g => g.GatewayId == gatewayId);
+                    if (gateway != null)
                     {
-                        client.UpdatedAt       = DateTime.UtcNow;
-                        client.LastHeartbeatAt = DateTime.UtcNow;
+                        gateway.LastHeartbeatAt = DateTime.UtcNow;
+                        gateway.UpdatedAt       = DateTime.UtcNow;
                         await db.SaveChangesAsync();
                         _logger.LogInformation("Heartbeat actualizado para gateway {GatewayId}.", gatewayId);
 
                         var fingerprint = $"Gateway-{gatewayId}-GatewayDown";
                         await alertService.ResolveAsync(
                             fingerprint,
-                            $"Gateway {client.Name} reconectado",
+                            $"Gateway {gateway.Client?.Name ?? gatewayId} reconectado",
                             $"El gateway '{gatewayId}' volvió a estar en línea.",
                             gatewayId,
                             AlertEntityType.Gateway,
-                            client.Id);
+                            gateway.ClientId);
                     }
                 }
 
@@ -262,8 +264,11 @@ namespace MotorControlEnterprise.Api.Services
                             return;
                         }
 
-                        // Look up client by gatewayId to get correct userId/clientId
-                        var client = db.Clients.FirstOrDefault(c => c.GatewayId == gatewayId);
+                        // Look up client by gatewayId via Gateways table
+                        var client = db.Gateways
+                            .Include(g => g.Client)
+                            .FirstOrDefault(g => g.GatewayId == gatewayId)
+                            ?.Client;
                         var camera = db.Cameras.FirstOrDefault(c => c.CameraKey == cameraKey);
 
                         // Parse the registration payload from edge-template

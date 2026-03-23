@@ -697,3 +697,95 @@
         justify-content: center;
     }
 }
+
+// ─── GATEWAY SECTION (chips en tarjeta de cliente) ────────────────────────────
+.gateway-section {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--outline);
+}
+
+.gateway-section-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.gateway-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 8px;
+}
+
+.gateway-chip {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+}
+
+.gw-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+    margin-top: 4px;
+    flex-shrink: 0;
+
+    &.online { background: var(--green); }
+}
+
+.gw-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.gw-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(var(--ink-rgb), 1);
+}
+
+.gw-location {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.no-gateways {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 8px;
+}
+
+.add-gateway-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    padding: 6px 10px;
+    background: rgba(var(--ink-rgb), 0.04);
+    border: 1px dashed var(--outline);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+
+    &:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+}
+
+.gateway-loading {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 4px 0;
+}

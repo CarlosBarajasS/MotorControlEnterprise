@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace MotorControlEnterprise.Api.Models
 {
@@ -49,9 +50,9 @@ namespace MotorControlEnterprise.Api.Models
         [MaxLength(255)]
         public string? ContactEmail { get; set; }
 
-        [Column("gateway_id")]
-        [MaxLength(150)]
-        public string? GatewayId { get; set; }
+        // GatewayId moved to Gateway entity. NotMapped shim for backward compat during T2/T3 migration.
+        [NotMapped]
+        public string? GatewayId => Gateways.FirstOrDefault()?.GatewayId;
 
         [Column("user_id")]
         public int? UserId { get; set; }
@@ -99,10 +100,14 @@ namespace MotorControlEnterprise.Api.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("last_heartbeat_at")]
-        public DateTime? LastHeartbeatAt { get; set; }
+        // LastHeartbeatAt moved to Gateway entity. NotMapped shim for backward compat during T2/T3 migration.
+        [NotMapped]
+        public DateTime? LastHeartbeatAt => Gateways.FirstOrDefault()?.LastHeartbeatAt;
 
         [Column("deleted_at")]
         public DateTime? DeletedAt { get; set; }
+
+        // Navigation: one client can have multiple gateways
+        public ICollection<Gateway> Gateways { get; set; } = new List<Gateway>();
     }
 }

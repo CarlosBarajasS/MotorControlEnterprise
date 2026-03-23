@@ -11,7 +11,7 @@
                     <span class="dot"></span>
                     {{ stats().active }} / {{ stats().total }} Online
                 </div>
-                <button class="btn-primary">
+                <button class="btn-primary" (click)="showModal.set(true)">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -57,8 +57,9 @@
                         </svg>
                     </div>
                     <div class="gw-identity">
-                        <h3>{{ gw.id }}</h3>
-                        <span>{{ gw.clientName || 'Sin asignar' }} • {{ gw.location }}</span>
+                        <h3>{{ gw.name }}</h3>
+                        <span>{{ gw.clientName }} • {{ gw.location }}</span>
+                        <span class="gw-technical-id">{{ gw.gatewayId }}</span>
                     </div>
                     <div class="gw-status" [class.active]="gw.status === 'active'">
                         {{ gw.status === 'active' ? 'ONLINE' : 'OFFLINE' }}
@@ -98,3 +99,9 @@
         </div>
     </div>
 </div>
+
+<app-gateway-modal
+  *ngIf="showModal()"
+  (saved)="onGatewaySaved()"
+  (cancelled)="showModal.set(false)">
+</app-gateway-modal>

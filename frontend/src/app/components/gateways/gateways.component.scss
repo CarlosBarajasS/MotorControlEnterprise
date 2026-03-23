@@ -285,6 +285,14 @@
     }
 }
 
+.gw-technical-id {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--muted);
+  margin-top: 2px;
+  display: block;
+}
+
 .empty-state {
     padding: 60px 0;
     text-align: center;

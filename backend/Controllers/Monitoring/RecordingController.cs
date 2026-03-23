@@ -255,7 +255,9 @@ namespace MotorControlEnterprise.Api.Controllers
             if (parts.Length >= 1)
             {
                 var gatewayId = parts[0];
-                var client    = await _db.Clients.FirstOrDefaultAsync(c => c.GatewayId == gatewayId);
+                var client    = (await _db.Gateways
+                    .Include(g => g.Client)
+                    .FirstOrDefaultAsync(g => g.GatewayId == gatewayId))?.Client;
 
                 if (client == null)
                     return Forbid();

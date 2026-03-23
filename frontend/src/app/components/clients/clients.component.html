@@ -21,7 +21,7 @@
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" placeholder="Buscar cliente por nombre, ubicación o Gateway ID..."
+            <input type="text" placeholder="Buscar por nombre, ciudad o tipo de negocio..."
                 [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
         </div>
         <span style="font-size:13px; color:var(--muted); font-weight: 500;">{{ filtered().length }} resultados</span>
@@ -75,14 +75,44 @@
                         <span style="font-size:11px; color:var(--muted);">{{ client.contactPhone || '—' }}</span>
                     </div>
                 </div>
-                <div class="info-row" style="margin-top:4px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                        <line x1="6" y1="6" x2="6.01" y2="6"></line>
-                        <line x1="6" y1="18" x2="6.01" y2="18"></line>
-                    </svg>
-                    <span class="mono">{{ client.gatewayId || 'Sin asignar' }}</span>
+                <div class="gateway-section">
+                    <div class="gateway-section-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                        </svg>
+                        PUNTOS DE ACCESO
+                    </div>
+
+                    <div class="gateway-loading" *ngIf="client.gatewaysLoading">
+                        <span>Cargando...</span>
+                    </div>
+
+                    <ng-container *ngIf="!client.gatewaysLoading">
+                        <div class="gateway-chips" *ngIf="client.gateways?.length > 0">
+                            <div class="gateway-chip" *ngFor="let gw of client.gateways">
+                                <span class="gw-dot" [class.online]="gw.status === 'active'"></span>
+                                <div class="gw-info">
+                                    <span class="gw-name">{{ gw.name }}</span>
+                                    <span class="gw-location" *ngIf="gw.location">{{ gw.location }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="no-gateways" *ngIf="!client.gateways?.length">
+                            Sin puntos de acceso configurados
+                        </p>
+
+                        <button class="add-gateway-btn" (click)="openGatewayModal(client.id)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            {{ client.gateways?.length > 0 ? 'Agregar punto' : 'Configurar primer punto' }}
+                        </button>
+                    </ng-container>
                 </div>
             </div>
 
@@ -127,7 +157,7 @@
         <div class="trash-grid" *ngIf="!trashLoading() && trashClients().length > 0">
             <div class="trash-card" *ngFor="let c of trashClients()">
                 <div class="trash-card-name">{{ c.name }}</div>
-                <div class="trash-card-meta">{{ c.gatewayId || 'Sin gateway' }}</div>
+                <div class="trash-card-meta">Sin puntos de acceso</div>
                 <div class="trash-card-timer" [class.urgent]="c.daysUntilPurge <= 7">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -142,6 +172,14 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Gateway -->
+    <app-gateway-modal
+        *ngIf="activeGatewayClientId() !== null"
+        [clientId]="activeGatewayClientId()!"
+        (saved)="onGatewaySaved(activeGatewayClientId()!)"
+        (cancelled)="activeGatewayClientId.set(null)">
+    </app-gateway-modal>
 
     <!-- Modal Formulario -->
     <div class="modal-overlay" *ngIf="showModal()"

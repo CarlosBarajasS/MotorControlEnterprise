@@ -29,6 +29,7 @@ namespace MotorControlEnterprise.Api.Controllers
 
             var client = await _db.Clients
                 .Include(c => c.User)
+                .Include(c => c.Gateways)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (client is null)
