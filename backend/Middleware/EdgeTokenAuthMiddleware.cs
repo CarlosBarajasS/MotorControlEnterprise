@@ -33,8 +33,8 @@ namespace MotorControlEnterprise.Api.Middleware
             // JsonSerializer.Serialize produces safe JSON — {0} is passed as a db parameter (no injection).
             var containsJson = JsonSerializer.Serialize(new { edgeToken = token });
             var gateway = await db.Gateways
-                .Include(g => g.Client)
                 .FromSqlRaw(@"SELECT * FROM ""Gateways"" WHERE ""Metadata"" @> {0}::jsonb LIMIT 1", containsJson)
+                .Include(g => g.Client)
                 .FirstOrDefaultAsync();
 
             if (gateway == null)
