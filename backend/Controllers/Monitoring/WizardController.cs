@@ -69,7 +69,7 @@ namespace MotorControlEnterprise.Api.Controllers
                     await _db.SaveChangesAsync();
                 }
             }
-            var gatewayId = gateway.GatewayId;
+            var resolvedGatewayId = gateway.GatewayId;
 
             // Generate edge token if not yet present — stored in Gateway.Metadata
             var edgeToken = ExtractEdgeToken(gateway.Metadata);
@@ -124,15 +124,15 @@ namespace MotorControlEnterprise.Api.Controllers
 
             return Ok(new
             {
-                gatewayId,
+                gatewayId = resolvedGatewayId,
                 mqttHost,
                 mqttPort,
                 mqttUser,
                 centralRtspHost = centralRtsp,
                 centralRtspPort = centralPort,
-                env             = BuildEnv(client, gatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location, edgeToken, centralRtsp, centralPort, mediamtxPass),
+                env             = BuildEnv(client, resolvedGatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location, edgeToken, centralRtsp, centralPort, mediamtxPass),
                 dockerCompose   = BuildDockerCompose(centralRtsp, centralPort, pushUser, pushPass, mediamtxPass),
-                mediamtxYml     = BuildMediamtxYml(cameras, gatewayId, mediamtxPass),
+                mediamtxYml     = BuildMediamtxYml(cameras, resolvedGatewayId, mediamtxPass),
                 localStorageType = client.LocalStorageType ?? "nvr"
             });
         }
