@@ -55,6 +55,7 @@ namespace MotorControlEnterprise.Api.Controllers
 
             var query = _db.Cameras
                 .Include(c => c.Client)
+                    .ThenInclude(cl => cl!.Gateways)
                 .Where(c => c.IsRecordingOnly && c.Client != null);
 
             if (role != "admin")
@@ -493,6 +494,7 @@ namespace MotorControlEnterprise.Api.Controllers
             {
                 return await _db.Cameras
                     .Include(c => c.Client)
+                        .ThenInclude(cl => cl!.Gateways)
                     .FirstOrDefaultAsync(c => c.Id == cameraId);
             }
 
@@ -504,6 +506,7 @@ namespace MotorControlEnterprise.Api.Controllers
 
             return await _db.Cameras
                 .Include(c => c.Client)
+                    .ThenInclude(cl => cl!.Gateways)
                 .FirstOrDefaultAsync(c =>
                     c.Id == cameraId &&
                     (c.UserId == userId || (clientId != null && c.ClientId == clientId)));
