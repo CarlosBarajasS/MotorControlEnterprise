@@ -32,28 +32,42 @@ namespace MotorControlEnterprise.Api.Controllers
         /// para desplegar el edge gateway en el sitio del cliente.
         /// </summary>
         [HttpGet("{id:int}/edge-config")]
-        public async Task<IActionResult> GetEdgeConfig(int id)
+        public async Task<IActionResult> GetEdgeConfig(int id, [FromQuery] string? gatewayId = null)
         {
             var client = await _db.Clients
                 .Include(c => c.Gateways)
                 .FirstOrDefaultAsync(c => c.Id == id);
             if (client == null) return NotFound();
 
-            // Asegurar que el cliente tenga al menos un gateway registrado
-            var gateway = client.Gateways.FirstOrDefault();
-            if (gateway == null)
+            // Si se pasa gatewayId, usar ese gateway específico; si no, usar el primero (backward-compat)
+            Gateway? gateway;
+            if (!string.IsNullOrEmpty(gatewayId))
             {
-                gateway = new Gateway
+                gateway = client.Gateways.FirstOrDefault(g => g.GatewayId == gatewayId);
+                if (gateway == null)
+                    return NotFound(new { message = $"Gateway '{gatewayId}' no encontrado para este cliente." });
+                // Cuando se pasó gatewayId explícito, no aplicar auto-creación: salir si no existe.
+            }
+            else
+            {
+                // Sin parámetro: comportamiento original — tomar el primero o auto-crear uno.
+                gateway = client.Gateways.FirstOrDefault();
+
+                if (gateway == null)
                 {
-                    ClientId  = client.Id,
-                    GatewayId = $"gateway-{client.Id}",
-                    Name      = $"{client.Name} - Gateway",
-                    Status    = "active",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-                _db.Gateways.Add(gateway);
-                await _db.SaveChangesAsync();
+                    // ⚠️ Auto-creación solo en rama sin gatewayId (backward-compat).
+                    gateway = new Gateway
+                    {
+                        ClientId  = client.Id,
+                        GatewayId = $"gateway-{client.Id}",
+                        Name      = $"{client.Name} - Gateway",
+                        Status    = "active",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _db.Gateways.Add(gateway);
+                    await _db.SaveChangesAsync();
+                }
             }
             var gatewayId = gateway.GatewayId;
 
