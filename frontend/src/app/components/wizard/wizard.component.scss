@@ -763,3 +763,106 @@
     color: #93c5fd;
     margin: 0.5rem 0 0;
 }
+
+/* ── Gateway section ─────────────────────────────── */
+.gateway-section {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gateway-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  label { margin: 0; }
+}
+
+.mode-toggle {
+  display: flex;
+  border: 1px solid var(--outline);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  button {
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+
+    &.active {
+      background: var(--accent);
+      color: #fff;
+    }
+    &:not(.active):hover { background: rgba(var(--ink-rgb), 0.06); }
+  }
+}
+
+.new-gateway-form {
+  padding: 16px;
+  background: rgba(var(--ink-rgb), 0.03);
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.token-row {
+  display: flex;
+  gap: 8px;
+
+  input { flex: 1; min-width: 0; }
+}
+
+.hint.success {
+  color: var(--green);
+  font-weight: 500;
+}
+
+.mono {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--outline);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: help;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+/* ── Empty state ─────────────────────────────────── */
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  background: rgba(var(--ink-rgb), 0.03);
+  border: 1px dashed var(--outline);
+  border-radius: 8px;
+
+  p { color: var(--muted); margin-bottom: 12px; }
+}
+
+.loading-hint {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 8px 0;
+}
