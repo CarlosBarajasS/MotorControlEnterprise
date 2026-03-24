@@ -70,16 +70,17 @@ namespace MotorControlEnterprise.Api.Services
             // Las cámaras de alta calidad (IsRecordingOnly=false) son exclusivamente para streaming en vivo
             var cameras = await db.Cameras
                 .Include(c => c.Client)
+                    .ThenInclude(cl => cl!.Gateways)
                 .Where(c => c.Status == "active"
                          && c.IsRecordingOnly
                          && c.Client != null
                          && c.Client.CloudStorageActive
                          && c.CameraId != null
-                         && c.Client.GatewayId != null)
+                         && c.Client.Gateways.Any())
                 .ToListAsync(ct);
 
             var activeKeys = cameras
-                .Select(c => $"{c.Client!.GatewayId}/{c.CameraId}")
+                .Select(c => $"{c.Client!.Gateways.FirstOrDefault()!.GatewayId}/{c.CameraId}")
                 .ToHashSet();
 
             // Detener procesos de cámaras que ya no deben grabarse
@@ -94,14 +95,21 @@ namespace MotorControlEnterprise.Api.Services
 
             foreach (var camera in cameras)
             {
-                var key = $"{camera.Client!.GatewayId}/{camera.CameraId}";
+                var gatewayId = camera.Client!.Gateways.FirstOrDefault()?.GatewayId;
+                if (string.IsNullOrEmpty(gatewayId))
+                {
+                    _logger.LogWarning("StreamRecorder: cámara {CameraId} no tiene gateway asignado, se omite", camera.CameraId);
+                    continue;
+                }
+
+                var key = $"{gatewayId}/{camera.CameraId}";
 
                 // Pre-crear directorios de fecha hoy y mañana en cada ciclo.
                 // -strftime_mkdir 1 puede fallar silenciosamente en montajes NFS;
                 // esto garantiza que ffmpeg siempre encuentre el directorio destino.
                 try
                 {
-                    var baseDir = Path.Combine(nasPath, camera.Client!.GatewayId!, camera.CameraId!);
+                    var baseDir = Path.Combine(nasPath, gatewayId, camera.CameraId!);
                     Directory.CreateDirectory(Path.Combine(baseDir, DateTime.Now.ToString("yyyy-MM-dd")));
                     Directory.CreateDirectory(Path.Combine(baseDir, DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")));
                 }
@@ -113,7 +121,7 @@ namespace MotorControlEnterprise.Api.Services
                 if (_processes.TryGetValue(key, out var existing) && !existing.HasExited)
                     continue;
 
-                StartRecording(camera.Client!.GatewayId!, camera.CameraId!);
+                StartRecording(gatewayId, camera.CameraId!);
             }
         }
 
