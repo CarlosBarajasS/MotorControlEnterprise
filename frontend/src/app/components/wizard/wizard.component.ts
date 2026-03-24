@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -30,6 +30,22 @@ interface CameraForm {
   onvifPass: string;
 }
 
+interface DiscoveryCamera {
+  id: number;
+  name: string;
+  ip?: string;
+  status: 'pending' | 'discovering' | 'discovered' | 'onvif_failed' | 'manual';
+  brand?: string;
+  model?: string;
+  resolution?: string;
+  fps?: number;
+}
+
+interface DiscoveryStatus {
+  gatewayOnline: boolean;
+  cameras: DiscoveryCamera[];
+}
+
 @Component({
   selector: 'app-wizard',
   standalone: true,
@@ -37,7 +53,7 @@ interface CameraForm {
   templateUrl: './wizard.component.html',
   styleUrls: ['./wizard.component.scss']
 })
-export class WizardComponent implements OnInit {
+export class WizardComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private router = inject(Router);
 
@@ -78,11 +94,11 @@ export class WizardComponent implements OnInit {
   step3Error = signal('');
 
   // ── Paso 4: Despliegue & Discovery ────────────────────────────────────────
-  discoveryStatus = signal<any>(null);
-  private discoveryPollInterval: any = null;
+  discoveryStatus = signal<DiscoveryStatus | null>(null);
+  private discoveryPollInterval: ReturnType<typeof setInterval> | null = null;
   private discoveryStartTime = 0;
   private readonly DISCOVERY_TIMEOUT_MS = 5 * 60 * 1000;
-  manualRtspInputs: { [key: number]: string } = {};
+  manualRtspInputs = signal<Record<number, string>>({});
 
   // ── Computed ──────────────────────────────────────────────────────────────
   activeGatewayId = computed(() => {
@@ -93,7 +109,7 @@ export class WizardComponent implements OnInit {
   canContinueFromStep4 = computed(() => {
     const status = this.discoveryStatus();
     if (!status?.cameras?.length) return false;
-    return status.cameras.every((c: any) =>
+    return status.cameras.every(c =>
       ['discovered', 'onvif_failed', 'manual'].includes(c.status)
     ) || status.gatewayOnline;
   });
@@ -102,6 +118,10 @@ export class WizardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadClients();
+  }
+
+  ngOnDestroy(): void {
+    this.stopDiscoveryPolling();
   }
 
   // ── Clientes ──────────────────────────────────────────────────────────────
@@ -339,10 +359,10 @@ export class WizardComponent implements OnInit {
     if (!clientId) return;
     try {
       const data = await firstValueFrom(
-        this.http.get<any>(`${API_URL}/admin/clients/${clientId}/discovery-status`)
+        this.http.get<DiscoveryStatus>(`${API_URL}/admin/clients/${clientId}/discovery-status`)
       );
       this.discoveryStatus.set(data);
-      const allTerminal = data.cameras?.every((c: any) =>
+      const allTerminal = data.cameras?.every(c =>
         ['discovered', 'onvif_failed', 'manual'].includes(c.status)
       );
       if (allTerminal && data.cameras?.length > 0) this.stopDiscoveryPolling();
@@ -361,17 +381,18 @@ export class WizardComponent implements OnInit {
     if (!this.discoveryPollInterval) this.startDiscoveryPolling();
   }
 
-  async saveManualRtsp(cameraId: number, rtspUrl: string): Promise<void> {
+  async saveManualRtsp(cameraId: number): Promise<void> {
+    const rtspUrl = this.manualRtspInputs()[cameraId];
     if (!rtspUrl?.startsWith('rtsp://')) return;
     try {
       await firstValueFrom(
         this.http.put(`${API_URL}/cameras/${cameraId}`, { rtspUrl, status: 'manual' })
       );
     } catch { return; }
-    this.discoveryStatus.update((s: any) => ({
+    this.discoveryStatus.update(s => s ? ({
       ...s,
-      cameras: s.cameras.map((c: any) => c.id === cameraId ? { ...c, status: 'manual' } : c)
-    }));
+      cameras: s.cameras.map(c => c.id === cameraId ? { ...c, status: 'manual' as const } : c)
+    }) : null);
     await this.pollDiscoveryOnce();
   }
 }
