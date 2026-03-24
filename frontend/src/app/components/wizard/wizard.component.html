@@ -35,7 +35,7 @@
 
       <!-- Selector de cliente -->
       <div class="form-group">
-        <label>Cliente <span class="required">*</span></label>
+        <label for="client-select">Cliente <span class="required">*</span></label>
         @if (loadingClients()) {
           <div class="loading-hint">Cargando clientes...</div>
         } @else if (clients().length === 0) {
@@ -44,7 +44,7 @@
             <a routerLink="/clients" class="btn btn-secondary">Dar de alta un cliente →</a>
           </div>
         } @else {
-          <select (change)="onClientChange($any($event.target).value)">
+          <select id="client-select" (change)="onClientChange($any($event.target).value)">
             <option value="">Selecciona un cliente...</option>
             @for (c of clients(); track c.id) {
               <option [value]="c.id">{{ c.name }}</option>
@@ -57,7 +57,7 @@
       @if (selectedClient()) {
         <div class="gateway-section">
           <div class="gateway-section-header">
-            <label>Gateway (Raspberry Pi) <span class="required">*</span></label>
+            <label for="gateway-select">Gateway (Raspberry Pi) <span class="required">*</span></label>
             @if (gateways().length > 0) {
               <div class="mode-toggle">
                 <button type="button" [class.active]="gatewayMode() === 'existing'"
@@ -71,7 +71,7 @@
           @if (loadingGateways()) {
             <div class="loading-hint">Cargando gateways...</div>
           } @else if (gatewayMode() === 'existing' && gateways().length > 0) {
-            <select (change)="onGatewayChange($any($event.target).value)">
+            <select id="gateway-select" (change)="onGatewayChange($any($event.target).value)">
               <option value="">Selecciona un gateway...</option>
               @for (gw of gateways(); track gw.gatewayId) {
                 <option [value]="gw.gatewayId">{{ gw.name }}</option>
@@ -274,7 +274,7 @@
 
         @if (discoveryStatus()?.cameras?.length) {
         <div class="camera-list">
-          @for (cam of discoveryStatus()!.cameras; track cam.id) {
+          @for (cam of (discoveryStatus()?.cameras ?? []); track cam.id) {
           <div class="camera-item" [class.failed]="cam.status === 'onvif_failed'">
             <div class="camera-header">
               <span class="camera-icon">📷</span>
