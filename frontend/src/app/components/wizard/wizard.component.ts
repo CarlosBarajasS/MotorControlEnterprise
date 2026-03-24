@@ -1,8 +1,34 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterModule } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+
+const API_URL = '/api';
+
+interface ClientOption {
+  id: number;
+  name: string;
+  cloudStorageActive: boolean;
+  localStorageType: string;
+}
+
+interface GatewayOption {
+  id: number;
+  gatewayId: string;
+  name: string;
+  location?: string;
+}
+
+interface CameraForm {
+  uid: number;        // local unique id para tracking en @for
+  name: string;
+  ip: string;
+  onvifPort: number;
+  onvifUser: string;
+  onvifPass: string;
+}
 
 @Component({
   selector: 'app-wizard',
@@ -15,477 +41,337 @@ export class WizardComponent implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  API_URL = '/api';
+  // ── Progreso ──────────────────────────────────────────────────────────────
+  currentStep = signal<1 | 2 | 3 | 4>(1);
+  totalSteps = 4;
 
-  currentStep = signal<number>(1);
-  totalSteps = 5;
+  // ── Paso 1: Cliente & Gateway ─────────────────────────────────────────────
+  clients = signal<ClientOption[]>([]);
+  loadingClients = signal(false);
+  selectedClient = signal<ClientOption | null>(null);
 
-  // Alerts
-  alerts = signal<{ [key: number]: { type: 'error' | 'success' | 'info', message: string } }>({});
+  gateways = signal<GatewayOption[]>([]);
+  loadingGateways = signal(false);
+  gatewayMode = signal<'existing' | 'new'>('existing');
+  selectedGateway = signal<GatewayOption | null>(null);
 
-  // Step 1: Client
-  clientData = {
+  newGateway = {
     name: '',
-    businessType: '',
-    contactName: '',
-    contactPhone: '',
-    location: '',
     gatewayId: '',
-    cloudStorageActive: true,
-    localStorageType: 'nvr' as 'nvr' | 'dvr' | 'none',
-    nvrIp: '',
-    nvrPort: 80,
-    nvrUser: 'admin',
-    nvrPassword: '',
-    nvrBrand: 'hikvision' as 'hikvision' | 'dahua' | 'generic'
+    edgeToken: '',
+    location: ''
   };
-  clientErrors = signal<any>({});
+  showToken = signal(false);   // true = texto plano, false = password
+  step1Error = signal('');
+  savingGateway = signal(false);
 
-  // Step 5: Acceso Web (antes User)
-  userData = {
-    email: '',
-    name: '',
-    password: ''
-  };
-  userErrors = signal<any>({});
-  isCreatingUser = signal<boolean>(false);
-  userCreated = signal<boolean>(false);
+  // ── Paso 2: Cámaras ───────────────────────────────────────────────────────
+  cameras = signal<CameraForm[]>([]);
+  private nextCameraUid = 1;
+  step2Error = signal('');
 
-  // Step 3: Cameras
-  cameras = signal<any[]>([{ id: 'cam1', ip: '', onvifPort: 8000, onvifUser: 'admin', onvifPass: '' }]);
-
-  // Step 4: Files
+  // ── Paso 3: Archivos ──────────────────────────────────────────────────────
   activeTab = signal<'env' | 'mediamtx' | 'compose'>('env');
-  generatedFiles = signal<{ env: string, compose: string, mediamtx: string }>({ env: '', compose: '', mediamtx: '' });
+  generatedFiles = signal<{ env: string; compose: string; mediamtx: string }>({
+    env: '', compose: '', mediamtx: ''
+  });
+  step3Error = signal('');
 
-  // Step 4: Discovery
+  // ── Paso 4: Despliegue & Discovery ────────────────────────────────────────
   discoveryStatus = signal<any>(null);
   private discoveryPollInterval: any = null;
   private discoveryStartTime = 0;
-  private readonly DISCOVERY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-
+  private readonly DISCOVERY_TIMEOUT_MS = 5 * 60 * 1000;
   manualRtspInputs: { [key: number]: string } = {};
 
-  ngOnInit(): void { }
+  // ── Computed ──────────────────────────────────────────────────────────────
+  activeGatewayId = computed(() => {
+    if (this.gatewayMode() === 'existing') return this.selectedGateway()?.gatewayId ?? null;
+    return this.newGateway.gatewayId.trim() || null;
+  });
 
-  showAlert(step: number, type: 'error' | 'success' | 'info', message: string) {
-    this.alerts.update(a => ({ ...a, [step]: { type, message } }));
+  canContinueFromStep4 = computed(() => {
+    const status = this.discoveryStatus();
+    if (!status?.cameras?.length) return false;
+    return status.cameras.every((c: any) =>
+      ['discovered', 'onvif_failed', 'manual'].includes(c.status)
+    ) || status.gatewayOnline;
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+
+  ngOnInit(): void {
+    this.loadClients();
   }
 
-  clearAlert(step: number) {
-    this.alerts.update(a => {
-      const newAlerts = { ...a };
-      delete newAlerts[step];
-      return newAlerts;
+  // ── Clientes ──────────────────────────────────────────────────────────────
+
+  loadClients(): void {
+    this.loadingClients.set(true);
+    this.http.get<ClientOption[]>(`${API_URL}/clients`).subscribe({
+      next: (res) => { this.clients.set(res ?? []); this.loadingClients.set(false); },
+      error: () => this.loadingClients.set(false)
     });
   }
 
-  async nextStep() {
+  onClientChange(clientId: string): void {
+    const id = parseInt(clientId, 10);
+    const client = this.clients().find(c => c.id === id) ?? null;
+    this.selectedClient.set(client);
+    this.selectedGateway.set(null);
+    this.gateways.set([]);
+    this.step1Error.set('');
+
+    if (!client) return;
+
+    this.loadingGateways.set(true);
+    this.http.get<GatewayOption[]>(`${API_URL}/clients/${client.id}/gateways`).subscribe({
+      next: (res) => {
+        this.gateways.set(res ?? []);
+        this.loadingGateways.set(false);
+        // Sin gateways → modo "nuevo" forzado
+        this.gatewayMode.set(res?.length ? 'existing' : 'new');
+      },
+      error: () => this.loadingGateways.set(false)
+    });
+  }
+
+  setGatewayMode(mode: 'existing' | 'new'): void {
+    this.gatewayMode.set(mode);
+    this.selectedGateway.set(null);
+    this.step1Error.set('');
+  }
+
+  onGatewayChange(gatewayId: string): void {
+    const gw = this.gateways().find(g => g.gatewayId === gatewayId) ?? null;
+    this.selectedGateway.set(gw);
+  }
+
+  generateToken(): void {
+    this.newGateway.edgeToken = crypto.randomUUID();
+    this.showToken.set(true);
+  }
+
+  // ── Navegación ────────────────────────────────────────────────────────────
+
+  async nextStep(): Promise<void> {
     if (this.currentStep() === 1) {
-      if (!this.validateStep1()) return;
-      const created = await this.createClientInApi();
-      if (!created) return;
-      this.clearAlert(1);
+      if (!await this.submitStep1()) return;
     } else if (this.currentStep() === 2) {
-      if (!this.validateStep2()) return;
-      await this.createCamerasInApi();
+      await this.submitStep2();
       await this.generateFiles();
-      this.clearAlert(2);
     } else if (this.currentStep() === 3) {
-      // Moving from step 3 → step 4: start discovery polling
       this.startDiscoveryPolling();
     } else if (this.currentStep() === 4) {
-      // Moving from step 4 → step 5: stop discovery polling
-      this.stopDiscoveryPolling();
-    } else if (this.currentStep() === 5) {
-      if (this.userCreated()) {
-        this.router.navigate(['/clients']);
-      } else {
-        this.createUserInApi();
+      this.router.navigate(['/clients']);
+      return;
+    }
+    this.currentStep.update(v => (v + 1) as any);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  prevStep(): void {
+    if (this.currentStep() === 1) return;
+    if (this.currentStep() === 4) this.stopDiscoveryPolling();
+    this.currentStep.update(v => (v - 1) as any);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Step 1 submit ─────────────────────────────────────────────────────────
+
+  private async submitStep1(): Promise<boolean> {
+    this.step1Error.set('');
+    if (!this.selectedClient()) {
+      this.step1Error.set('Selecciona un cliente.');
+      return false;
+    }
+
+    if (this.gatewayMode() === 'existing') {
+      if (!this.selectedGateway()) {
+        this.step1Error.set('Selecciona un gateway existente.');
+        return false;
       }
+      return true;
+    }
+
+    // Modo "nuevo"
+    if (!this.newGateway.name.trim()) { this.step1Error.set('El nombre del punto es requerido.'); return false; }
+    if (!this.newGateway.gatewayId.trim()) { this.step1Error.set('El ID del dispositivo es requerido.'); return false; }
+    if (!this.newGateway.edgeToken.trim()) { this.step1Error.set('Genera o ingresa un token de acceso.'); return false; }
+
+    this.savingGateway.set(true);
+    try {
+      const body = {
+        gatewayId: this.newGateway.gatewayId.trim(),
+        name: this.newGateway.name.trim(),
+        location: this.newGateway.location.trim() || null,
+        clientId: this.selectedClient()!.id,
+        edgeToken: this.newGateway.edgeToken.trim()
+      };
+
+      const created = await firstValueFrom(
+        this.http.post<{ id: number }>(`${API_URL}/gateways`, body)
+      );
+
+      // Guardar como gateway seleccionado (id viene del backend)
+      this.selectedGateway.set({
+        id: created?.id ?? 0,
+        gatewayId: body.gatewayId,
+        name: body.name,
+        location: body.location ?? undefined
+      });
+      return true;
+    } catch (err: any) {
+      this.step1Error.set(
+        err?.error?.message ?? 'Error al registrar el gateway. Verifica el ID del dispositivo.'
+      );
+      return false;
+    } finally {
+      this.savingGateway.set(false);
+    }
+  }
+
+  // ── Step 2: Cámaras ───────────────────────────────────────────────────────
+
+  addCamera(): void {
+    this.cameras.update(list => [
+      ...list,
+      { uid: this.nextCameraUid++, name: '', ip: '', onvifPort: 8000, onvifUser: 'admin', onvifPass: '' }
+    ]);
+  }
+
+  removeCamera(uid: number): void {
+    this.cameras.update(list => list.filter(c => c.uid !== uid));
+  }
+
+  private async submitStep2(): Promise<void> {
+    this.step2Error.set('');
+    const clientId = this.selectedClient()!.id;
+    const cloudActive = this.selectedClient()!.cloudStorageActive;
+    let failedCount = 0;
+
+    for (const cam of this.cameras()) {
+      if (!cam.name.trim() || !cam.ip.trim()) continue; // skip incomplete
+      const base = {
+        name: cam.name, cameraId: cam.name, onvifPort: cam.onvifPort || 8000,
+        onvifUser: cam.onvifUser, onvifPass: cam.onvifPass, onvifIp: cam.ip,
+        ptz: false, isRecordingOnly: false, clientId
+      };
+      try {
+        await firstValueFrom(this.http.post(`${API_URL}/cameras`, base));
+        if (cloudActive) {
+          await firstValueFrom(this.http.post(`${API_URL}/cameras`, {
+            ...base,
+            name: `${cam.name}-low`, cameraId: `${cam.name}-low`,
+            isRecordingOnly: true
+          }));
+        }
+      } catch { failedCount++; }
+    }
+
+    if (failedCount > 0) {
+      this.step2Error.set(
+        `${failedCount} cámara(s) no se pudieron registrar. Agrégalas después desde el módulo de Cámaras.`
+      );
+    }
+  }
+
+  // ── Step 3: Archivos ──────────────────────────────────────────────────────
+
+  async generateFiles(): Promise<void> {
+    this.step3Error.set('');
+    const clientId = this.selectedClient()!.id;
+    const gatewayId = this.activeGatewayId();
+
+    if (!gatewayId) {
+      this.step3Error.set('No hay gateway seleccionado.');
       return;
     }
 
-    if (this.currentStep() < this.totalSteps) {
-      this.currentStep.update(v => v + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      const data = await firstValueFrom(
+        this.http.get<{ env: string; dockerCompose: string; mediamtxYml: string }>(
+          `${API_URL}/admin/clients/${clientId}/edge-config?gatewayId=${encodeURIComponent(gatewayId)}`
+        )
+      );
+      this.generatedFiles.set({ env: data.env, compose: data.dockerCompose, mediamtx: data.mediamtxYml });
+    } catch (err: any) {
+      this.step3Error.set(err?.error?.message ?? 'Error al obtener la configuración.');
     }
   }
 
-  prevStep() {
-    if (this.currentStep() > 1 && this.currentStep() !== 5) {
-      if (this.currentStep() === 4) {
-        this.stopDiscoveryPolling();
-      }
-      this.currentStep.update(v => v - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+  showTab(tab: 'env' | 'mediamtx' | 'compose'): void { this.activeTab.set(tab); }
+
+  downloadFile(type: 'env' | 'mediamtx' | 'compose'): void {
+    const map = {
+      env:      { content: this.generatedFiles().env,     name: 'edge-gateway.env' },
+      mediamtx: { content: this.generatedFiles().mediamtx, name: 'mediamtx.yml' },
+      compose:  { content: this.generatedFiles().compose,  name: 'docker-compose.yml' }
+    };
+    const { content, name } = map[type];
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(a.href);
   }
 
-  // --- Step 4: Discovery polling ---
+  // ── Step 4: Discovery ────────────────────────────────────────────────────
 
-  startDiscoveryPolling() {
+  startDiscoveryPolling(): void {
     this.discoveryStartTime = Date.now();
-    this.pollDiscoveryOnce(); // immediate first call
+    this.pollDiscoveryOnce();
     this.discoveryPollInterval = setInterval(() => {
-      const elapsed = Date.now() - this.discoveryStartTime;
-      if (elapsed > this.DISCOVERY_TIMEOUT_MS) {
+      if (Date.now() - this.discoveryStartTime > this.DISCOVERY_TIMEOUT_MS) {
         this.stopDiscoveryPolling();
-        this.showAlert(4, 'error', 'Tiempo de espera agotado. Verifica que el Pi esté encendido y conectado.');
         return;
       }
       this.pollDiscoveryOnce();
     }, 3000);
   }
 
-  stopDiscoveryPolling() {
-    if (this.discoveryPollInterval) {
-      clearInterval(this.discoveryPollInterval);
-      this.discoveryPollInterval = null;
-    }
+  stopDiscoveryPolling(): void {
+    if (this.discoveryPollInterval) { clearInterval(this.discoveryPollInterval); this.discoveryPollInterval = null; }
   }
 
-  private async pollDiscoveryOnce() {
-    if (!this.clientId()) return;
+  private async pollDiscoveryOnce(): Promise<void> {
+    const clientId = this.selectedClient()?.id;
+    if (!clientId) return;
     try {
-      const res = await fetch(
-        `${this.API_URL}/admin/clients/${this.clientId()}/discovery-status`,
-        { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token') } }
+      const data = await firstValueFrom(
+        this.http.get<any>(`${API_URL}/admin/clients/${clientId}/discovery-status`)
       );
-      if (!res.ok) return;
-      const data = await res.json();
       this.discoveryStatus.set(data);
-
-      // Stop polling when all cameras reach terminal state
       const allTerminal = data.cameras?.every((c: any) =>
         ['discovered', 'onvif_failed', 'manual'].includes(c.status)
       );
-      if (allTerminal && data.cameras?.length > 0) {
-        this.stopDiscoveryPolling();
-      }
-    } catch { /* ignore polling errors */ }
+      if (allTerminal && data.cameras?.length > 0) this.stopDiscoveryPolling();
+    } catch { /* ignore */ }
   }
 
-  get canContinueFromStep4(): boolean {
-    const status = this.discoveryStatus();
-    if (!status?.cameras?.length) return false;
-    const allTerminal = status.cameras.every((c: any) =>
-      ['discovered', 'onvif_failed', 'manual'].includes(c.status)
-    );
-    // Allow continuing if all cameras reached a terminal state,
-    // even if the gateway heartbeat wasn't detected during this polling window.
-    return allTerminal || status.gatewayOnline;
-  }
-
-  async retryDiscovery(cameraId?: number) {
-    if (!this.clientId()) return;
+  async retryDiscovery(cameraId?: number): Promise<void> {
+    const clientId = this.selectedClient()?.id;
+    if (!clientId) return;
     const url = cameraId
-      ? `${this.API_URL}/admin/clients/${this.clientId()}/trigger-discovery?cameraId=${cameraId}`
-      : `${this.API_URL}/admin/clients/${this.clientId()}/trigger-discovery`;
-    await fetch(url, {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token') }
-    });
-    if (!this.discoveryPollInterval) {
-      this.startDiscoveryPolling();
-    }
+      ? `${API_URL}/admin/clients/${clientId}/trigger-discovery?cameraId=${cameraId}`
+      : `${API_URL}/admin/clients/${clientId}/trigger-discovery`;
+    try {
+      await firstValueFrom(this.http.post(url, {}));
+    } catch { /* ignore */ }
+    if (!this.discoveryPollInterval) this.startDiscoveryPolling();
   }
 
-  async saveManualRtsp(cameraId: number, rtspUrl: string) {
+  async saveManualRtsp(cameraId: number, rtspUrl: string): Promise<void> {
     if (!rtspUrl?.startsWith('rtsp://')) return;
-    const res = await fetch(`${this.API_URL}/cameras/${cameraId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
-      },
-      body: JSON.stringify({ rtspUrl, status: 'manual' })
-    });
-    if (!res.ok) {
-      this.showAlert(4, 'error', 'Error al guardar la URL RTSP. Intenta de nuevo.');
-      return;
-    }
-
-    // Optimistic local update: mark this camera as 'manual' immediately so
-    // canContinueFromStep4 unblocks without waiting for the next poll cycle.
-    this.discoveryStatus.update((s: any) => {
-      if (!s?.cameras) return s;
-      return {
-        ...s,
-        cameras: s.cameras.map((c: any) =>
-          c.id === cameraId ? { ...c, status: 'manual' } : c
-        )
-      };
-    });
-
+    try {
+      await firstValueFrom(
+        this.http.put(`${API_URL}/cameras/${cameraId}`, { rtspUrl, status: 'manual' })
+      );
+    } catch { return; }
+    this.discoveryStatus.update((s: any) => ({
+      ...s,
+      cameras: s.cameras.map((c: any) => c.id === cameraId ? { ...c, status: 'manual' } : c)
+    }));
     await this.pollDiscoveryOnce();
   }
-
-  // --- Step 1 ---
-  clientId = signal<number | null>(null);
-
-  validateStep1(): boolean {
-    const err: any = {};
-    if (!this.clientData.name.trim()) err.name = true;
-    if (!this.clientData.businessType) err.businessType = true;
-    if (!this.clientData.contactName.trim()) err.contactName = true;
-    if (!this.clientData.location.trim()) err.location = true;
-    if (!this.clientData.gatewayId.trim()) err.gatewayId = true;
-
-    this.clientErrors.set(err);
-    return Object.keys(err).length === 0;
-  }
-
-  async createClientInApi(): Promise<boolean> {
-    if (this.clientId()) return true; // Ya creado
-
-    try {
-      const clientRes = await fetch(`${this.API_URL}/clients`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
-        },
-        body: JSON.stringify({
-          name: this.clientData.name,
-          businessType: this.clientData.businessType,
-          contactName: this.clientData.contactName,
-          contactPhone: this.clientData.contactPhone,
-          address: this.clientData.location,
-          gatewayId: this.clientData.gatewayId,
-          cloudStorageActive: this.clientData.cloudStorageActive,
-          localStorageType: this.clientData.localStorageType,
-          nvrIp: this.clientData.nvrIp || null,
-          nvrPort: this.clientData.nvrPort,
-          nvrUser: this.clientData.nvrUser || null,
-          nvrPassword: this.clientData.nvrPassword || null,
-          nvrBrand: this.clientData.nvrBrand || null
-        })
-      });
-
-      if (!clientRes.ok) {
-        const clientBody = await clientRes.json();
-        this.showAlert(1, 'error', clientBody.error || clientBody.message || 'Error al registrar el cliente.');
-        return false;
-      }
-
-      const body = await clientRes.json();
-      this.clientId.set(body.id);
-      this.userData.name = this.clientData.contactName;
-      return true;
-    } catch (e: any) {
-      this.showAlert(1, 'error', 'Error de conexión: ' + e.message);
-      return false;
-    }
-  }
-
-  updateGatewayId() {
-    if (!this.clientData.gatewayId && this.clientData.name) {
-      const gId = 'edge-gateway-' + this.clientData.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      this.clientData.gatewayId = gId;
-    }
-  }
-
-  // --- Step 2 (Cámaras) ---
-
-  calculatePasswordStrength(): number {
-    const p = this.userData.password;
-    if (!p) return 0;
-    if (p.length < 8) return 33;
-    if (/[a-zA-Z]/.test(p) && /[0-9]/.test(p) && p.length >= 8) return 66;
-    if (/[a-zA-Z]/.test(p) && /[0-9]/.test(p) && /[^a-zA-Z0-9]/.test(p) && p.length >= 10) return 100;
-    return 33;
-  }
-
-  // --- Step 3 ---
-  addCamera() {
-    this.cameras.update(c => [...c, { id: 'cam' + (c.length + 1), ip: '', onvifPort: 8000, onvifUser: 'admin', onvifPass: '' }]);
-  }
-
-  removeCamera(index: number) {
-    this.cameras.update(c => c.filter((_, i) => i !== index));
-  }
-
-  validateStep2(): boolean {
-    if (this.cameras().length === 0) {
-      this.showAlert(2, 'error', 'Agrega al menos una cámara');
-      return false;
-    }
-    for (const cam of this.cameras()) {
-      if (!cam.id?.trim() || !cam.ip?.trim() || !cam.onvifUser?.trim()) {
-        this.showAlert(2, 'error', 'Completa el nombre, IP y usuario ONVIF de todas las cámaras');
-        return false;
-      }
-      // Default port to 8000 if blank
-      if (!cam.onvifPort) cam.onvifPort = 8000;
-    }
-    return true;
-  }
-
-  async createCamerasInApi() {
-    const token = localStorage.getItem('motor_control_token');
-    for (const cam of this.cameras()) {
-      try {
-        // Cámara live (alta calidad, vista en vivo)
-        await fetch(`${this.API_URL}/cameras`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-          body: JSON.stringify({
-            name: cam.id,
-            cameraId: cam.id,
-            location: this.clientData.location,
-            onvifPort: cam.onvifPort || 8000,
-            onvifUser: cam.onvifUser,
-            onvifPass: cam.onvifPass,
-            onvifIp: cam.ip,
-            ptz: false,
-            isRecordingOnly: false,
-            clientId: this.clientId()
-          })
-        });
-      } catch (e) {
-        console.warn('Error creating live camera:', cam.id, e);
-      }
-
-      // Cámara de grabación (solo si cloudStorageActive)
-      if (this.clientData.cloudStorageActive) {
-        try {
-          await fetch(`${this.API_URL}/cameras`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify({
-              name: `${cam.id}-low`,
-              cameraId: `${cam.id}-low`,
-              location: this.clientData.location,
-              onvifPort: cam.onvifPort || 8000,
-              onvifUser: cam.onvifUser,
-              onvifPass: cam.onvifPass,
-              onvifIp: cam.ip,
-              ptz: false,
-              isRecordingOnly: true,
-              clientId: this.clientId()
-            })
-          });
-        } catch (e) {
-          console.warn('Error creating recording camera:', cam.id, e);
-        }
-      }
-    }
-  }
-
-  // --- Step 3: Archivos (Desde API) ---
-  async generateFiles() {
-    this.alerts.update(a => {
-      const newAlerts = { ...a };
-      delete newAlerts[3];
-      return newAlerts;
-    });
-
-    try {
-      const res = await fetch(`${this.API_URL}/admin/clients/${this.clientId()}/edge-config`, {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
-        }
-      });
-
-      if (!res.ok) {
-        const body = await res.json();
-        this.showAlert(3, 'error', body.message || 'Error al obtener la configuración del Edge Gateway desde el servidor central.');
-        return;
-      }
-
-      const configData = await res.json();
-
-      this.generatedFiles.set({
-        env: configData.env,
-        compose: configData.dockerCompose,
-        mediamtx: configData.mediamtxYml
-      });
-
-    } catch (e: any) {
-      this.showAlert(3, 'error', 'Error de red al contactar al servidor: ' + e.message);
-    }
-  }
-
-  showTab(tab: 'env' | 'mediamtx' | 'compose') {
-    this.activeTab.set(tab);
-  }
-
-  downloadFile(type: 'env' | 'mediamtx' | 'compose') {
-    let content = '';
-    let filename = '';
-    const gw = this.clientData.gatewayId;
-
-    if (type === 'env') {
-      content = this.generatedFiles().env;
-      filename = 'edge-gateway.env';
-    } else if (type === 'mediamtx') {
-      content = this.generatedFiles().mediamtx;
-      filename = `${gw}_mediamtx.yml`;
-    } else {
-      content = this.generatedFiles().compose;
-      filename = `${gw}_docker-compose.yml`;
-    }
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  }
-
-  // --- Step 5: Acceso Web ---
-  generateRandomPassword() {
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    let pass = "";
-    for (let i = 0; i < 12; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
-    this.userData.password = pass;
-  }
-
-  async createUserInApi() {
-    this.clearAlert(5);
-    const err: any = {};
-    if (!this.userData.email.includes('@')) err.email = true;
-    if (!this.userData.name.trim()) err.name = true;
-    if (this.userData.password.length < 8) err.password = true;
-
-    this.userErrors.set(err);
-    if (Object.keys(err).length > 0) return;
-
-    this.isCreatingUser.set(true);
-    try {
-      const res = await fetch(`${this.API_URL}/clients/${this.clientId()}/create-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('motor_control_token')
-        },
-        body: JSON.stringify({
-          email: this.userData.email,
-          name: this.userData.name,
-          password: this.userData.password
-        })
-      });
-
-      const body = await res.json();
-      this.isCreatingUser.set(false);
-
-      if (!res.ok) {
-        this.showAlert(5, 'error', body.message || 'Error al crear el acceso web');
-        return;
-      }
-
-      this.userCreated.set(true);
-      this.showAlert(5, 'success', `Acceso creado y credenciales enviadas a ${this.userData.email}`);
-    } catch (e: any) {
-      this.isCreatingUser.set(false);
-      this.showAlert(5, 'error', 'Error de conexión: ' + e.message);
-    }
-  }
-
 }
