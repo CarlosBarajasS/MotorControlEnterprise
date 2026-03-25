@@ -347,9 +347,7 @@
     <span class="step-counter">Paso {{ currentStep() }} de {{ totalSteps }}</span>
     <button type="button" class="btn btn-primary" (click)="nextStep()"
             [disabled]="savingGateway() || (currentStep() === 4 && !canContinueFromStep4())">
-      @if (savingGateway()) { Guardando... }
-      @else if (currentStep() === 4) { Finalizar }
-      @else { Siguiente &rarr; }
+      {{ savingGateway() ? 'Guardando...' : (currentStep() === 4 ? 'Finalizar' : 'Siguiente →') }}
     </button>
   </div>
 </div>
