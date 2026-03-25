@@ -342,14 +342,14 @@
   <!-- Navigation Footer -->
   <div class="wizard-nav">
     <button type="button" class="btn btn-secondary" [disabled]="currentStep() === 1" (click)="prevStep()">
-      ← Anterior
+      &larr; Anterior
     </button>
     <span class="step-counter">Paso {{ currentStep() }} de {{ totalSteps }}</span>
     <button type="button" class="btn btn-primary" (click)="nextStep()"
             [disabled]="savingGateway() || (currentStep() === 4 && !canContinueFromStep4())">
       @if (savingGateway()) { Guardando... }
       @else if (currentStep() === 4) { Finalizar }
-      @else { Siguiente → }
+      @else { Siguiente &rarr; }
     </button>
   </div>
 </div>
