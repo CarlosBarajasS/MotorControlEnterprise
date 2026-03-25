@@ -386,6 +386,10 @@ export class WizardComponent implements OnInit, OnDestroy {
     if (!this.discoveryPollInterval) this.startDiscoveryPolling();
   }
 
+  setManualRtsp(camId: number, value: string): void {
+    this.manualRtspInputs.update(m => ({ ...m, [camId]: value }));
+  }
+
   async saveManualRtsp(cameraId: number): Promise<void> {
     const rtspUrl = this.manualRtspInputs()[cameraId];
     if (!rtspUrl?.startsWith('rtsp://')) return;

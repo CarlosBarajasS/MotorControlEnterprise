@@ -315,7 +315,7 @@
                 <div class="manual-input-row">
                   <input type="text"
                          [value]="manualRtspInputs()[cam.id] ?? ''"
-                         (input)="manualRtspInputs.update(m => ({...m, [cam.id]: $any($event.target).value}))"
+                         (input)="setManualRtsp(cam.id, $any($event.target).value)"
                          placeholder="rtsp://admin:pass@192.168.1.100:554/..."
                          class="form-input manual-rtsp">
                   <button type="button" class="btn btn-primary" (click)="saveManualRtsp(cam.id)">
@@ -347,7 +347,7 @@
     <span class="step-counter">Paso {{ currentStep() }} de {{ totalSteps }}</span>
     <button type="button" class="btn btn-primary" (click)="nextStep()"
             [disabled]="savingGateway() || (currentStep() === 4 && !canContinueFromStep4())">
-      {{ savingGateway() ? 'Guardando...' : (currentStep() === 4 ? 'Finalizar' : 'Siguiente →') }}
+      {{ savingGateway() ? 'Guardando...' : (currentStep() === 4 ? 'Finalizar' : 'Siguiente') }}
     </button>
   </div>
 </div>
