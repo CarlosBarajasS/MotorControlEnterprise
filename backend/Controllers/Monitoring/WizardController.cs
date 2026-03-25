@@ -32,30 +32,44 @@ namespace MotorControlEnterprise.Api.Controllers
         /// para desplegar el edge gateway en el sitio del cliente.
         /// </summary>
         [HttpGet("{id:int}/edge-config")]
-        public async Task<IActionResult> GetEdgeConfig(int id)
+        public async Task<IActionResult> GetEdgeConfig(int id, [FromQuery] string? gatewayId = null)
         {
             var client = await _db.Clients
                 .Include(c => c.Gateways)
                 .FirstOrDefaultAsync(c => c.Id == id);
             if (client == null) return NotFound();
 
-            // Asegurar que el cliente tenga al menos un gateway registrado
-            var gateway = client.Gateways.FirstOrDefault();
-            if (gateway == null)
+            // Si se pasa gatewayId, usar ese gateway específico; si no, usar el primero (backward-compat)
+            Gateway? gateway;
+            if (!string.IsNullOrEmpty(gatewayId))
             {
-                gateway = new Gateway
-                {
-                    ClientId  = client.Id,
-                    GatewayId = $"gateway-{client.Id}",
-                    Name      = $"{client.Name} - Gateway",
-                    Status    = "active",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-                _db.Gateways.Add(gateway);
-                await _db.SaveChangesAsync();
+                gateway = client.Gateways.FirstOrDefault(g => g.GatewayId == gatewayId);
+                if (gateway == null)
+                    return NotFound(new { message = $"Gateway '{gatewayId}' no encontrado para este cliente." });
+                // Cuando se pasó gatewayId explícito, no aplicar auto-creación: salir si no existe.
             }
-            var gatewayId = gateway.GatewayId;
+            else
+            {
+                // Sin parámetro: comportamiento original — tomar el primero o auto-crear uno.
+                gateway = client.Gateways.FirstOrDefault();
+
+                if (gateway == null)
+                {
+                    // ⚠️ Auto-creación solo en rama sin gatewayId (backward-compat).
+                    gateway = new Gateway
+                    {
+                        ClientId  = client.Id,
+                        GatewayId = $"gateway-{client.Id}",
+                        Name      = $"{client.Name} - Gateway",
+                        Status    = "active",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _db.Gateways.Add(gateway);
+                    await _db.SaveChangesAsync();
+                }
+            }
+            var resolvedGatewayId = gateway.GatewayId;
 
             // Generate edge token if not yet present — stored in Gateway.Metadata
             var edgeToken = ExtractEdgeToken(gateway.Metadata);
@@ -110,15 +124,15 @@ namespace MotorControlEnterprise.Api.Controllers
 
             return Ok(new
             {
-                gatewayId,
+                gatewayId = resolvedGatewayId,
                 mqttHost,
                 mqttPort,
                 mqttUser,
                 centralRtspHost = centralRtsp,
                 centralRtspPort = centralPort,
-                env             = BuildEnv(client, gatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location, edgeToken, centralRtsp, centralPort, mediamtxPass),
+                env             = BuildEnv(client, resolvedGatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location, edgeToken, centralRtsp, centralPort, mediamtxPass),
                 dockerCompose   = BuildDockerCompose(centralRtsp, centralPort, pushUser, pushPass, mediamtxPass),
-                mediamtxYml     = BuildMediamtxYml(cameras, gatewayId, mediamtxPass),
+                mediamtxYml     = BuildMediamtxYml(cameras, resolvedGatewayId, mediamtxPass),
                 localStorageType = client.LocalStorageType ?? "nvr"
             });
         }
@@ -351,14 +365,28 @@ networks:
 
         // POST /api/admin/clients/{id}/trigger-discovery
         [HttpPost("{id:int}/trigger-discovery")]
-        public async Task<IActionResult> TriggerDiscovery(int id, [FromQuery] int? cameraId = null)
+        public async Task<IActionResult> TriggerDiscovery(int id, [FromQuery] int? cameraId = null, [FromQuery] string? gatewayId = null)
         {
             var client = await _db.Clients
                 .Include(c => c.Gateways)
                 .FirstOrDefaultAsync(c => c.Id == id);
             if (client == null) return NotFound();
-            var gatewayId = client.Gateways.FirstOrDefault()?.GatewayId;
-            if (string.IsNullOrEmpty(gatewayId))
+
+            // Si se pasa gatewayId, usar ese gateway específico; si no, usar el primero (backward-compat)
+            string? resolvedGatewayId;
+            if (!string.IsNullOrEmpty(gatewayId))
+            {
+                var gw = client.Gateways.FirstOrDefault(g => g.GatewayId == gatewayId);
+                if (gw == null)
+                    return NotFound(new { message = $"Gateway '{gatewayId}' no encontrado para este cliente." });
+                resolvedGatewayId = gw.GatewayId;
+            }
+            else
+            {
+                resolvedGatewayId = client.Gateways.FirstOrDefault()?.GatewayId;
+            }
+
+            if (string.IsNullOrEmpty(resolvedGatewayId))
                 return BadRequest(new { message = "Client has no gateway configured." });
 
             // Load cameras to discover (all, or specific one)
@@ -404,10 +432,10 @@ networks:
                 })
             });
 
-            var topic = $"gateway/{gatewayId}/cmd/discover-onvif";
+            var topic = $"gateway/{resolvedGatewayId}/cmd/discover-onvif";
             await _mqtt.PublishAsync(topic, payload);
 
-            return Ok(new { requestId, cameraCount = cameras.Count, gatewayId });
+            return Ok(new { requestId, cameraCount = cameras.Count, gatewayId = resolvedGatewayId });
         }
 
         // GET /api/admin/clients/{id}/discovery-status
