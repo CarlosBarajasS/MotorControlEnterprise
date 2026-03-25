@@ -179,7 +179,7 @@ export class WizardComponent implements OnInit, OnDestroy {
       if (!await this.submitStep1()) return;
     } else if (this.currentStep() === 2) {
       await this.submitStep2();
-      await this.generateFiles();
+      if (!await this.generateFiles()) return;
     } else if (this.currentStep() === 3) {
       this.startDiscoveryPolling();
     } else if (this.currentStep() === 4) {
@@ -298,14 +298,14 @@ export class WizardComponent implements OnInit, OnDestroy {
 
   // ── Step 3: Archivos ──────────────────────────────────────────────────────
 
-  async generateFiles(): Promise<void> {
+  async generateFiles(): Promise<boolean> {
     this.step3Error.set('');
     const clientId = this.selectedClient()!.id;
     const gatewayId = this.activeGatewayId();
 
     if (!gatewayId) {
       this.step3Error.set('No hay gateway seleccionado.');
-      return;
+      return false;
     }
 
     try {
@@ -315,8 +315,10 @@ export class WizardComponent implements OnInit, OnDestroy {
         )
       );
       this.generatedFiles.set({ env: data.env, compose: data.dockerCompose, mediamtx: data.mediamtxYml });
+      return true;
     } catch (err: any) {
       this.step3Error.set(err?.error?.message ?? 'Error al obtener la configuración.');
+      return false;
     }
   }
 
@@ -372,9 +374,12 @@ export class WizardComponent implements OnInit, OnDestroy {
   async retryDiscovery(cameraId?: number): Promise<void> {
     const clientId = this.selectedClient()?.id;
     if (!clientId) return;
-    const url = cameraId
-      ? `${API_URL}/admin/clients/${clientId}/trigger-discovery?cameraId=${cameraId}`
-      : `${API_URL}/admin/clients/${clientId}/trigger-discovery`;
+    const gatewayId = this.activeGatewayId();
+    const base = `${API_URL}/admin/clients/${clientId}/trigger-discovery`;
+    const params = new URLSearchParams();
+    if (cameraId) params.set('cameraId', String(cameraId));
+    if (gatewayId) params.set('gatewayId', gatewayId);
+    const url = params.toString() ? `${base}?${params}` : base;
     try {
       await firstValueFrom(this.http.post(url, {}));
     } catch { /* ignore */ }
@@ -384,9 +389,18 @@ export class WizardComponent implements OnInit, OnDestroy {
   async saveManualRtsp(cameraId: number): Promise<void> {
     const rtspUrl = this.manualRtspInputs()[cameraId];
     if (!rtspUrl?.startsWith('rtsp://')) return;
+    const cam = this.discoveryStatus()?.cameras.find(c => c.id === cameraId);
+    if (!cam) return;
     try {
       await firstValueFrom(
-        this.http.put(`${API_URL}/cameras/${cameraId}`, { rtspUrl, status: 'manual' })
+        this.http.put(`${API_URL}/cameras/${cameraId}`, {
+          name: cam.name,
+          location: null,
+          rtspUrl,
+          clientId: this.selectedClient()?.id ?? null,
+          ptz: false,
+          isRecordingOnly: false
+        })
       );
     } catch { return; }
     this.discoveryStatus.update(s => s ? ({

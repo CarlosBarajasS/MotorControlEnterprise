@@ -365,14 +365,28 @@ networks:
 
         // POST /api/admin/clients/{id}/trigger-discovery
         [HttpPost("{id:int}/trigger-discovery")]
-        public async Task<IActionResult> TriggerDiscovery(int id, [FromQuery] int? cameraId = null)
+        public async Task<IActionResult> TriggerDiscovery(int id, [FromQuery] int? cameraId = null, [FromQuery] string? gatewayId = null)
         {
             var client = await _db.Clients
                 .Include(c => c.Gateways)
                 .FirstOrDefaultAsync(c => c.Id == id);
             if (client == null) return NotFound();
-            var gatewayId = client.Gateways.FirstOrDefault()?.GatewayId;
-            if (string.IsNullOrEmpty(gatewayId))
+
+            // Si se pasa gatewayId, usar ese gateway específico; si no, usar el primero (backward-compat)
+            string? resolvedGatewayId;
+            if (!string.IsNullOrEmpty(gatewayId))
+            {
+                var gw = client.Gateways.FirstOrDefault(g => g.GatewayId == gatewayId);
+                if (gw == null)
+                    return NotFound(new { message = $"Gateway '{gatewayId}' no encontrado para este cliente." });
+                resolvedGatewayId = gw.GatewayId;
+            }
+            else
+            {
+                resolvedGatewayId = client.Gateways.FirstOrDefault()?.GatewayId;
+            }
+
+            if (string.IsNullOrEmpty(resolvedGatewayId))
                 return BadRequest(new { message = "Client has no gateway configured." });
 
             // Load cameras to discover (all, or specific one)
@@ -418,10 +432,10 @@ networks:
                 })
             });
 
-            var topic = $"gateway/{gatewayId}/cmd/discover-onvif";
+            var topic = $"gateway/{resolvedGatewayId}/cmd/discover-onvif";
             await _mqtt.PublishAsync(topic, payload);
 
-            return Ok(new { requestId, cameraCount = cameras.Count, gatewayId });
+            return Ok(new { requestId, cameraCount = cameras.Count, gatewayId = resolvedGatewayId });
         }
 
         // GET /api/admin/clients/{id}/discovery-status
