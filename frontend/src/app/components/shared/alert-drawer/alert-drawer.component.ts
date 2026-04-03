@@ -34,7 +34,6 @@ const API_URL = '/api';
           {{ a.priority }}
         </span>
         <span class="alert-status" *ngIf="a.status === 'Acknowledged'">ACK</span>
-        <span class="alert-status resolved" *ngIf="a.status === 'Resolved'">RESUELTO</span>
         <span class="alert-time">{{ a.createdAt | date:'HH:mm dd/MM' }}</span>
       </div>
       <div class="alert-title">{{ a.title }}</div>
@@ -120,7 +119,6 @@ const API_URL = '/api';
   font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
   background: rgba(var(--ink-rgb), 0.08); color: var(--muted);
 }
-.alert-status.resolved { background: rgba(0,200,150,0.12); color: var(--teal); }
 .alert-time { font-size: 11px; color: var(--muted); margin-left: auto; }
 .alert-title { font-weight: 600; font-size: 14px; color: rgba(var(--ink-rgb), 1); margin-bottom: 4px; }
 .alert-message { font-size: 12px; color: var(--muted); line-height: 1.5; }
@@ -165,7 +163,8 @@ export class AlertDrawerComponent implements OnInit {
 
         this.http.get<any>(url).subscribe({
             next: (res) => {
-                this.alerts.set(this.isAdmin ? (res.data ?? []) : (res ?? []));
+                const raw: any[] = this.isAdmin ? (res.data ?? []) : (res ?? []);
+                this.alerts.set(raw.filter((a: any) => a.status === 'Active' || a.status === 'Acknowledged'));
                 this.loading.set(false);
             },
             error: () => this.loading.set(false)
@@ -182,9 +181,7 @@ export class AlertDrawerComponent implements OnInit {
     resolve(alertId: number) {
         this.http.patch(`${API_URL}/alerts/${alertId}/resolve`, {}).subscribe({
             next: () => {
-                this.alerts.update(list =>
-                    list.map(a => a.id === alertId ? { ...a, status: 'Resolved' } : a)
-                );
+                this.alerts.update(list => list.filter(a => a.id !== alertId));
                 this.toast.success('Alerta resuelta correctamente');
             },
             error: () => {
