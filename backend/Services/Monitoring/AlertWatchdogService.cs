@@ -13,6 +13,10 @@ namespace MotorControlEnterprise.Api.Services
         private static readonly TimeSpan Interval        = TimeSpan.FromMinutes(2);
         private static readonly TimeSpan CameraTimeout   = TimeSpan.FromMinutes(5);
         private static readonly TimeSpan GatewayTimeout  = TimeSpan.FromMinutes(3);
+        private static readonly TimeSpan PurgeInterval   = TimeSpan.FromHours(24);
+        private static readonly int      PurgeAgeDays    = 15;
+
+        private DateTime _lastPurgeAt = DateTime.MinValue;
 
         public AlertWatchdogService(
             IServiceProvider services,
@@ -51,6 +55,13 @@ namespace MotorControlEnterprise.Api.Services
             var alertService  = scope.ServiceProvider.GetRequiredService<AlertService>();
 
             var now = DateTime.UtcNow;
+
+            // ── 0. Daily purge of stale resolved alerts ──────────────────────
+            if (now - _lastPurgeAt >= PurgeInterval)
+            {
+                await PurgeResolvedAlertsAsync(db, ct);
+                _lastPurgeAt = now;
+            }
 
             // ── 1. Gateway offline check ──────────────────────────────────────
             var gatewayThreshold = now - GatewayTimeout;
@@ -187,6 +198,34 @@ namespace MotorControlEnterprise.Api.Services
                     _logger.LogWarning(ex, "AlertWatchdog: error reading NAS storage");
                 }
             }
+        }
+
+        /// <summary>
+        /// Deletes Resolved alerts whose resolved_at is older than PurgeAgeDays.
+        /// Never touches Active or Acknowledged alerts -- double-filtered by Status.
+        /// </summary>
+        private async Task PurgeResolvedAlertsAsync(ApplicationDbContext db, CancellationToken ct)
+        {
+            var cutoff = DateTime.UtcNow.AddDays(-PurgeAgeDays);
+
+            var stale = await db.Alerts
+                .Where(a => a.Status == AlertStatus.Resolved &&
+                            a.ResolvedAt != null &&
+                            a.ResolvedAt < cutoff)
+                .ToListAsync(ct);
+
+            if (stale.Count == 0)
+            {
+                _logger.LogInformation("AlertWatchdog purge: no resolved alerts older than {Days}d found", PurgeAgeDays);
+                return;
+            }
+
+            db.Alerts.RemoveRange(stale);
+            await db.SaveChangesAsync(ct);
+
+            _logger.LogInformation(
+                "AlertWatchdog purge: deleted {Count} resolved alert(s) older than {Days} days",
+                stale.Count, PurgeAgeDays);
         }
     }
 }

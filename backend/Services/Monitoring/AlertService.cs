@@ -155,7 +155,21 @@ namespace MotorControlEnterprise.Api.Services
             alert.Status          = AlertStatus.Acknowledged;
             alert.AcknowledgedAt  = alert.AcknowledgedAt ?? DateTime.UtcNow;
             alert.AcknowledgedBy  = adminEmail;
+
+            // P4 (informational/recovery) alerts need no follow-up action.
+            // Auto-resolve immediately after ACK so they leave the active drawer.
+            if (alert.Priority == AlertPriority.P4)
+            {
+                alert.Status     = AlertStatus.Resolved;
+                alert.ResolvedAt = DateTime.UtcNow;
+            }
+
             await _db.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Alert acknowledged: Id={AlertId} by {User}{AutoResolved}",
+                alertId, adminEmail,
+                alert.Status == AlertStatus.Resolved ? " (auto-resolved, P4)" : string.Empty);
 
             return (true, null, alert);
         }
