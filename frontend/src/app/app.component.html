@@ -34,6 +34,7 @@
 <app-alert-drawer
     *ngIf="adminDrawerOpen && showSidebar()"
     [isAdmin]="true"
+    [canResolve]="true"
     (close)="adminDrawerOpen = false">
 </app-alert-drawer>
 

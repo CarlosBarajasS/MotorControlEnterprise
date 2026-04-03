@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { ToastService } from '../../../services/toast.service';
 
 const API_URL = '/api';
 
@@ -13,7 +14,7 @@ const API_URL = '/api';
 <div class="alert-drawer">
   <div class="drawer-header">
     <h3>Alertas</h3>
-    <button class="close-btn" (click)="close.emit()">✕</button>
+    <button class="close-btn" (click)="close.emit()">&#x2715;</button>
   </div>
 
   <div class="drawer-body">
@@ -41,11 +42,18 @@ const API_URL = '/api';
       <div class="alert-footer" *ngIf="a.clientName">
         <span class="alert-client">{{ a.clientName }}</span>
       </div>
-      <button class="ack-btn"
-        *ngIf="isAdmin && a.status === 'Active'"
-        (click)="acknowledge(a.id)">
-        Reconocer
-      </button>
+      <div class="alert-actions">
+        <button class="ack-btn"
+          *ngIf="isAdmin && a.status === 'Active'"
+          (click)="acknowledge(a.id)">
+          Reconocer
+        </button>
+        <button class="resolve-btn"
+          *ngIf="canResolve && (a.status === 'Active' || a.status === 'Acknowledged')"
+          (click)="resolve(a.id)">
+          Resolver
+        </button>
+      </div>
       <div class="ack-info" *ngIf="a.status === 'Acknowledged' && a.acknowledgedBy">
         Reconocida por {{ a.acknowledgedBy }}
       </div>
@@ -118,21 +126,31 @@ const API_URL = '/api';
 .alert-message { font-size: 12px; color: var(--muted); line-height: 1.5; }
 .alert-footer { margin-top: 6px; }
 .alert-client { font-size: 11px; color: var(--accent); font-weight: 500; }
+.alert-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .ack-btn {
-  margin-top: 10px; padding: 6px 14px; border-radius: 8px;
+  padding: 6px 14px; border-radius: 8px;
   background: rgba(0,122,255,0.12); color: var(--accent);
   border: 1px solid rgba(0,122,255,0.25); font-size: 12px;
   font-weight: 600; cursor: pointer; transition: all 0.15s;
 }
 .ack-btn:hover { background: rgba(0,122,255,0.2); }
+.resolve-btn {
+  padding: 6px 14px; border-radius: 8px;
+  background: rgba(201,168,76,0.12); color: #C9A84C;
+  border: 1px solid rgba(201,168,76,0.35); font-size: 12px;
+  font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.resolve-btn:hover { background: rgba(201,168,76,0.25); border-color: rgba(201,168,76,0.55); }
 .ack-info { margin-top: 8px; font-size: 11px; color: var(--muted); font-style: italic; }
     `]
 })
 export class AlertDrawerComponent implements OnInit {
     @Input() isAdmin = false;
+    @Input() canResolve = false;
     @Output() close = new EventEmitter<void>();
 
-    private http = inject(HttpClient);
+    private http  = inject(HttpClient);
+    private toast = inject(ToastService);
     alerts  = signal<any[]>([]);
     loading = signal(true);
 
@@ -158,6 +176,20 @@ export class AlertDrawerComponent implements OnInit {
         this.http.patch(`${API_URL}/alerts/${alertId}/acknowledge`, {}).subscribe({
             next: () => this.loadAlerts(),
             error: () => {}
+        });
+    }
+
+    resolve(alertId: number) {
+        this.http.patch(`${API_URL}/alerts/${alertId}/resolve`, {}).subscribe({
+            next: () => {
+                this.alerts.update(list =>
+                    list.map(a => a.id === alertId ? { ...a, status: 'Resolved' } : a)
+                );
+                this.toast.success('Alerta resuelta correctamente');
+            },
+            error: () => {
+                this.toast.error('No se pudo resolver la alerta');
+            }
         });
     }
 }
