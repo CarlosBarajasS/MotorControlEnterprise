@@ -100,6 +100,27 @@ namespace MotorControlEnterprise.Api.Services
                     cam.ClientId);
             }
 
+            // ── 2b. Camera recovery — resolve Active/Acknowledged alerts for cameras back online ──
+            var onlineCameras = await db.Cameras
+                .Include(c => c.Client)
+                .Where(c => c.Status == "active" &&
+                            c.IsRecordingOnly != true &&
+                            c.LastSeen != null &&
+                            c.LastSeen >= cameraThreshold)
+                .ToListAsync(ct);
+
+            foreach (var cam in onlineCameras)
+            {
+                var fp = $"Camera-{cam.Id}-Offline";
+                await alertService.ResolveAsync(
+                    fp,
+                    $"Cámara '{cam.Name}' recuperada",
+                    $"La cámara '{cam.Name}' volvió a reportar actividad.",
+                    cam.Id.ToString(),
+                    AlertEntityType.Camera,
+                    cam.ClientId);
+            }
+
             // ── 3. NAS storage check ─────────────────────────────────────────
             var nasPath = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/recordings";
             if (Directory.Exists(nasPath))

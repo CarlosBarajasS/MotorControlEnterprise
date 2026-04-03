@@ -91,5 +91,40 @@ namespace MotorControlEnterprise.Api.Controllers
                 alert.AcknowledgedAt, alert.AcknowledgedBy
             });
         }
+
+        // PATCH /api/alerts/{id}/resolve
+        [HttpPatch("{id:int}/resolve")]
+        [Authorize(Roles = "admin,installer")]
+        public async Task<IActionResult> Resolve(int id)
+        {
+            var username = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                        ?? User.FindFirstValue(ClaimTypes.Name)
+                        ?? User.FindFirstValue(JwtRegisteredClaimNames.Email)
+                        ?? User.FindFirstValue(ClaimTypes.Email)
+                        ?? "unknown";
+
+            var (success, error, alert) = await _alertService.ManualResolveAsync(id, username);
+
+            if (!success && error == "not_found")        return NotFound(new { error = "Alerta no encontrada." });
+            if (!success && error == "already_resolved") return Conflict(new { error = "La alerta ya está resuelta." });
+
+            return Ok(new {
+                alert!.Id,
+                alert.Fingerprint,
+                EntityType    = alert.EntityType.ToString(),
+                alert.EntityId,
+                AlertType     = alert.AlertType.ToString(),
+                Priority      = alert.Priority.ToString(),
+                Status        = alert.Status.ToString(),
+                alert.Title,
+                alert.Message,
+                alert.ClientId,
+                alert.CreatedAt,
+                alert.LastTriggeredAt,
+                alert.AcknowledgedAt,
+                alert.AcknowledgedBy,
+                alert.ResolvedAt
+            });
+        }
     }
 }

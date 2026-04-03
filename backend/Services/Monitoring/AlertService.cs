@@ -124,6 +124,25 @@ namespace MotorControlEnterprise.Api.Services
         }
 
         /// <summary>
+        /// Manually resolve an alert. Allowed for admin/installer.
+        /// Returns error codes if not found or already resolved.
+        /// </summary>
+        public async Task<(bool success, string? error, Alert? alert)> ManualResolveAsync(int alertId, string resolvedByUsername)
+        {
+            var alert = await _db.Alerts.FindAsync(alertId);
+            if (alert == null) return (false, "not_found", null);
+            if (alert.Status == AlertStatus.Resolved) return (false, "already_resolved", null);
+
+            alert.Status         = AlertStatus.Resolved;
+            alert.ResolvedAt     = DateTime.UtcNow;
+            alert.AcknowledgedBy = resolvedByUsername;
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Alert manually resolved: Id={AlertId} by {User}", alertId, resolvedByUsername);
+            return (true, null, alert);
+        }
+
+        /// <summary>
         /// ACK an alert. Idempotent on already-ACK'd. Returns error codes if not found or resolved.
         /// </summary>
         public async Task<(bool success, string? error, Alert? alert)> AcknowledgeAsync(int alertId, string adminEmail)
