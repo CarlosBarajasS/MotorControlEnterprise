@@ -85,8 +85,10 @@
             </div>
         </div>
         <div class="lp-hero-right reveal reveal-delay-2">
-          <div class="hero-screen-frame">
-            <div class="hero-screen-chrome">
+          <div class="hero-nvr-container">
+
+            <!-- Mac-style chrome bar -->
+            <div class="mock-nav">
               <div class="mac-dots">
                 <span class="mock-dot red"></span>
                 <span class="mock-dot yellow"></span>
@@ -94,21 +96,46 @@
               </div>
               <span class="mock-url">nirm.group / monitor</span>
             </div>
-            <div class="hero-screen-body">
-              <video
-                #heroVideo
-                class="hero-video-player"
-                muted
-                loop
-                playsinline
-                preload="auto"
-                poster="assets/cctv-1.png"
-                aria-hidden="true"
-              >
-                <source src="assets/hero-cinematic.webm" type="video/webm">
-                <source src="assets/hero-cinematic.mp4"  type="video/mp4">
-              </video>
+
+            <!-- Single camera view (phases 1-3) -->
+            <div class="hero-single-view" [class.active]="heroPhase === 'single'">
+              <div class="hero-single-feed" [class.slow-zoom]="activeCam === 3">
+                <img [src]="'assets/cctv-' + activeCam + '.png'" alt="Camera feed" class="hero-single-img">
+                <div class="hero-single-vignette"></div>
+              </div>
+              <!-- CCTV overlays -->
+              <div class="cctv-overlay top-left">
+                <span class="cctv-rec-dot"></span>
+                <span class="cctv-rec-text">REC</span>
+              </div>
+              <div class="cctv-overlay top-right">
+                <span class="cctv-live-badge">
+                  <span class="dot-live"></span>LIVE
+                </span>
+              </div>
+              <div class="cctv-overlay bottom-left">
+                <span class="cctv-cam-id">CAM 0{{ activeCam }} · SECTOR {{ ['A','B','C','D','E','F'][activeCam-1] }}</span>
+              </div>
+              <div class="cctv-overlay bottom-right">
+                <span class="cctv-timestamp">{{ currentTime }}</span>
+              </div>
             </div>
+
+            <!-- Grid view (phase 4) -->
+            <div class="hero-grid-view" [class.active]="heroPhase === 'grid'">
+              <div class="hero-grid-cell"
+                   *ngFor="let i of [1,2,3,4,5,6]; let idx = index"
+                   [style.animation-delay]="(idx * 80) + 'ms'">
+                <img [src]="'assets/cctv-' + i + '.png'" alt="Cam" class="hero-cell-img">
+                <div class="hero-cell-overlay top-right">
+                  <span class="dot-live"></span>
+                </div>
+                <div class="hero-cell-overlay bottom-left">
+                  <span class="hero-cell-id">CAM 0{{ i }}</span>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
     </section>
