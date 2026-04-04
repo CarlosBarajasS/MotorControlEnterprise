@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, inject, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -10,10 +10,28 @@ import { HttpClient } from '@angular/common/http';
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss'],
 })
-export class LandingComponent implements OnInit, AfterViewInit {
+export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   isLightMode = document.body.classList.contains('theme-light');
   showScrollTop = false;
   isMobileMenuOpen = false;
+
+  // ─── Hero alternating view ────────────────────────────────────────────────
+  heroView: 'video' | 'mockup' = 'video';
+
+  private heroTimeout: ReturnType<typeof setTimeout> | null = null;
+  private revealObserver: IntersectionObserver | null = null;
+
+  // video stays 21s (20s video + 1s crossfade); mockup stays 9s (8s visible + 1s crossfade)
+  private readonly HERO_DURATIONS = { video: 21000, mockup: 9000 } as const;
+
+  private scheduleHeroToggle(): void {
+    const duration = this.HERO_DURATIONS[this.heroView];
+    this.heroTimeout = setTimeout(() => {
+      this.heroView = this.heroView === 'video' ? 'mockup' : 'video';
+      this.scheduleHeroToggle();
+    }, duration);
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
@@ -47,6 +65,7 @@ export class LandingComponent implements OnInit, AfterViewInit {
       localStorage.setItem('theme', 'dark');
     }
   }
+
   private http = inject(HttpClient);
 
   mockStats = [
@@ -59,19 +78,25 @@ export class LandingComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.checkHealth();
+    this.scheduleHeroToggle();
   }
 
   ngAfterViewInit() {
-    const observer = new IntersectionObserver(
+    this.revealObserver = new IntersectionObserver(
       (entries) => entries.forEach(e => {
         if (e.isIntersecting) {
           e.target.classList.add('is-visible');
-          observer.unobserve(e.target);
+          this.revealObserver?.unobserve(e.target);
         }
       }),
       { threshold: 0.12 }
     );
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    document.querySelectorAll('.reveal').forEach(el => this.revealObserver!.observe(el));
+  }
+
+  ngOnDestroy() {
+    if (this.heroTimeout) clearTimeout(this.heroTimeout);
+    if (this.revealObserver) this.revealObserver.disconnect();
   }
 
   checkHealth() {
