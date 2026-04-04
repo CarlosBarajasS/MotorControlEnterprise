@@ -406,6 +406,11 @@ $amber: var(--amber);
 // ─── HERO DASHBOARD ILLUSTRATION ──────────────────────────────────────────────
 .lp-hero-right {
     position: relative;
+    min-height: 420px;
+
+    @media (max-width: 768px) {
+        min-height: 280px;
+    }
 
     &::before {
         content: '';
@@ -1421,15 +1426,6 @@ $amber: var(--amber);
 }
 
 // ─── Hero Alternating View ──────────────────────────────────────────────────
-.lp-hero-right {
-  position: relative;
-  min-height: 420px;
-
-  @media (max-width: 768px) {
-    min-height: 280px;
-  }
-}
-
 .hero-visual {
   position: absolute;
   inset: 0;
@@ -1455,11 +1451,11 @@ $amber: var(--amber);
 
 // Mobile: hide video — only show NVR mockup
 @media (max-width: 768px) {
-  .hero-visual:has(.hero-video) {
+  .hero-visual--video {
     display: none;
   }
 
-  .hero-visual:has(.lp-dashboard-mock) {
+  .hero-visual--mockup {
     position: relative;
     opacity: 1 !important;
     pointer-events: auto !important;

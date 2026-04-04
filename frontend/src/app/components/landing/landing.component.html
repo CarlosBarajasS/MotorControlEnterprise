@@ -87,14 +87,14 @@
         <div class="lp-hero-right reveal reveal-delay-2">
 
           <!-- Capa A: Video cinemático -->
-          <div class="hero-visual" [class.active]="heroView === 'video'">
+          <div class="hero-visual hero-visual--video" [class.active]="heroView === 'video'">
             <video
               class="hero-video"
               autoplay
               muted
               loop
               playsinline
-              preload="auto"
+              preload="metadata"
               aria-hidden="true"
             >
               <source src="assets/hero-cinematic.webm" type="video/webm">
@@ -103,7 +103,7 @@
           </div>
 
           <!-- Capa B: NVR Mockup -->
-          <div class="hero-visual" [class.active]="heroView === 'mockup'">
+          <div class="hero-visual hero-visual--mockup" [class.active]="heroView === 'mockup'">
             <div class="lp-dashboard-mock">
               <!-- NVR panel mockup inside hero -->
               <div class="mock-nav">
