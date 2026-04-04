@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, inject, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, inject, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -14,6 +14,8 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   isLightMode = document.body.classList.contains('theme-light');
   showScrollTop = false;
   isMobileMenuOpen = false;
+
+  @ViewChild('heroVideo') heroVideoRef!: ElementRef<HTMLVideoElement>;
 
   private revealObserver: IntersectionObserver | null = null;
 
@@ -75,6 +77,12 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       { threshold: 0.12 }
     );
     document.querySelectorAll('.reveal').forEach(el => this.revealObserver!.observe(el));
+
+    // Force video play — browser autoplay policies require programmatic play()
+    const video = this.heroVideoRef?.nativeElement;
+    if (video) {
+      video.play().catch(() => { /* autoplay blocked by browser policy */ });
+    }
   }
 
   ngOnDestroy() {
