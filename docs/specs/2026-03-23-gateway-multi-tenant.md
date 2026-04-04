@@ -1,6 +1,8 @@
 # Spec: Gateway Multi-Tenant (1:N)
-> Estado: DONE
-> Fecha: 2026-03-23
+> Estado: ✅ DONE — Implementado 2026-03-23, en producción desde 2026-03-24
+> Commits: `9a8fa2e` `9b02b7a` `9f3004e` (backend) · `d6f243a` `a88653c` (frontend) · 16 commits total
+> QA: 15/15 CAs aprobados
+> Fecha spec: 2026-03-23
 
 ## Objetivo
 Permitir que un cliente tenga múltiples edge gateways (Raspberry Pi) asociados, cubriendo

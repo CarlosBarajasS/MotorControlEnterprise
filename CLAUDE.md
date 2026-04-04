@@ -35,15 +35,19 @@
 ## Capturas del usuario
 `Read` con ruta absoluta: `C:\Users\carlo\Pictures\Screenshots\` · `C:\Users\carlo\Desktop\` · `C:\Users\carlo\Pictures\Analisis-imagnes\`
 
-## Contexto entre sesiones
-Memory auto-save activo en `C:\Users\carlo\.claude\projects\C--dev-MotorControlEnterprise\memory\`.
-Al terminar trabajo significativo → guardar en `project_*.md` o `feedback_*.md`.
-Ver índice: `MEMORY.md`
+## Inicio de sesión (ClaudeBrain — canónico)
+Ver protocolo completo en `~/.claude/CLAUDE.md` → SESSION START.
+Rutas directas para este proyecto:
+1. `C:\Users\carlo\Documents\ClaudeBrain\01-projects\MotorControlEnterprise\briefing_MotorControlEnterprise.md`
+2. `C:\Users\carlo\Documents\ClaudeBrain\01-projects\MotorControlEnterprise\session_log_MotorControlEnterprise.md` — últimas 20 líneas
+3. `C:\Users\carlo\Documents\ClaudeBrain\01-projects\MotorControlEnterprise\project_state_MotorControlEnterprise.md`
 
-## Inicio de sesión
-Al iniciar cada sesión, leer:
-1. `C:\Users\carlo\.claude\projects\C--dev-MotorControlEnterprise\memory\implementation_log.md` — últimas 3 sesiones
-2. `C:\Users\carlo\.claude\projects\C--dev-MotorControlEnterprise\memory\project_state.md` — estado actual
+## Fin de sesión (ClaudeBrain — canónico)
+Al terminar trabajo significativo:
+- Agregar entrada al tope de `session_log_MotorControlEnterprise.md`
+- Reescribir `project_state_MotorControlEnterprise.md` si el estado cambió
+- Si cambió arquitectura → actualizar `briefing_MotorControlEnterprise.md`
+- Feedback/domain nuevo → crear archivo en `memory\` e indexar en `memory\MEMORY.md`
 
 ## Compact Instructions
 Al compactar, preservar:
@@ -53,3 +57,8 @@ Al compactar, preservar:
 - Estado de features activas: qué está en prod, qué está en progreso
 - Bloqueantes activos y workarounds aplicados
 Descartar: outputs de herramientas verbose, listados de archivos completos, tareas ya cerradas.
+
+## Memory
+Vault canónico: `C:\Users\carlo\Documents\ClaudeBrain\01-projects\MotorControlEnterprise\`
+Feedback/domain: `memory\` — leer solo si el usuario los pide por nombre.
+Auto-memory Claude Code: `C:\Users\carlo\.claude\projects\C--dev-MotorControlEnterprise\memory\` — secundario, apunta a ClaudeBrain.
