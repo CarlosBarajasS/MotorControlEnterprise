@@ -85,51 +85,30 @@
             </div>
         </div>
         <div class="lp-hero-right reveal reveal-delay-2">
-
-          <!-- Capa A: Video cinemático -->
-          <div class="hero-visual hero-visual--video" [class.active]="heroView === 'video'">
-            <video
-              class="hero-video"
-              autoplay
-              muted
-              loop
-              playsinline
-              preload="metadata"
-              aria-hidden="true"
-            >
-              <source src="assets/hero-cinematic.webm" type="video/webm">
-              <source src="assets/hero-cinematic.mp4"  type="video/mp4">
-            </video>
-          </div>
-
-          <!-- Capa B: NVR Mockup -->
-          <div class="hero-visual hero-visual--mockup" [class.active]="heroView === 'mockup'">
-            <div class="lp-dashboard-mock">
-              <!-- NVR panel mockup inside hero -->
-              <div class="mock-nav">
-                <div class="mac-dots">
-                  <span class="mock-dot red"></span><span class="mock-dot yellow"></span><span class="mock-dot green"></span>
-                </div>
-                <span class="mock-url">nirm.group / dashboard</span>
+          <div class="hero-screen-frame">
+            <div class="hero-screen-chrome">
+              <div class="mac-dots">
+                <span class="mock-dot red"></span>
+                <span class="mock-dot yellow"></span>
+                <span class="mock-dot green"></span>
               </div>
-              <div class="mock-body">
-                <div class="mock-grid">
-                  <div class="mock-cell" *ngFor="let i of [1,2,3,4,5,6]">
-                    <img [src]="'assets/cctv-' + i + '.png'" alt="Cam live feed" class="cctv-feed">
-                    <div class="mock-cell-overlay top-right">
-                      <span class="mock-cell-status online">
-                        <span class="dot-live"></span>LIVE
-                      </span>
-                    </div>
-                    <div class="mock-cell-overlay bottom-left">
-                      <span class="mock-cam-name">CAM 0{{ i }} - SECTOR {{ ['A', 'D', 'B', 'Z', 'C', 'X'][i-1] }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <span class="mock-url">nirm.group / monitor</span>
+            </div>
+            <div class="hero-screen-body">
+              <video
+                class="hero-video-player"
+                autoplay
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                aria-hidden="true"
+              >
+                <source src="assets/hero-cinematic.webm" type="video/webm">
+                <source src="assets/hero-cinematic.mp4"  type="video/mp4">
+              </video>
             </div>
           </div>
-
         </div>
     </section>
 
