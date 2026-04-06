@@ -25,6 +25,8 @@ export class CameraGridComponent implements OnChanges {
     @Input() showLayoutPicker = false;
     /** Modo portal cliente: botones de acción (Expandir, Grabaciones) en lugar de panel PTZ */
     @Input() clientMode = false;
+    /** Mapa camId → estado de alerta, inyectado por ClientCamerasComponent */
+    @Input() alertStatusMap: Record<string, string> = {};
 
     @HostBinding('class.admin-mode') get adminMode() { return !this.clientMode; }
     @Input() loading = false;
@@ -76,6 +78,12 @@ export class CameraGridComponent implements OnChanges {
     }
 
     isOnline(cam: any): boolean { return cam.status === 'active'; }
+
+    /** Returns 'online' | 'offline' | 'alert' | 'unknown' — prefers alertStatusMap when available */
+    getCamAlertStatus(cam: any): string {
+        const key = String(cam.id ?? cam.cameraId ?? '');
+        return this.alertStatusMap[key] ?? (cam.status === 'active' ? 'online' : 'unknown');
+    }
 
     getWebrtcPath(cam: any): string {
         const key = cam.cameraId ?? cam.cameraKey ?? cam.name;

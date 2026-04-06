@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { WebrtcViewerComponent } from '../camera-viewer/webrtc-viewer.component';
+import { ClientExportModalComponent } from './client-export-modal.component';
+
 
 const API_URL = '/api';
 
 @Component({
   selector: 'app-client-camera-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, WebrtcViewerComponent],
+  imports: [CommonModule, RouterModule, WebrtcViewerComponent, ClientExportModalComponent],
   template: `
     <div class="detail-container" *ngIf="camera()">
       <div class="detail-topbar">
@@ -29,6 +31,10 @@ const API_URL = '/api';
              [title]="!camera().recordingCameraId ? 'Esta cámara no tiene almacenamiento en nube configurado' : ''">
              🎞 Grabaciones
           </a>
+          <button class="btn-export" (click)="exportModal.set(true)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar clip
+          </button>
         </div>
       </div>
 
@@ -56,6 +62,13 @@ const API_URL = '/api';
         </div>
       </div>
     </div>
+
+    <app-client-export-modal
+      *ngIf="exportModal()"
+      [cameraId]="camera().id"
+      [cameraName]="camera().name || 'Camara'"
+      (closed)="exportModal.set(false)">
+    </app-client-export-modal>
   `,
   styles: [`
     .detail-container { color: rgba(var(--ink-rgb), 1); }
@@ -86,6 +99,16 @@ const API_URL = '/api';
       text-decoration: none;
       &:hover:not(.disabled) { background: rgba(var(--accent-rgb), 0.12); }
       &.disabled { opacity: 0.5; pointer-events: none; cursor: not-allowed; }
+    }
+    .detail-actions { display: flex; align-items: center; gap: 8px; }
+    .btn-export {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 8px;
+      background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05));
+      border: 1px solid rgba(201,168,76,0.3);
+      color: #C9A84C; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s;
+      &:hover { background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.1)); box-shadow: 0 2px 8px rgba(201,168,76,0.2); }
     }
     .video-wrapper {
       border-radius: 16px; overflow: hidden;
@@ -130,6 +153,7 @@ export class ClientCameraDetailComponent implements OnInit {
 
   camera = signal<any>(null);
   streamPath = signal('');
+  exportModal = signal(false);
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');

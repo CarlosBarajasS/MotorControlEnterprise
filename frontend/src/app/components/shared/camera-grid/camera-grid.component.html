@@ -63,10 +63,15 @@
         <p class="cgrid-offline-text">Sin señal</p>
       </div>
 
-      <!-- Badge estado -->
-      <div class="cgrid-badge-top">
-        <span class="live-dot" [class.online]="isOnline(cam)"></span>
-        {{ isOnline(cam) ? 'EN VIVO' : 'OFFLINE' }}
+      <!-- Badge estado — 4 estados: online/offline/alert/unknown -->
+      <div class="cgrid-badge-top" [class]="'cgrid-badge-top cgrid-badge-' + getCamAlertStatus(cam)">
+        <span class="live-dot" [class]="'live-dot status-' + getCamAlertStatus(cam)"></span>
+        <ng-container [ngSwitch]="getCamAlertStatus(cam)">
+          <span *ngSwitchCase="'online'">EN VIVO</span>
+          <span *ngSwitchCase="'offline'">SIN SEÑAL</span>
+          <span *ngSwitchCase="'alert'">ALERTA</span>
+          <span *ngSwitchDefault>--</span>
+        </ng-container>
       </div>
 
       <!-- Nombre -->
