@@ -107,7 +107,7 @@ services:
       StreamRecorder__SegmentSeconds: "900"
       StreamRecorder__RefreshIntervalSeconds: "300"
       # Storage path compartido con el volumen NAS
-      Storage__NasRecordingsPath: "/mnt/nas/raspberry_data/videos"
+      Storage__NasRecordingsPath: "/mnt/nas/recordings"
       TZ: "America/Mexico_City"
       # Email (Resend.dev) — credenciales de clientes y alertas de cámaras
       Email__ResendApiKey:    ${Email__ResendApiKey:-}
