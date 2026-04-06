@@ -136,7 +136,8 @@ namespace MotorControlEnterprise.Api.Controllers
                 .ThenByDescending(a => a.CreatedAt)
                 .Take(50)
                 .Select(a => new {
-                    a.Id, a.AlertType, Priority = a.Priority.ToString(),
+                    a.Id, a.EntityType, a.EntityId, a.AlertType,
+                    Priority = a.Priority.ToString(),
                     Status = a.Status.ToString(), a.Title, a.Message,
                     a.CreatedAt, a.AcknowledgedAt, a.ResolvedAt
                 })

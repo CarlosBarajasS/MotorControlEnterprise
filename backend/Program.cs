@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MotorControlEnterprise.Api.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -58,6 +58,8 @@ builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.MqttIntegr
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.StreamRecorderService>();
 // Storage Cleaner: limpieza diaria de grabaciones antiguas en NAS
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.StorageCleanerService>();
+// Video Export: generacion de clips MP4 con marca de agua NIRMGROUP via FFmpeg
+builder.Services.AddScoped<MotorControlEnterprise.Api.Services.VideoExportService>();
 
 // Configure Entity Framework
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
