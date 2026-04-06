@@ -1,0 +1,173 @@
+<div class="legal-page">
+
+  <!-- Header -->
+  <header class="legal-header">
+    <div class="legal-header-inner">
+      <a routerLink="/" class="legal-logo">
+        <span class="legal-logo-nirm">NIRM</span><span class="legal-logo-group">GROUP</span>
+      </a>
+      <nav class="legal-back">
+        <a routerLink="/" class="legal-back-link">← Inicio</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Tab navigation -->
+  <div class="legal-tabs-bar">
+    <div class="legal-tabs-inner">
+      <button
+        class="legal-tab"
+        [class.active]="activeTab === 'privacy'"
+        (click)="setTab('privacy')">
+        Aviso de Privacidad
+      </button>
+      <button
+        class="legal-tab"
+        [class.active]="activeTab === 'terms'"
+        (click)="setTab('terms')">
+        Términos y Condiciones
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <main class="legal-content">
+    <div class="legal-container">
+
+      <!-- ══ AVISO DE PRIVACIDAD ══ -->
+      <section *ngIf="activeTab === 'privacy'" class="legal-section">
+        <div class="legal-badge">LFPDPPP</div>
+        <h1 class="legal-title">Aviso de Privacidad</h1>
+        <p class="legal-updated">Última actualización: abril 2026</p>
+
+        <div class="legal-body">
+
+          <p><strong>NIRM GROUP</strong> (en adelante "el Responsable"), con domicilio en
+            <strong>[Ciudad, Estado, México]</strong>, es responsable del tratamiento de sus datos personales
+            conforme a lo establecido en la <strong>Ley Federal de Protección de Datos Personales
+            en Posesión de los Particulares (LFPDPPP)</strong>.</p>
+
+          <h2>¿Qué datos recabamos?</h2>
+          <ul>
+            <li>Nombre completo y datos de contacto (correo electrónico, teléfono)</li>
+            <li>Datos de facturación (RFC, dirección fiscal)</li>
+            <li>Datos de acceso al sistema (usuario, contraseña cifrada)</li>
+            <li>
+              <strong>Imágenes de video:</strong> el video capturado por sus cámaras se almacena en un
+              dispositivo NAS ubicado en sus propias instalaciones. NIRM GROUP actúa como
+              <strong>encargado del procesamiento</strong>, no como dueño del video.
+              Usted conserva la propiedad total de las grabaciones.
+            </li>
+          </ul>
+
+          <h2>¿Para qué usamos sus datos?</h2>
+          <ul>
+            <li>Prestación del servicio de monitoreo remoto contratado</li>
+            <li>Envío de alertas y notificaciones de seguridad</li>
+            <li>Facturación y cobro del servicio</li>
+            <li>Soporte técnico</li>
+          </ul>
+
+          <h2>Transferencias de datos</h2>
+          <p>Sus datos <strong>no se venden ni se comparten</strong> con terceros, salvo obligación legal expresa.</p>
+
+          <h2>Derechos ARCO</h2>
+          <p>
+            Puede ejercer sus derechos de <strong>Acceso, Rectificación, Cancelación u Oposición</strong>
+            enviando un correo a:
+            <a href="mailto:privacidad@nirmgroup.net" class="legal-link">privacidad&#64;nirmgroup.net</a>
+            con asunto <em>"Solicitud ARCO"</em>.
+          </p>
+
+          <h2>Cambios al aviso</h2>
+          <p>
+            Cualquier modificación será notificada en
+            <strong>nirmgroup.net/legal</strong> con al menos 10 días de anticipación.
+          </p>
+
+          <div class="legal-cta">
+            <button class="legal-tab-switch" (click)="setTab('terms')">
+              Ver Términos y Condiciones →
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══ TÉRMINOS Y CONDICIONES ══ -->
+      <section *ngIf="activeTab === 'terms'" class="legal-section">
+        <div class="legal-badge">ToS</div>
+        <h1 class="legal-title">Términos y Condiciones de Servicio</h1>
+        <p class="legal-updated">Última actualización: abril 2026</p>
+
+        <div class="legal-body">
+
+          <h2>1. Descripción del servicio</h2>
+          <p>
+            NIRM GROUP provee una plataforma de monitoreo remoto de video en la nube que permite la
+            visualización, gestión de alertas y respaldo de grabaciones de cámaras IP del cliente.
+          </p>
+
+          <h2>2. Responsabilidades del cliente</h2>
+          <ul>
+            <li>Mantener una conexión a internet estable en el sitio donde se ubican las cámaras</li>
+            <li>Garantizar el suministro eléctrico continuo a los dispositivos</li>
+            <li>Proteger sus credenciales de acceso</li>
+          </ul>
+
+          <h2>3. Límites de responsabilidad</h2>
+          <p>NIRM GROUP <strong>no será responsable</strong> por:</p>
+          <ul>
+            <li>Interrupciones del servicio causadas por fallas en la conexión a internet del cliente</li>
+            <li>Pérdida de grabaciones por corte eléctrico en las instalaciones del cliente</li>
+            <li>Accesos no autorizados derivados de credenciales compartidas o comprometidas por el cliente</li>
+            <li>Fallas de hardware en las cámaras o dispositivos NAS del cliente</li>
+          </ul>
+
+          <h2>4. Disponibilidad del servicio</h2>
+          <p>
+            NIRM GROUP se compromete a una disponibilidad objetivo del <strong>99.5% mensual</strong>
+            en sus servidores de monitoreo. Mantenimientos programados serán notificados con
+            24 horas de anticipación por correo electrónico.
+          </p>
+
+          <h2>5. Pagos y suspensión</h2>
+          <ul>
+            <li>El servicio se factura de forma mensual anticipada</li>
+            <li>La falta de pago después de <strong>7 días de vencimiento</strong> suspenderá el acceso al historial de video</li>
+            <li>La cancelación definitiva del servicio requiere aviso con 15 días de anticipación</li>
+          </ul>
+
+          <h2>6. Propiedad del video</h2>
+          <p>
+            Las grabaciones generadas por las cámaras del cliente son
+            <strong>propiedad exclusiva del cliente</strong>. NIRM GROUP no accede, vende ni
+            comparte el contenido de video.
+          </p>
+
+          <h2>7. Ley aplicable</h2>
+          <p>
+            El presente contrato se rige por las leyes de los <strong>Estados Unidos Mexicanos</strong>.
+            Cualquier controversia se someterá a los tribunales competentes de
+            <strong>[Ciudad, Estado]</strong>.
+          </p>
+
+          <div class="legal-cta">
+            <button class="legal-tab-switch" (click)="setTab('privacy')">
+              ← Ver Aviso de Privacidad
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="legal-footer">
+    <span>© 2026 NIRM GROUP · Todos los derechos reservados</span>
+    <a routerLink="/" class="legal-footer-link">Volver al inicio</a>
+  </footer>
+
+</div>

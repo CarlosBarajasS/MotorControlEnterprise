@@ -379,9 +379,9 @@
             </div>
             <div class="lp-footer-col">
                 <h4>LEGAL</h4>
-                <a href="#">Privacidad</a>
-                <a href="#">Términos</a>
-                <a href="#">SLA</a>
+                <a routerLink="/legal">Privacidad</a>
+                <a routerLink="/legal" [queryParams]="{tab: 'terms'}">Términos</a>
+                <a routerLink="/legal">SLA</a>
             </div>
         </div>
         <div class="lp-footer-bottom">

@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
 import { LandingComponent } from './components/landing/landing.component';
+import { LegalComponent } from './components/legal/legal.component';
 import { WizardComponent } from './components/wizard/wizard.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { GatewaysComponent } from './components/gateways/gateways.component';
@@ -49,6 +50,7 @@ const adminAuthGuard = () => {
 export const routes: Routes = [
     { path: '', component: LandingComponent, pathMatch: 'full' },
     { path: 'login', component: LoginComponent },
+    { path: 'legal', component: LegalComponent },
     { path: 'change-password', component: ChangePasswordComponent },
 
     // Admin routes
