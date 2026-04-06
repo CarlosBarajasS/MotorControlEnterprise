@@ -219,6 +219,64 @@
 </div>
 </div><!-- /.fade-section activity -->
 
+<!-- PANEL DE SALUD -->
+<div class="fade-section" style="animation-delay: 0.18s">
+  <div class="section-hdr" style="margin-top: 32px;">
+    <h2>Panel de Salud</h2>
+    <span class="section-count">Alertas activas del sistema</span>
+    <div class="health-summary-pills" *ngIf="activeAlerts().length > 0">
+      <span class="priority-pill p1" *ngIf="p1Count() > 0">P1 Crítico · {{ p1Count() }}</span>
+      <span class="priority-pill p2" *ngIf="p2Count() > 0">P2 Alto · {{ p2Count() }}</span>
+      <span class="priority-pill p3" *ngIf="p3Count() > 0">P3 Medio · {{ p3Count() }}</span>
+    </div>
+  </div>
+
+  <!-- sin alertas -->
+  <div class="health-ok" *ngIf="activeAlerts().length === 0">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+      <polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+    Sin alertas activas — sistema operando con normalidad
+  </div>
+
+  <!-- tabla de alertas -->
+  <div class="alerts-table-wrap" *ngIf="activeAlerts().length > 0">
+    <table class="alerts-table">
+      <thead>
+        <tr>
+          <th>Prioridad</th>
+          <th>Título</th>
+          <th>Cliente</th>
+          <th>Tipo entidad</th>
+          <th>Desde</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let alert of activeAlerts()"
+          [class.row-p1]="alert.Priority === 'P1'"
+          [class.row-p2]="alert.Priority === 'P2'"
+          [class.row-p3]="alert.Priority === 'P3'"
+          [class.row-p4]="alert.Priority === 'P4'">
+          <td>
+            <span class="priority-badge"
+              [class.p1]="alert.Priority === 'P1'"
+              [class.p2]="alert.Priority === 'P2'"
+              [class.p3]="alert.Priority === 'P3'"
+              [class.p4]="alert.Priority === 'P4'">
+              {{ alert.Priority }}
+            </span>
+          </td>
+          <td class="font-medium">{{ alert.title }}</td>
+          <td class="text-muted">{{ alert.clientName || '—' }}</td>
+          <td class="text-muted mono">{{ alert.entityType || '—' }}</td>
+          <td class="text-muted">{{ alert.createdAt | date:'dd/MM HH:mm' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div><!-- /.fade-section health -->
+
 <!-- TOP CLIENTES -->
 <div class="fade-section" style="animation-delay: 0.2s" *ngIf="gateways().length > 0">
   <div class="section-hdr" style="margin-top: 32px;">

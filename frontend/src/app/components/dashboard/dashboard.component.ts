@@ -23,6 +23,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     stats = signal<{ active: number, total: number }>({ active: 0, total: 0 });
     storageStats = signal<{ totalMb: number, capacityMb: number }>({ totalMb: 0, capacityMb: 0 });
+    activeAlerts = signal<any[]>([]);
+
+    p1Count = computed(() => this.activeAlerts().filter((a: any) => a.Priority === 'P1').length);
+    p2Count = computed(() => this.activeAlerts().filter((a: any) => a.Priority === 'P2').length);
+    p3Count = computed(() => this.activeAlerts().filter((a: any) => a.Priority === 'P3').length);
 
     camerasOnline = computed(() => this.cameras().filter(c => c.status === 'active').length);
 
@@ -79,6 +84,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.fetchCameras();
         this.fetchHealth();
         this.fetchStorageStats();
+        this.fetchAlerts();
     }
 
     fetchClients() {
@@ -131,6 +137,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     closeCameraModal() {
         this.selectedCameraStream = null;
         this.selectedCameraPath = null;
+    }
+
+    fetchAlerts() {
+        this.http.get<{ total: number, data: any[] }>(`${API_URL}/alerts?status=Active&pageSize=100`).subscribe({
+            next: (res) => this.activeAlerts.set(res.data ?? []),
+            error: () => this.activeAlerts.set([])
+        });
     }
 
     // Legacy alias
