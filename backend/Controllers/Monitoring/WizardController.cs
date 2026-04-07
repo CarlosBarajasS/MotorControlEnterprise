@@ -196,8 +196,7 @@ namespace MotorControlEnterprise.Api.Controllers
             sb.AppendLine($"CLIENT_ID={gatewayId}");
             sb.AppendLine($"GATEWAY_NAME={client.Name}");
             sb.AppendLine($"LOCATION={location}");
-            sb.AppendLine("# IMPORTANTE: reemplaza con la IP pública o LAN accesible del gateway");
-            sb.AppendLine("GATEWAY_PUBLIC_IP=TU_IP_AQUI");
+            sb.AppendLine("# GATEWAY_PUBLIC_IP no requerida -- el relay usa el servidor central automaticamente");
             sb.AppendLine();
             sb.AppendLine("# ===================================================");
             sb.AppendLine("# SERVIDOR CENTRAL - MQTT");

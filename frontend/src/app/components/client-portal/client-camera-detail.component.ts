@@ -163,7 +163,7 @@ export class ClientCameraDetailComponent implements OnInit {
           this.camera.set(cam);
           this.http.get<any>(`${API_URL}/client/me`).subscribe({
             next: (me) => {
-              const cameraKey = cam.cameraId ?? cam.cameraKey ?? cam.name;
+              const cameraKey = cam.cameraKey ?? cam.cameraId ?? cam.name;
               if (me.gatewayId) {
                 this.streamPath.set(`${me.gatewayId}/${cameraKey}`);
               }

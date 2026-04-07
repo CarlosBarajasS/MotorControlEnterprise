@@ -86,7 +86,7 @@ export class CameraGridComponent implements OnChanges {
     }
 
     getWebrtcPath(cam: any): string {
-        const key = cam.cameraId ?? cam.cameraKey ?? cam.name;
+        const key = cam.cameraKey ?? cam.cameraId ?? cam.name;
         return `${this.gatewayId}/${key}`;
     }
 

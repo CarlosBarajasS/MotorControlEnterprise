@@ -42,9 +42,10 @@ namespace MotorControlEnterprise.Api.Controllers
                     c.Name,
                     c.CameraKey,
                     ip = ExtractCameraIp(c.Streams, c.Metadata),
-                    onvifPort = onvif?.port ?? 8000,
-                    onvifUser = onvif?.user,
-                    onvifPass = onvif?.pass
+                    onvifPort   = onvif?.port ?? 8000,
+                    onvifUser   = onvif?.user,
+                    onvifPass   = onvif?.pass,
+                    nvrChannel  = onvif?.channel
                 };
             }));
         }
@@ -103,17 +104,19 @@ namespace MotorControlEnterprise.Api.Controllers
 
         // ── Helpers ──────────────────────────────────────────────────────────
 
-        private static (int port, string? user, string? pass)? ExtractOnvif(string? metadata)
+        private static (int port, string? user, string? pass, int? channel)? ExtractOnvif(string? metadata)
         {
             if (string.IsNullOrEmpty(metadata)) return null;
             try
             {
                 var doc = JsonDocument.Parse(metadata);
                 if (!doc.RootElement.TryGetProperty("onvif", out var o)) return null;
-                var port = o.TryGetProperty("port", out var p) ? p.GetInt32() : 8000;
-                var user = o.TryGetProperty("user", out var u) ? u.GetString() : null;
-                var pass = o.TryGetProperty("pass", out var pw) ? pw.GetString() : null;
-                return (port, user, pass);
+                var port    = o.TryGetProperty("port",    out var p)  ? p.GetInt32()  : 8000;
+                var user    = o.TryGetProperty("user",    out var u)  ? u.GetString() : null;
+                var pass    = o.TryGetProperty("pass",    out var pw) ? pw.GetString(): null;
+                int? channel = o.TryGetProperty("channel", out var ch) && ch.ValueKind == JsonValueKind.Number
+                               ? ch.GetInt32() : null;
+                return (port, user, pass, channel);
             }
             catch { return null; }
         }

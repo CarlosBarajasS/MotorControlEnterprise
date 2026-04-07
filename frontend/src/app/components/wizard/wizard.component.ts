@@ -28,6 +28,7 @@ interface CameraForm {
   onvifPort: number;
   onvifUser: string;
   onvifPass: string;
+  nvrChannel?: number;  // canal DVR (1-16), undefined para cámaras IP individuales
 }
 
 interface DiscoveryCamera {
@@ -256,7 +257,7 @@ export class WizardComponent implements OnInit, OnDestroy {
   addCamera(): void {
     this.cameras.update(list => [
       ...list,
-      { uid: this.nextCameraUid++, name: '', ip: '', onvifPort: 8000, onvifUser: 'admin', onvifPass: '' }
+      { uid: this.nextCameraUid++, name: '', ip: '', onvifPort: 8000, onvifUser: 'admin', onvifPass: '', nvrChannel: undefined }
     ]);
   }
 
@@ -275,6 +276,7 @@ export class WizardComponent implements OnInit, OnDestroy {
       const base = {
         name: cam.name, cameraId: cam.name, onvifPort: cam.onvifPort || 8000,
         onvifUser: cam.onvifUser, onvifPass: cam.onvifPass, onvifIp: cam.ip,
+        nvrChannel: cam.nvrChannel || null,
         ptz: false, isRecordingOnly: false, clientId
       };
       try {
