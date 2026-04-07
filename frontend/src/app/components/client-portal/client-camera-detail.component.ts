@@ -165,7 +165,7 @@ export class ClientCameraDetailComponent implements OnInit {
             next: (me) => {
               const cameraKey = cam.cameraKey ?? cam.cameraId ?? cam.name;
               if (me.gatewayId) {
-                this.streamPath.set(`${me.gatewayId}/${cameraKey}`);
+                this.streamPath.set(`${me.gatewayId.replace(/:/g, '-')}/${cameraKey}`);
               }
             },
             error: (err) => console.error('Error loading client profile:', err)

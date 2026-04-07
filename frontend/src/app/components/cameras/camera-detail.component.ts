@@ -51,7 +51,7 @@ export class CameraDetailComponent implements OnInit, OnDestroy {
         this.checkStatus();
         if (cam.gatewayId) {
           const cameraKey = cam.cameraId ?? cam.cameraKey ?? cam.name;
-          this.streamPath.set(`${cam.gatewayId}/${cameraKey}`);
+          this.streamPath.set(`${cam.gatewayId.replace(/:/g, '-')}/${cameraKey}`);
         }
       },
       error: (err) => console.error(err)

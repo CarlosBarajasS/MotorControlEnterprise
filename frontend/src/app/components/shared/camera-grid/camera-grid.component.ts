@@ -87,7 +87,7 @@ export class CameraGridComponent implements OnChanges {
 
     getWebrtcPath(cam: any): string {
         const key = cam.cameraKey ?? cam.cameraId ?? cam.name;
-        return `${this.gatewayId}/${key}`;
+        return `${this.gatewayId.replace(/:/g, '-')}/${key}`;
     }
 
     toggleFullscreen(event: MouseEvent, cell: HTMLDivElement) {
