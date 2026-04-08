@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using MotorControlEnterprise.Api.Data;
 using MotorControlEnterprise.Api.Models;
 using MotorControlEnterprise.Api.Services;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -670,7 +672,7 @@ networks:
             var client = await _db.Clients.FindAsync(id);
             if (client == null) return NotFound();
 
-            if (!int.TryParse(User.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub), out var adminUserId))
+            if (!int.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out var adminUserId))
                 return Unauthorized();
 
             int created = 0;
