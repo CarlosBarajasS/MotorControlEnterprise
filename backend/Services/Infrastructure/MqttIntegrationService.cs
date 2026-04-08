@@ -79,6 +79,7 @@ namespace MotorControlEnterprise.Api.Services
                 await _mqttClient.SubscribeAsync("camera/+/+/stats",     cancellationToken: ct);
                 await _mqttClient.SubscribeAsync("motor/+/telemetry",    cancellationToken: ct);
                 await _mqttClient.SubscribeAsync("response/+/+",         cancellationToken: ct);
+                await _mqttClient.SubscribeAsync("gateway/+/evt/dvr-scan-result", cancellationToken: ct);
 
                 _logger.LogInformation("MQTT conectado a {Host}:{Port}.", host, port);
             }
@@ -363,6 +364,47 @@ namespace MotorControlEnterprise.Api.Services
                                 newCamera.Name, gatewayId, "registrada",
                                 $"Nueva cámara detectada desde el gateway {gatewayId}");
                         }
+                    }
+                }
+
+                // gateway/{gatewayId}/evt/dvr-scan-result
+                else if (topic.Contains("/evt/dvr-scan-result"))
+                {
+                    var parts     = topic.Split('/');
+                    var gatewayId = parts.Length >= 2 ? parts[1] : null;
+                    if (string.IsNullOrEmpty(gatewayId)) return;
+
+                    var gateway = db.Gateways
+                        .Include(g => g.Client)
+                        .FirstOrDefault(g => g.GatewayId == gatewayId);
+
+                    if (gateway?.Client == null) return;
+
+                    var client = gateway.Client;
+
+                    try
+                    {
+                        var meta = string.IsNullOrEmpty(client.Metadata)
+                            ? new Dictionary<string, object?>()
+                            : (JsonSerializer.Deserialize<Dictionary<string, object?>>(client.Metadata)
+                               ?? new Dictionary<string, object?>());
+
+                        // Parse incoming payload and store under dvrScan key
+                        var resultDoc = JsonDocument.Parse(payload);
+                        meta["dvrScan"] = JsonSerializer.Deserialize<object>(
+                            JsonSerializer.Serialize(resultDoc.RootElement));
+
+                        client.Metadata  = JsonSerializer.Serialize(meta);
+                        client.UpdatedAt = DateTime.UtcNow;
+                        await db.SaveChangesAsync();
+
+                        _logger.LogInformation(
+                            "DVR scan result guardado para gateway {GatewayId} (client {ClientId}).",
+                            gatewayId, client.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error procesando dvr-scan-result del gateway {GatewayId}.", gatewayId);
                     }
                 }
             }
