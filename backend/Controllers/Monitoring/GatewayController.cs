@@ -89,8 +89,12 @@ namespace MotorControlEnterprise.Api.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Create([FromBody] GatewayCreateDto dto)
         {
-            if (await _db.Gateways.AnyAsync(g => g.GatewayId == dto.GatewayId))
-                return Conflict(new { message = $"Ya existe un gateway con el ID '{dto.GatewayId}'." });
+            var sluggedId = Slugify(dto.GatewayId);
+            if (string.IsNullOrEmpty(sluggedId))
+                return BadRequest(new { message = "El ID del gateway no puede estar vacío después de sanitizar." });
+
+            if (await _db.Gateways.AnyAsync(g => g.GatewayId == sluggedId))
+                return Conflict(new { message = $"Ya existe un gateway con el ID '{sluggedId}'." });
 
             var clientExists = await _db.Clients.AnyAsync(c => c.Id == dto.ClientId);
             if (!clientExists)
@@ -98,7 +102,7 @@ namespace MotorControlEnterprise.Api.Controllers
 
             var gateway = new Gateway
             {
-                GatewayId       = dto.GatewayId,
+                GatewayId       = sluggedId,
                 Name            = dto.Name,
                 Location        = dto.Location,
                 ClientId        = dto.ClientId,
@@ -194,5 +198,14 @@ namespace MotorControlEnterprise.Api.Controllers
                 CreatedAt:       g.CreatedAt,
                 CameraCount:     cameraCountMap.GetValueOrDefault(g.ClientId, 0)
             );
+
+        private static string Slugify(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+            var slug = input.Trim().ToLowerInvariant();
+            slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9-]", "-");
+            slug = System.Text.RegularExpressions.Regex.Replace(slug, @"-{2,}", "-");
+            return slug.Trim('-');
+        }
     }
 }

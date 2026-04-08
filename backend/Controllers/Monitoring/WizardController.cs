@@ -555,5 +555,14 @@ networks:
             }
             catch { return null; }
         }
+
+        private static string Slugify(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+            var slug = input.Trim().ToLowerInvariant();
+            slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9-]", "-");
+            slug = System.Text.RegularExpressions.Regex.Replace(slug, @"-{2,}", "-");
+            return slug.Trim('-');
+        }
     }
 }
