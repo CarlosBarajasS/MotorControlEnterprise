@@ -1,259 +1,227 @@
 <div class="wizard-container">
-  <div class="wizard-header">
-    <h1>Configurar Gateway</h1>
-    <p>Genera la configuración de instalación para una Raspberry Pi</p>
-  </div>
-
-  <div class="progress-container">
-    <div class="progress-steps">
-      <div class="progress-line">
-        <div class="progress-line-fill"
-             [style.width.%]="(currentStep() - 1) / (totalSteps - 1) * 100"></div>
+  <div class="wizard-header"><h1>Configurar Gateway</h1></div>
+  <div class="progress-container"><div class="progress-steps">
+    <div class="progress-line"><div class="progress-line-fill" [style.width.%]="(currentStep() - 1) / (totalSteps - 1) * 100"></div></div>
+    @for (step of [{n:1,label:'Cliente'},{n:2,label:'Gateway'},{n:3,label:'Instalación'},{n:4,label:'Archivos'},{n:5,label:'Despliegue'}]; track step.n) {
+      <div class="step" [class.active]="currentStep() === step.n" [class.completed]="currentStep() > step.n">
+        <div class="step-circle">@if (currentStep() > step.n) { ✓ } @else { {{step.n}} }</div>
+        <div class="step-label">{{step.label}}</div>
       </div>
-      @for (step of [{n:1,label:'Cliente'},{n:2,label:'Cámaras'},{n:3,label:'Archivos'},{n:4,label:'Despliegue'}]; track step.n) {
-        <div class="step" [class.active]="currentStep() === step.n" [class.completed]="currentStep() > step.n">
-          <div class="step-circle">
-            @if (currentStep() > step.n) { ✓ } @else { {{step.n}} }
-          </div>
-          <div class="step-label">{{step.label}}</div>
-        </div>
-      }
-    </div>
-  </div>
-
+    }
+  </div></div>
   <div class="wizard-content">
 
-    <!-- ── Paso 1: Cliente & Gateway ─────────────────────────────────────── -->
+    <!-- Paso 1: Cliente -->
     @if (currentStep() === 1) {
     <div class="wizard-step">
-      <h2 class="step-title">Cliente y Gateway</h2>
-      <p class="step-description">Selecciona el cliente y la Raspberry Pi que vas a instalar</p>
-
-      @if (step1Error()) {
-        <div class="alert error">{{ step1Error() }}</div>
-      }
-
-      <!-- Selector de cliente -->
+      <h2 class="step-title">Seleccionar Cliente</h2>
+      <p class="step-description">Elige el cliente para quien se configura este gateway</p>
+      @if (step1Error()) { <div class="alert error">{{ step1Error() }}</div> }
       <div class="form-group">
         <label for="client-select">Cliente <span class="required">*</span></label>
-        @if (loadingClients()) {
-          <div class="loading-hint">Cargando clientes...</div>
+        @if (loadingClients()) { <div class="loading-hint">Cargando clientes...</div>
         } @else if (clients().length === 0) {
-          <div class="empty-state">
-            <p>No hay clientes registrados aún.</p>
-            <a routerLink="/clients" class="btn btn-secondary">Dar de alta un cliente →</a>
-          </div>
+          <div class="empty-state"><p>No hay clientes registrados aún.</p>
+            <a routerLink="/clients" class="btn btn-secondary">Dar de alta un cliente →</a></div>
         } @else {
           <select id="client-select" (change)="onClientChange($any($event.target).value)">
             <option value="">Selecciona un cliente...</option>
-            @for (c of clients(); track c.id) {
-              <option [value]="c.id">{{ c.name }}</option>
-            }
+            @for (c of clients(); track c.id) { <option [value]="c.id">{{ c.name }}</option> }
           </select>
         }
       </div>
-
-      <!-- Selector de gateway (solo si hay cliente) -->
-      @if (selectedClient()) {
-        <div class="gateway-section">
-          <div class="gateway-section-header">
-            <label for="gateway-select">Gateway (Raspberry Pi) <span class="required">*</span></label>
-            @if (gateways().length > 0) {
-              <div class="mode-toggle">
-                <button type="button" [class.active]="gatewayMode() === 'existing'"
-                        (click)="setGatewayMode('existing')">Existente</button>
-                <button type="button" [class.active]="gatewayMode() === 'new'"
-                        (click)="setGatewayMode('new')">+ Nuevo</button>
-              </div>
-            }
-          </div>
-
-          @if (loadingGateways()) {
-            <div class="loading-hint">Cargando gateways...</div>
-          } @else if (gatewayMode() === 'existing' && gateways().length > 0) {
-            <select id="gateway-select" (change)="onGatewayChange($any($event.target).value)">
-              <option value="">Selecciona un gateway...</option>
-              @for (gw of gateways(); track gw.gatewayId) {
-                <option [value]="gw.gatewayId">{{ gw.name }}</option>
-              }
-            </select>
-            <div class="hint">Útil para regenerar los archivos de una RPi ya instalada</div>
-          }
-
-          @if (gatewayMode() === 'new') {
-            <div class="new-gateway-form">
-              <div class="form-group">
-                <label>Nombre del punto <span class="required">*</span></label>
-                <input type="text" [(ngModel)]="newGateway.name"
-                       placeholder="Ej: Edificio A, Planta Baja" autocomplete="off">
-              </div>
-              <div class="form-group">
-                <label>
-                  ID del dispositivo <span class="required">*</span>
-                  <span class="tooltip-trigger" title="MAC address o hostname de la Raspberry Pi. Ejecuta 'hostname' en la RPi para obtenerlo.">?</span>
-                </label>
-                <input type="text" [(ngModel)]="newGateway.gatewayId"
-                       placeholder="b8:27:eb:aa:bb:cc" class="mono" autocomplete="off" spellcheck="false">
-              </div>
-              <div class="form-group">
-                <label>
-                  Token de acceso <span class="required">*</span>
-                  <span class="tooltip-trigger" title="Contraseña que usará la RPi para conectarse al servidor. Genera uno nuevo o usa el que ya tiene configurado.">?</span>
-                </label>
-                <div class="token-row">
-                  <input [type]="showToken() ? 'text' : 'password'"
-                         [(ngModel)]="newGateway.edgeToken"
-                         placeholder="Token de autenticación"
-                         class="mono" autocomplete="new-password" spellcheck="false">
-                  <button type="button" class="btn btn-secondary" (click)="generateToken()">Generar</button>
-                </div>
-                @if (newGateway.edgeToken) {
-                  <div class="hint success">✓ Copia este token antes de continuar — no se puede recuperar después</div>
-                }
-              </div>
-              <div class="form-group">
-                <label>Ubicación <span class="optional">(opcional)</span></label>
-                <input type="text" [(ngModel)]="newGateway.location"
-                       placeholder="Ej: Piso 2, junto al cuarto de red">
-              </div>
-            </div>
-          }
-        </div>
-      }
     </div>
     }
 
-    <!-- ── Paso 2: Cámaras ────────────────────────────────────────────────── -->
+    <!-- Paso 2: Gateway -->
     @if (currentStep() === 2) {
     <div class="wizard-step">
-      <h2 class="step-title">Cámaras IP</h2>
-      <p class="step-description">
-        Agrega las cámaras que conectarás a esta Raspberry Pi.
-        <strong>Puedes omitir este paso</strong> y agregarlas después desde el módulo de Cámaras.
-      </p>
-
+      <h2 class="step-title">Gateway (Raspberry Pi)</h2>
+      <p class="step-description">Selecciona o registra la Raspberry Pi para <strong>{{ selectedClient()?.name }}</strong></p>
       @if (step2Error()) { <div class="alert error">{{ step2Error() }}</div> }
-
-      <div class="alert info">
-        Las cámaras deben estar en la misma red local que la Raspberry Pi.
+      <div class="gateway-section">
+        <div class="gateway-section-header">
+          <label>Gateway <span class="required">*</span></label>
+          @if (gateways().length > 0) {
+            <div class="mode-toggle">
+              <button type="button" [class.active]="gatewayMode() === 'existing'" (click)="setGatewayMode('existing')">Existente</button>
+              <button type="button" [class.active]="gatewayMode() === 'new'" (click)="setGatewayMode('new')">+ Nuevo</button>
+            </div>
+          }
+        </div>
+        @if (loadingGateways()) { <div class="loading-hint">Cargando gateways...</div>
+        } @else if (gatewayMode() === 'existing' && gateways().length > 0) {
+          <select id="gateway-select" (change)="onGatewayChange($any($event.target).value)">
+            <option value="">Selecciona un gateway...</option>
+            @for (gw of gateways(); track gw.gatewayId) { <option [value]="gw.gatewayId">{{ gw.name }}</option> }
+          </select>
+          <div class="hint">Útil para regenerar los archivos de una RPi ya instalada</div>
+        }
+        @if (gatewayMode() === 'new') {
+          <div class="new-gateway-form">
+            <div class="form-group">
+              <label>Nombre del punto <span class="required">*</span></label>
+              <input type="text" [(ngModel)]="newGateway.name" placeholder="Ej: Edificio A, Planta Baja" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label>ID del dispositivo <span class="required">*</span>
+                <span class="tooltip-trigger" title="MAC address o hostname de la Raspberry Pi.">?</span></label>
+              <input type="text" [(ngModel)]="newGateway.gatewayId" placeholder="b8:27:eb:aa:bb:cc" class="mono" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="form-group">
+              <label>Token de acceso <span class="required">*</span>
+                <span class="tooltip-trigger" title="Contraseña de la RPi para conectarse al servidor.">?</span></label>
+              <div class="token-row">
+                <input [type]="showToken() ? 'text' : 'password'" [(ngModel)]="newGateway.edgeToken" placeholder="Token de autenticación" class="mono" autocomplete="new-password" spellcheck="false">
+                <button type="button" class="btn btn-secondary" (click)="generateToken()">Generar</button>
+              </div>
+              @if (newGateway.edgeToken) {
+                <div class="hint success">✓ Copia este token antes de continuar — no se puede recuperar después</div>
+              }
+            </div>
+            <div class="form-group">
+              <label>Ubicación <span class="optional">(opcional)</span></label>
+              <input type="text" [(ngModel)]="newGateway.location" placeholder="Ej: Piso 2, junto al cuarto de red">
+            </div>
+          </div>
+        }
       </div>
+    </div>
+    }
 
-      @for (cam of cameras(); track cam.uid) {
-        <div class="camera-card">
-          <div class="camera-card-header">
-            <span class="camera-card-title">Cámara {{ $index + 1 }}</span>
-            <button type="button" class="btn-remove" (click)="removeCamera(cam.uid)">Eliminar</button>
-          </div>
+    <!-- Paso 3: Tipo de instalacion -->
+    @if (currentStep() === 3) {
+    <div class="wizard-step">
+      <h2 class="step-title">Tipo de Instalación</h2>
+      <p class="step-description">Selecciona cómo están conectadas las cámaras</p>
+      @if (step3Error()) { <div class="alert error">{{ step3Error() }}</div> }
+      <div class="mode-toggle install-mode-toggle">
+        <button type="button" [class.active]="installMode() === 'dvr'" (click)="installMode.set('dvr')">DVR/NVR (automático)</button>
+        <button type="button" [class.active]="installMode() === 'nvr'" (click)="installMode.set('nvr')">NVR (manual)</button>
+        <button type="button" [class.active]="installMode() === 'ip'" (click)="installMode.set('ip')">Cámaras IP</button>
+      </div>
+      @if (installMode() === 'dvr' || installMode() === 'nvr') {
+        <div class="dvr-form">
+          <div class="alert info">El agente edge escaneará automáticamente los canales del DVR/NVR vía ONVIF.</div>
           <div class="form-row">
             <div class="form-group">
-              <label>ID/Nombre <span class="required">*</span></label>
-              <input type="text" [(ngModel)]="cam.name" placeholder="cam1">
-            </div>
-            <div class="form-group">
-              <label>IP Local <span class="required">*</span></label>
-              <input type="text" [(ngModel)]="cam.ip" placeholder="192.168.1.100">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group" style="max-width:140px">
-              <label>Puerto ONVIF</label>
-              <input type="number" [(ngModel)]="cam.onvifPort" placeholder="8000">
-              <span class="hint">Común: 80, 8000, 8080</span>
+              <label>IP del DVR/NVR <span class="required">*</span></label>
+              <input type="text" [(ngModel)]="dvrConfig.ip" placeholder="192.168.1.200" autocomplete="off">
             </div>
             <div class="form-group" style="max-width:120px">
-              <label>Canal DVR</label>
-              <input type="number" [(ngModel)]="cam.nvrChannel" placeholder="1-16" min="1" max="16">
-              <span class="hint">Solo para DVR/NVR</span>
+              <label>Puerto</label>
+              <input type="number" [(ngModel)]="dvrConfig.port" placeholder="80">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Marca</label>
+              <select [(ngModel)]="dvrConfig.brand">
+                <option value="dahua">Dahua</option>
+                <option value="hikvision">Hikvision</option>
+                <option value="generic">Genérico</option>
+              </select>
             </div>
             <div class="form-group">
-              <label>Usuario ONVIF <span class="required">*</span></label>
-              <input type="text" [(ngModel)]="cam.onvifUser" placeholder="admin" autocomplete="off">
+              <label>Usuario <span class="required">*</span></label>
+              <input type="text" [(ngModel)]="dvrConfig.user" autocomplete="off">
             </div>
             <div class="form-group">
-              <label>Contraseña ONVIF</label>
-              <input type="password" [(ngModel)]="cam.onvifPass" autocomplete="new-password">
+              <label>Contraseña</label>
+              <input type="password" [(ngModel)]="dvrConfig.pass" autocomplete="new-password">
             </div>
           </div>
         </div>
       }
-
-      <button type="button" class="btn btn-secondary" style="margin-top:10px" (click)="addCamera()">
-        + Agregar cámara
-      </button>
+      @if (installMode() === 'ip') {
+        <div class="alert info">Agrega las cámaras. <strong>Puedes omitir este paso</strong> y agregarlas después.</div>
+        @for (cam of cameras(); track cam.uid) {
+          <div class="camera-card">
+            <div class="camera-card-header">
+              <span class="camera-card-title">Cámara {{ $index + 1 }}</span>
+              <button type="button" class="btn-remove" (click)="removeCamera(cam.uid)">Eliminar</button>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>ID/Nombre <span class="required">*</span></label><input type="text" [(ngModel)]="cam.name" placeholder="cam1"></div>
+              <div class="form-group"><label>IP Local <span class="required">*</span></label><input type="text" [(ngModel)]="cam.ip" placeholder="192.168.1.100"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group" style="max-width:140px"><label>Puerto ONVIF</label><input type="number" [(ngModel)]="cam.onvifPort" placeholder="8000"></div>
+              <div class="form-group"><label>Usuario ONVIF <span class="required">*</span></label><input type="text" [(ngModel)]="cam.onvifUser" placeholder="admin" autocomplete="off"></div>
+              <div class="form-group"><label>Contraseña ONVIF</label><input type="password" [(ngModel)]="cam.onvifPass" autocomplete="new-password"></div>
+            </div>
+          </div>
+        }
+        <button type="button" class="btn btn-secondary" style="margin-top:10px" (click)="addCamera()">+ Agregar cámara</button>
+      }
     </div>
     }
 
-    <!-- ── Paso 3: Archivos de Configuración ─────────────────────────────── -->
-    @if (currentStep() === 3) {
+    <!-- Paso 4: Archivos -->
+    @if (currentStep() === 4) {
     <div class="wizard-step">
       <h2 class="step-title">Archivos de Configuración</h2>
-      <p class="step-description">Revisa y descarga los archivos que debes copiar al dispositivo edge (Raspberry Pi)</p>
-
       @if (step3Error()) {
-        <div class="alert error">
-          {{ step3Error() }}
+        <div class="alert error">{{ step3Error() }}
           <button type="button" class="btn btn-secondary" style="margin-left:12px" (click)="generateFiles()">Reintentar</button>
         </div>
       }
-
-      <div class="file-tab">
-        <button type="button" class="tab-btn" [class.active]="activeTab() === 'env'" (click)="showTab('env')">.env</button>
-        <button type="button" class="tab-btn" [class.active]="activeTab() === 'mediamtx'" (click)="showTab('mediamtx')">mediamtx.yml</button>
-        <button type="button" class="tab-btn" [class.active]="activeTab() === 'compose'" (click)="showTab('compose')">docker-compose.yml</button>
-      </div>
-
-      <div class="code-block">
-        @if (activeTab() === 'env') { {{ generatedFiles().env }} }
-        @if (activeTab() === 'mediamtx') { {{ generatedFiles().mediamtx }} }
-        @if (activeTab() === 'compose') { {{ generatedFiles().compose }} }
-      </div>
-
-      <div class="download-btns">
-        <button type="button" class="btn btn-primary" (click)="downloadFile('env')">Descargar .env</button>
-        <button type="button" class="btn btn-primary" (click)="downloadFile('mediamtx')">Descargar mediamtx.yml</button>
-        <button type="button" class="btn btn-primary" (click)="downloadFile('compose')">Descargar docker-compose.yml</button>
-      </div>
+      @if (installMode() === 'dvr' || installMode() === 'nvr') {
+        <p class="step-description">Los archivos se generan automáticamente. Descárgalos para copiarlos al dispositivo edge.</p>
+        @if (!canContinueFromStep4()) {
+          <button type="button" class="btn btn-primary" (click)="generateFiles()">Generar archivos de configuración</button>
+        }
+      } @else {
+        <p class="step-description">Revisa y descarga los archivos que debes copiar al dispositivo edge</p>
+      }
+      @if (canContinueFromStep4()) {
+        <div class="file-tab">
+          <button type="button" class="tab-btn" [class.active]="activeTab() === 'env'" (click)="showTab('env')">.env</button>
+          <button type="button" class="tab-btn" [class.active]="activeTab() === 'mediamtx'" (click)="showTab('mediamtx')">mediamtx.yml</button>
+          <button type="button" class="tab-btn" [class.active]="activeTab() === 'compose'" (click)="showTab('compose')">docker-compose.yml</button>
+        </div>
+        <div class="code-block">
+          @if (activeTab() === 'env') { {{ generatedFiles().env }} }
+          @if (activeTab() === 'mediamtx') { {{ generatedFiles().mediamtx }} }
+          @if (activeTab() === 'compose') { {{ generatedFiles().compose }} }
+        </div>
+        <div class="download-btns">
+          <button type="button" class="btn btn-primary" (click)="downloadFile('env')">Descargar .env</button>
+          <button type="button" class="btn btn-primary" (click)="downloadFile('mediamtx')">Descargar mediamtx.yml</button>
+          <button type="button" class="btn btn-primary" (click)="downloadFile('compose')">Descargar docker-compose.yml</button>
+        </div>
+      }
     </div>
     }
 
-    <!-- ── Paso 4: Despliegue ─────────────────────────────────────────────── -->
-    @if (currentStep() === 4) {
+    <!-- Paso 5: Despliegue -->
+    @if (currentStep() === 5) {
     <div class="wizard-step">
       <h2 class="step-title">Instrucciones de Instalación</h2>
-      <p class="step-description">Pasos para instalar el equipo en la ubicación de
-        <strong>{{ selectedClient()?.name }}</strong>. Realiza esto en la Raspberry Pi del cliente.
-      </p>
-
-      <div class="alert success" style="display:block">
-        ✅ Gateway registrado. Descarga los archivos del paso anterior antes de irte.
-      </div>
-
+      <p class="step-description">Realiza estos pasos en la Raspberry Pi de <strong>{{ selectedClient()?.name }}</strong></p>
+      <div class="alert success" style="display:block">✅ Gateway registrado. Descarga los archivos del paso anterior.</div>
       <div class="deploy-step">
         <div class="deploy-step-num">1</div>
         <div class="deploy-step-content">
-          <strong>Descargar el software base del gateway</strong>
-          <p>En la consola de la Raspberry Pi:</p>
+          <strong>Descargar el software base</strong>
           <code class="cmd">git clone https://github.com/CarlosBarajasS/motorcontrol-edge-template.git edge-gateway &amp;&amp; cd edge-gateway</code>
         </div>
       </div>
-
       <div class="deploy-step">
         <div class="deploy-step-num">2</div>
         <div class="deploy-step-content">
           <strong>Copiar los archivos de configuración</strong>
-          <p>Transfiere los 3 archivos descargados vía SFTP o USB. Coloca <code>mediamtx.yml</code> dentro del subdirectorio <code>mediamtx/</code>.</p>
+          <p>Transfiere los 3 archivos vía SFTP o USB. Coloca <code>mediamtx.yml</code> en el subdirectorio <code>mediamtx/</code>.</p>
         </div>
       </div>
-
       <div class="deploy-step">
         <div class="deploy-step-num">3</div>
         <div class="deploy-step-content">
-          <strong>Iniciar el contenedor Docker</strong>
+          <strong>Iniciar Docker</strong>
           <code class="cmd">mv edge-gateway.env .env</code>
           <code class="cmd">docker compose up -d</code>
         </div>
       </div>
-
       <div class="deploy-step">
         <div class="deploy-step-num">4</div>
         <div class="deploy-step-content">
@@ -263,82 +231,91 @@
         </div>
       </div>
 
-      <!-- Discovery Status Panel -->
-      <div class="discovery-panel">
-        <h3>Estado del descubrimiento</h3>
-
-        <div class="gateway-status">
-          @if (!discoveryStatus()?.gatewayOnline) {
-            <span class="status-dot pending"></span>
-            <span>Esperando conexión del gateway...</span>
-          } @else {
-            <span class="status-dot online"></span>
-            <span>Gateway conectado</span>
-          }
-        </div>
-
-        @if (discoveryStatus()?.cameras?.length) {
-        <div class="camera-list">
-          @for (cam of (discoveryStatus()?.cameras ?? []); track cam.id) {
-          <div class="camera-item" [class.failed]="cam.status === 'onvif_failed'">
-            <div class="camera-header">
-              <span class="camera-icon">📷</span>
-              <strong>{{ cam.name }}</strong>
-              @switch (cam.status) {
-                @case ('pending') { <span class="badge pending">⬜ Pendiente</span> }
-                @case ('discovering') { <span class="badge discovering">🟡 Descubriendo...</span> }
-                @case ('discovered') {
-                  <span class="badge discovered">
-                    ✅ {{ cam.brand }} {{ cam.model }}
-                    @if (cam.resolution) { · {{ cam.resolution }} }
-                    @if (cam.fps) { · {{ cam.fps }}fps }
-                  </span>
+      @if (installMode() === 'ip') {
+        <!-- Discovery Status Panel -->
+        <div class="discovery-panel">
+          <h3>Estado del descubrimiento</h3>
+          <div class="gateway-status">
+            @if (!discoveryStatus()?.gatewayOnline) {
+              <span class="status-dot pending"></span><span>Esperando conexión del gateway...</span>
+            } @else {
+              <span class="status-dot online"></span><span>Gateway conectado</span>
+            }
+          </div>
+          @if (discoveryStatus()?.cameras?.length) {
+          <div class="camera-list">
+            @for (cam of (discoveryStatus()?.cameras ?? []); track cam.id) {
+            <div class="camera-item" [class.failed]="cam.status === 'onvif_failed'">
+              <div class="camera-header">
+                <span class="camera-icon">📷</span>
+                <strong>{{ cam.name }}</strong>
+                @switch (cam.status) {
+                  @case ('pending') { <span class="badge pending">⬜ Pendiente</span> }
+                  @case ('discovering') { <span class="badge discovering">🟡 Descubriendo...</span> }
+                  @case ('discovered') { <span class="badge discovered">✅ {{ cam.brand }} {{ cam.model }}@if (cam.resolution) { · {{ cam.resolution }} }@if (cam.fps) { · {{ cam.fps }}fps }</span> }
+                  @case ('manual') { <span class="badge manual">✏️ URL manual</span> }
+                  @case ('onvif_failed') { <span class="badge failed">⚠️ ONVIF no respondió</span> }
                 }
-                @case ('manual') { <span class="badge manual">✏️ URL manual</span> }
-                @case ('onvif_failed') { <span class="badge failed">⚠️ ONVIF no respondió</span> }
-              }
-            </div>
-
-            @if (cam.status === 'onvif_failed') {
-            <div class="failure-guide">
-              <div class="guide-option">
-                <strong>Opción 1 — Activar ONVIF en la cámara</strong>
-                <p>En la interfaz web de la cámara: <em>Configuración → Red → ONVIF → Activar</em></p>
-                <button type="button" class="btn btn-secondary" (click)="retryDiscovery(cam.id)">
-                  🔄 Reintentar descubrimiento
-                </button>
               </div>
-              <div class="guide-option">
-                <strong>Opción 2 — URL RTSP manual</strong>
-                <table class="rtsp-cheatsheet">
-                  <tr><td>Hikvision</td><td><code>/Streaming/Channels/101</code></td></tr>
-                  <tr><td>Dahua</td><td><code>/cam/realmonitor?channel=1&amp;subtype=0</code></td></tr>
-                  <tr><td>Reolink</td><td><code>/h264Preview_01_main</code></td></tr>
-                  <tr><td>TP-Link Tapo</td><td><code>/stream1</code></td></tr>
-                  <tr><td>Axis</td><td><code>/axis-media/media.amp</code></td></tr>
-                </table>
-                <div class="manual-input-row">
-                  <input type="text"
-                         [value]="manualRtspInputs()[cam.id] ?? ''"
-                         (input)="setManualRtsp(cam.id, $any($event.target).value)"
-                         placeholder="rtsp://admin:pass@192.168.1.100:554/..."
-                         class="form-input manual-rtsp">
-                  <button type="button" class="btn btn-primary" (click)="saveManualRtsp(cam.id)">
-                    Guardar
-                  </button>
+              @if (cam.status === 'onvif_failed') {
+              <div class="failure-guide">
+                <div class="guide-option">
+                  <strong>Opción 1 — Activar ONVIF</strong>
+                  <p>En la interfaz web: Configuración → Red → ONVIF → Activar</p>
+                  <button type="button" class="btn btn-secondary" (click)="retryDiscovery(cam.id)">🔄 Reintentar</button>
+                </div>
+                <div class="guide-option">
+                  <strong>Opción 2 — URL RTSP manual</strong>
+                  <table class="rtsp-cheatsheet">
+                    <tr><td>Hikvision</td><td><code>/Streaming/Channels/101</code></td></tr>
+                    <tr><td>Dahua</td><td><code>/cam/realmonitor?channel=1&amp;subtype=0</code></td></tr>
+                    <tr><td>Reolink</td><td><code>/h264Preview_01_main</code></td></tr>
+                    <tr><td>TP-Link Tapo</td><td><code>/stream1</code></td></tr>
+                  </table>
+                  <div class="manual-input-row">
+                    <input type="text" [value]="manualRtspInputs()[cam.id] ?? ''" (input)="setManualRtsp(cam.id, $any($event.target).value)" placeholder="rtsp://admin:pass@192.168.1.100:554/..." class="form-input manual-rtsp">
+                    <button type="button" class="btn btn-primary" (click)="saveManualRtsp(cam.id)">Guardar</button>
+                  </div>
                 </div>
               </div>
+              }
             </div>
             }
           </div>
           }
         </div>
-        }
-      </div>
-
-      <div style="margin-top: 24px;">
-        <button type="button" class="btn btn-secondary" routerLink="/clients">Ir a lista de Clientes</button>
-      </div>
+      } @else {
+        <!-- DVR Scan Panel -->
+        <div class="discovery-panel">
+          <h3>Escaneo de canales DVR</h3>
+          @switch (dvrScanStatus()) {
+            @case ('idle') { <div class="gateway-status"><span class="status-dot pending"></span><span>Esperando inicio del escaneo...</span></div> }
+            @case ('scanning') { <div class="gateway-status"><span class="status-dot discovering"></span><span>Escaneando canales DVR... (puede tomar hasta 2 minutos)</span></div> }
+            @case ('error') { <div class="alert error">{{ dvrScanError() || 'El escaneo falló.' }}</div> }
+            @case ('done') {
+              @if (camerasCreated()) {
+                <div class="alert success" style="display:block">✅ Cámaras creadas exitosamente en el sistema</div>
+              } @else if (dvrChannels().length === 0) {
+                <div class="alert info">No se encontraron canales activos en el DVR.</div>
+              } @else {
+                <div class="dvr-channels-list">
+                  <p><strong>Canales encontrados:</strong> selecciona los que deseas agregar al sistema</p>
+                  @for (ch of dvrChannels(); track ch.channel) {
+                    <div class="dvr-channel-row">
+                      <input type="checkbox" [id]="'ch-' + ch.channel" [checked]="channelIncluded[ch.channel]" (change)="channelIncluded[ch.channel] = $any($event.target).checked">
+                      <label [for]="'ch-' + ch.channel" class="channel-num">Canal {{ ch.channel }}</label>
+                      <input type="text" [(ngModel)]="channelNames[ch.channel]" class="channel-name-input" placeholder="Nombre de la cámara">
+                      @if (ch.resolution) { <span class="channel-meta">{{ ch.resolution }}</span> }
+                      @if (ch.fps) { <span class="channel-meta">{{ ch.fps }}fps</span> }
+                    </div>
+                  }
+                </div>
+                <button type="button" class="btn btn-primary" style="margin-top:16px" (click)="createDvrCameras()">Crear cámaras en el sistema</button>
+              }
+            }
+          }
+        </div>
+      }
     </div>
     }
 
@@ -346,13 +323,10 @@
 
   <!-- Navigation Footer -->
   <div class="wizard-nav">
-    <button type="button" class="btn btn-secondary" [disabled]="currentStep() === 1" (click)="prevStep()">
-      &larr; Anterior
-    </button>
+    <button type="button" class="btn btn-secondary" [disabled]="currentStep() === 1" (click)="prevStep()">&larr; Anterior</button>
     <span class="step-counter">Paso {{ currentStep() }} de {{ totalSteps }}</span>
-    <button type="button" class="btn btn-primary" (click)="nextStep()"
-            [disabled]="savingGateway() || (currentStep() === 4 && !canContinueFromStep4())">
-      {{ savingGateway() ? 'Guardando...' : (currentStep() === 4 ? 'Finalizar' : 'Siguiente') }}
+    <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="savingGateway() || (currentStep() === 4 && !canContinueFromStep4())">
+      {{ savingGateway() ? 'Guardando...' : (currentStep() === 5 ? 'Finalizar' : 'Siguiente →') }}
     </button>
   </div>
 </div>

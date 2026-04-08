@@ -47,6 +47,24 @@ interface DiscoveryStatus {
   cameras: DiscoveryCamera[];
 }
 
+
+interface DvrConfig {
+  ip: string;
+  port: number;
+  brand: 'dahua' | 'hikvision' | 'generic';
+  user: string;
+  pass: string;
+}
+
+interface DvrChannel {
+  channel: number;
+  name: string;
+  resolution?: string;
+  fps?: number;
+}
+
+type InstallMode = 'dvr' | 'ip' | 'nvr';
+
 @Component({
   selector: 'app-wizard',
   standalone: true,
@@ -59,14 +77,15 @@ export class WizardComponent implements OnInit, OnDestroy {
   private router = inject(Router);
 
   // ── Progreso ──────────────────────────────────────────────────────────────
-  currentStep = signal<1 | 2 | 3 | 4>(1);
-  totalSteps = 4;
+  currentStep = signal<1 | 2 | 3 | 4 | 5>(1);
+  totalSteps = 5;
 
-  // ── Paso 1: Cliente & Gateway ─────────────────────────────────────────────
+  // -- Paso 1: Cliente --------------------------------------------------------
   clients = signal<ClientOption[]>([]);
   loadingClients = signal(false);
   selectedClient = signal<ClientOption | null>(null);
 
+  // -- Paso 2: Gateway ----------------------------------------------------------
   gateways = signal<GatewayOption[]>([]);
   loadingGateways = signal(false);
   gatewayMode = signal<'existing' | 'new'>('existing');
@@ -82,24 +101,46 @@ export class WizardComponent implements OnInit, OnDestroy {
   step1Error = signal('');
   savingGateway = signal(false);
 
-  // ── Paso 2: Cámaras ───────────────────────────────────────────────────────
+  step2Error = signal('');  // for gateway step
+
+  // -- Paso 3: Tipo de instalacion ----------------------------------------------
+  installMode = signal<InstallMode>('dvr');
+
+  dvrConfig: DvrConfig = {
+    ip: '',
+    port: 80,
+    brand: 'dahua',
+    user: 'admin',
+    pass: ''
+  };
+
+  // -- Paso 3: Camaras (modo IP manual) -----------------------------------------
   cameras = signal<CameraForm[]>([]);
   private nextCameraUid = 1;
-  step2Error = signal('');
+  step3Error = signal('');
 
-  // ── Paso 3: Archivos ──────────────────────────────────────────────────────
+  // -- Paso 4: Archivos ----------------------------------------------------------
   activeTab = signal<'env' | 'mediamtx' | 'compose'>('env');
   generatedFiles = signal<{ env: string; compose: string; mediamtx: string }>({
     env: '', compose: '', mediamtx: ''
   });
-  step3Error = signal('');
 
-  // ── Paso 4: Despliegue & Discovery ────────────────────────────────────────
+  // -- Paso 5: Despliegue & Discovery -------------------------------------------
   discoveryStatus = signal<DiscoveryStatus | null>(null);
   private discoveryPollInterval: ReturnType<typeof setInterval> | null = null;
   private discoveryStartTime = 0;
   private readonly DISCOVERY_TIMEOUT_MS = 5 * 60 * 1000;
   manualRtspInputs = signal<Record<number, string>>({});
+
+  // -- Paso 5: DVR Scan ----------------------------------------------------------
+  dvrScanStatus = signal<'idle' | 'scanning' | 'done' | 'error'>('idle');
+  dvrChannels = signal<DvrChannel[]>([]);
+  dvrScanError = signal('');
+  channelNames: Record<number, string> = {};
+  channelIncluded: Record<number, boolean> = {};
+  private dvrScanPollInterval: ReturnType<typeof setInterval> | null = null;
+  private gatewayPollInterval: ReturnType<typeof setInterval> | null = null;
+  camerasCreated = signal(false);
 
   // ── Computed ──────────────────────────────────────────────────────────────
   activeGatewayId = computed(() => {
@@ -107,7 +148,10 @@ export class WizardComponent implements OnInit, OnDestroy {
     return this.newGateway.gatewayId.trim() || null;
   });
 
-  canContinueFromStep4 = computed(() => {
+  canFinish = computed(() => {
+    if (this.installMode() === 'dvr' || this.installMode() === 'nvr') {
+      return this.camerasCreated();
+    }
     const status = this.discoveryStatus();
     if (!status?.cameras?.length) return false;
     return status.cameras.every(c =>
@@ -123,6 +167,8 @@ export class WizardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopDiscoveryPolling();
+    if (this.gatewayPollInterval) clearInterval(this.gatewayPollInterval);
+    if (this.dvrScanPollInterval) clearInterval(this.dvrScanPollInterval);
   }
 
   // ── Clientes ──────────────────────────────────────────────────────────────
@@ -179,11 +225,12 @@ export class WizardComponent implements OnInit, OnDestroy {
     if (this.currentStep() === 1) {
       if (!await this.submitStep1()) return;
     } else if (this.currentStep() === 2) {
-      await this.submitStep2();
-      if (!await this.generateFiles()) return;
+      if (!await this.submitStep2Gateway()) return;
     } else if (this.currentStep() === 3) {
-      this.startDiscoveryPolling();
+      if (!await this.submitStep3Install()) return;
     } else if (this.currentStep() === 4) {
+      this.startDeployPolling();
+    } else if (this.currentStep() === 5) {
       this.router.navigate(['/clients']);
       return;
     }
@@ -193,7 +240,7 @@ export class WizardComponent implements OnInit, OnDestroy {
 
   prevStep(): void {
     if (this.currentStep() === 1) return;
-    if (this.currentStep() === 4) this.stopDiscoveryPolling();
+    if (this.currentStep() === 5) this.stopDiscoveryPolling();
     this.currentStep.update(v => (v - 1) as any);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -206,50 +253,7 @@ export class WizardComponent implements OnInit, OnDestroy {
       this.step1Error.set('Selecciona un cliente.');
       return false;
     }
-
-    if (this.gatewayMode() === 'existing') {
-      if (!this.selectedGateway()) {
-        this.step1Error.set('Selecciona un gateway existente.');
-        return false;
-      }
-      return true;
-    }
-
-    // Modo "nuevo"
-    if (!this.newGateway.name.trim()) { this.step1Error.set('El nombre del punto es requerido.'); return false; }
-    if (!this.newGateway.gatewayId.trim()) { this.step1Error.set('El ID del dispositivo es requerido.'); return false; }
-    if (!this.newGateway.edgeToken.trim()) { this.step1Error.set('Genera o ingresa un token de acceso.'); return false; }
-
-    this.savingGateway.set(true);
-    try {
-      const body = {
-        gatewayId: this.newGateway.gatewayId.trim(),
-        name: this.newGateway.name.trim(),
-        location: this.newGateway.location.trim() || null,
-        clientId: this.selectedClient()!.id,
-        edgeToken: this.newGateway.edgeToken.trim()
-      };
-
-      const created = await firstValueFrom(
-        this.http.post<{ id: number }>(`${API_URL}/gateways`, body)
-      );
-
-      // Guardar como gateway seleccionado (id viene del backend)
-      this.selectedGateway.set({
-        id: created?.id ?? 0,
-        gatewayId: body.gatewayId,
-        name: body.name,
-        location: body.location ?? undefined
-      });
-      return true;
-    } catch (err: any) {
-      this.step1Error.set(
-        err?.error?.message ?? 'Error al registrar el gateway. Verifica el ID del dispositivo.'
-      );
-      return false;
-    } finally {
-      this.savingGateway.set(false);
-    }
+    return true;
   }
 
   // ── Step 2: Cámaras ───────────────────────────────────────────────────────
@@ -265,8 +269,8 @@ export class WizardComponent implements OnInit, OnDestroy {
     this.cameras.update(list => list.filter(c => c.uid !== uid));
   }
 
-  private async submitStep2(): Promise<void> {
-    this.step2Error.set('');
+  private async submitIpCameras(): Promise<void> {
+    this.step3Error.set('');
     const clientId = this.selectedClient()!.id;
     const cloudActive = this.selectedClient()!.cloudStorageActive;
     let failedCount = 0;
@@ -292,13 +296,118 @@ export class WizardComponent implements OnInit, OnDestroy {
     }
 
     if (failedCount > 0) {
-      this.step2Error.set(
+      this.step3Error.set(
         `${failedCount} cámara(s) no se pudieron registrar. Agrégalas después desde el módulo de Cámaras.`
       );
     }
   }
 
-  // ── Step 3: Archivos ──────────────────────────────────────────────────────
+  // -- Step 2: Gateway (submit) -------------------------------------------
+
+  private async submitStep2Gateway(): Promise<boolean> {
+    this.step2Error.set('');
+    const clientId = this.selectedClient()!.id;
+    if (this.gatewayMode() === 'existing') {
+      if (!this.selectedGateway()) { this.step2Error.set('Selecciona un gateway existente.'); return false; }
+      return true;
+    }
+    if (!this.newGateway.name.trim()) { this.step2Error.set('El nombre del punto es requerido.'); return false; }
+    if (!this.newGateway.gatewayId.trim()) { this.step2Error.set('El ID del dispositivo es requerido.'); return false; }
+    if (!this.newGateway.edgeToken.trim()) { this.step2Error.set('Genera o ingresa un token de acceso.'); return false; }
+    this.savingGateway.set(true);
+    try {
+      const result = await firstValueFrom(
+        this.http.post<GatewayOption>(API_URL + '/admin/wizard/register-gateway', {
+          clientId, name: this.newGateway.name, gatewayId: this.newGateway.gatewayId,
+          edgeToken: this.newGateway.edgeToken, location: this.newGateway.location || null
+        })
+      );
+      this.selectedGateway.set(result);
+      return true;
+    } catch (err: any) {
+      this.step2Error.set(err?.error?.message ?? 'Error al registrar el gateway.');
+      return false;
+    } finally {
+      this.savingGateway.set(false);
+    }
+  }
+
+  // -- Paso 3: Tipo instalacion (submit) ------------------------------------
+
+  private async submitStep3Install(): Promise<boolean> {
+    this.step3Error.set('');
+    const mode = this.installMode();
+    if (mode === 'dvr' || mode === 'nvr') {
+      if (!this.dvrConfig.ip.trim()) { this.step3Error.set('La IP del DVR es requerida.'); return false; }
+      const clientId = this.selectedClient()!.id;
+      const gatewayId = this.activeGatewayId();
+      try {
+        await firstValueFrom(this.http.post(API_URL + '/admin/wizard/scan-dvr', { clientId, gatewayId, dvrConfig: this.dvrConfig }));
+        this.dvrScanStatus.set('scanning');
+        await this.generateFiles();
+        return true;
+      } catch (err: any) {
+        this.step3Error.set(err?.error?.message ?? 'Error al iniciar el escaneo DVR.');
+        return false;
+      }
+    }
+    const filesOk = await this.generateFiles();
+    if (!filesOk) return false;
+    await this.submitIpCameras();
+    return true;
+  }
+
+  startDeployPolling(): void {
+    if (this.installMode() === 'dvr' || this.installMode() === 'nvr') {
+      this.pollDvrScanOnce();
+      this.dvrScanPollInterval = setInterval(() => this.pollDvrScanOnce(), 3000);
+    } else {
+      this.startDiscoveryPolling();
+    }
+  }
+
+  private async pollDvrScanOnce(): Promise<void> {
+    const clientId = this.selectedClient()?.id;
+    const gatewayId = this.activeGatewayId();
+    if (!clientId || !gatewayId) return;
+    try {
+      const data = await firstValueFrom(
+        this.http.get<{ status: string; channels: DvrChannel[] }>(
+          API_URL + '/admin/wizard/dvr-scan-status?clientId=' + clientId + '&gatewayId=' + encodeURIComponent(gatewayId)
+        )
+      );
+      this.dvrScanStatus.set(data.status as any);
+      if (data.status === 'done') {
+        this.stopDvrScanPolling();
+        this.dvrChannels.set(data.channels ?? []);
+        for (const ch of data.channels ?? []) { this.channelNames[ch.channel] = ch.name; this.channelIncluded[ch.channel] = true; }
+      } else if (data.status === 'error') {
+        this.stopDvrScanPolling();
+        this.dvrScanError.set('El escaneo falló. Verifica la IP y credenciales del DVR.');
+      }
+    } catch { /* ignore */ }
+  }
+
+  stopDvrScanPolling(): void {
+    if (this.dvrScanPollInterval) { clearInterval(this.dvrScanPollInterval); this.dvrScanPollInterval = null; }
+  }
+
+  async createDvrCameras(): Promise<void> {
+    const clientId = this.selectedClient()!.id;
+    const gatewayId = this.activeGatewayId();
+    const channels = this.dvrChannels().filter(ch => this.channelIncluded[ch.channel])
+      .map(ch => ({ channel: ch.channel, name: this.channelNames[ch.channel] || ch.name }));
+    try {
+      await firstValueFrom(this.http.post(API_URL + '/admin/wizard/create-dvr-cameras', { clientId, gatewayId, dvrConfig: this.dvrConfig, channels }));
+      this.camerasCreated.set(true);
+    } catch (err: any) {
+      this.dvrScanError.set(err?.error?.message ?? 'Error al crear las cámaras.');
+    }
+  }
+
+  canContinueFromStep4(): boolean { return this.generatedFiles().env !== ''; }
+
+    // ── Step 3: Archivos ──────────────────────────────────────────────────────
 
   async generateFiles(): Promise<boolean> {
     this.step3Error.set('');
