@@ -113,6 +113,29 @@ namespace MotorControlEnterprise.Api.Services
             }
         }
 
+
+        public async Task<bool> SendWelcomePasswordAsync(string to, string clientName, string tempPassword)
+        {
+            try
+            {
+                var subject = $"Bienvenido a NIRMGROUP — Acceso para {clientName}";
+                var html    = $@"<h2>Tu acceso está listo</h2>
+<p>Hola,</p>
+<p>Tu cuenta para el portal de monitoreo de <strong>{clientName}</strong> ha sido creada.</p>
+<p><strong>Email:</strong> {to}<br/>
+<strong>Contraseña temporal:</strong> <code style=""font-size:18px"">{tempPassword}</code></p>
+<p>Ingresa en <a href=""https://nirmgroup.net/login"">nirmgroup.net/login</a> y cambia tu contraseña.</p>
+<p>— Equipo NIRMGROUP</p>";
+
+                await SendAsync(to, subject, html);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private async Task SendAsync(string to, string subject, string html)
         {
             var apiKey = _config["Email:ResendApiKey"];

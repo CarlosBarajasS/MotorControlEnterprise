@@ -306,10 +306,17 @@ namespace MotorControlEnterprise.Api.Controllers
             client.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
-            // Enviar credenciales por email (no bloquea si falla)
-            _ = _email.SendUserInviteAsync(user.Email, user.Name ?? client.Name, plainPassword);
+            // Enviar credenciales por email
+            bool emailSent = false;
+            if (!string.IsNullOrEmpty(user.Email) && !string.IsNullOrEmpty(plainPassword))
+            {
+                emailSent = await _email.SendWelcomePasswordAsync(
+                    user.Email, client.Name, plainPassword);
+            }
 
-            return Ok(new { user.Id, user.Email, user.Name, user.Role, user.IsActive, user.MustChangePassword });
+            return Ok(new { user.Id, user.Email, user.Name, user.Role, user.IsActive, user.MustChangePassword,
+                emailSent,
+                tempPassword = emailSent ? null : plainPassword });
         }
 
         // DELETE api/clients/{id}/user — desvincula (y desactiva) la cuenta del cliente
