@@ -670,6 +670,9 @@ networks:
             var client = await _db.Clients.FindAsync(id);
             if (client == null) return NotFound();
 
+            if (!int.TryParse(User.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub), out var adminUserId))
+                return Unauthorized();
+
             int created = 0;
             var failed  = new List<string>();
 
@@ -700,7 +703,7 @@ networks:
                     CameraKey       = cameraKey,
                     CameraId        = cameraKey,
                     ClientId        = id,
-                    UserId          = client.UserId ?? 1,
+                    UserId          = client.UserId ?? adminUserId,
                     Status          = "pending",
                     IsRecordingOnly = false,
                     Ptz             = false,
