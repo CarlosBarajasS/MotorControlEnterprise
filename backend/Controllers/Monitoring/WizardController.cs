@@ -10,6 +10,19 @@ using System.Text.Json;
 
 namespace MotorControlEnterprise.Api.Controllers
 {
+    public record ScanDvrRequestDto(
+        string GatewayId,
+        string NvrIp,
+        int    NvrPort,
+        string NvrUser,
+        string NvrPassword,
+        string NvrBrand
+    );
+
+    public record DvrCameraItemDto(int Channel, string Name);
+    public record CreateDvrCamerasDto(string GatewayId, List<DvrCameraItemDto> Cameras);
+
+
     [ApiController]
     [Route("api/admin/clients")]
     [Authorize(Roles = "admin")]
@@ -557,6 +570,150 @@ networks:
                 );
             }
             catch { return null; }
+        }
+
+
+        // POST /api/admin/clients/{id}/scan-dvr
+        [HttpPost("{id:int}/scan-dvr")]
+        public async Task<IActionResult> ScanDvr(int id, [FromBody] ScanDvrRequestDto dto)
+        {
+            var client = await _db.Clients
+                .Include(c => c.Gateways)
+                .FirstOrDefaultAsync(c => c.Id == id);
+            if (client == null) return NotFound();
+
+            var gw = client.Gateways.FirstOrDefault(g => g.GatewayId == dto.GatewayId);
+            if (gw == null)
+                return NotFound(new { message = $"Gateway '{dto.GatewayId}' no encontrado." });
+
+            // Persist DVR credentials to client
+            client.NvrIp       = dto.NvrIp;
+            client.NvrPort     = dto.NvrPort;
+            client.NvrUser     = dto.NvrUser;
+            client.NvrPassword = dto.NvrPassword;
+            client.NvrBrand    = dto.NvrBrand;
+
+            var meta = ParseMetaDict(client.Metadata);
+            meta["dvrScan"] = new Dictionary<string, object>
+            {
+                ["status"]    = "scanning",
+                ["startedAt"] = DateTime.UtcNow.ToString("O")
+            };
+            client.Metadata  = JsonSerializer.Serialize(meta);
+            client.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            var requestId = Guid.NewGuid().ToString("N");
+            var payload = JsonSerializer.Serialize(new
+            {
+                requestId,
+                nvrIp       = dto.NvrIp,
+                nvrPort     = dto.NvrPort,
+                nvrUser     = dto.NvrUser,
+                nvrPassword = dto.NvrPassword,
+                nvrBrand    = dto.NvrBrand
+            });
+
+            await _mqtt.PublishAsync($"gateway/{dto.GatewayId}/cmd/scan-dvr", payload);
+
+            return Ok(new { requestId, status = "scanning" });
+        }
+
+        // GET /api/admin/clients/{id}/dvr-scan-status
+        [HttpGet("{id:int}/dvr-scan-status")]
+        public async Task<IActionResult> DvrScanStatus(int id)
+        {
+            var client = await _db.Clients.FindAsync(id);
+            if (client == null) return NotFound();
+
+            if (string.IsNullOrEmpty(client.Metadata))
+                return Ok(new { status = "idle", channels = Array.Empty<object>() });
+
+            try
+            {
+                var doc = JsonDocument.Parse(client.Metadata);
+                if (!doc.RootElement.TryGetProperty("dvrScan", out var scan))
+                    return Ok(new { status = "idle", channels = Array.Empty<object>() });
+
+                var status       = scan.TryGetProperty("status",       out var s) ? s.GetString()  : "idle";
+                var errorMessage = scan.TryGetProperty("errorMessage", out var e) ? e.GetString()  : null;
+
+                var channels = new List<object>();
+                if (scan.TryGetProperty("channels", out var chArr) &&
+                    chArr.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var ch in chArr.EnumerateArray())
+                    {
+                        channels.Add(new
+                        {
+                            channel    = ch.TryGetProperty("channel",    out var c) ? c.GetInt32()  : 0,
+                            name       = ch.TryGetProperty("name",       out var n) ? n.GetString() : null,
+                            resolution = ch.TryGetProperty("resolution", out var r) ? r.GetString() : null,
+                            fps        = ch.TryGetProperty("fps",        out var f) && f.ValueKind == JsonValueKind.Number
+                                         ? f.GetInt32() : (int?)null
+                        });
+                    }
+                }
+
+                return Ok(new { status, errorMessage, channels });
+            }
+            catch
+            {
+                return Ok(new { status = "idle", channels = Array.Empty<object>() });
+            }
+        }
+
+        // POST /api/admin/clients/{id}/create-dvr-cameras
+        [HttpPost("{id:int}/create-dvr-cameras")]
+        public async Task<IActionResult> CreateDvrCameras(int id, [FromBody] CreateDvrCamerasDto dto)
+        {
+            var client = await _db.Clients.FindAsync(id);
+            if (client == null) return NotFound();
+
+            int created = 0;
+            var failed  = new List<string>();
+
+            foreach (var cam in dto.Cameras)
+            {
+                if (string.IsNullOrWhiteSpace(cam.Name)) continue;
+
+                var cameraKey = Slugify(cam.Name);
+                if (string.IsNullOrEmpty(cameraKey))
+                {
+                    failed.Add(cam.Name);
+                    continue;
+                }
+
+                // Idempotent: skip if already exists
+                if (await _db.Cameras.AnyAsync(c => c.CameraKey == cameraKey && c.ClientId == id))
+                    continue;
+
+                var camMeta = new Dictionary<string, object>
+                {
+                    ["nvrChannel"] = cam.Channel,
+                    ["discovery"]  = new { status = "pending" }
+                };
+
+                _db.Cameras.Add(new Camera
+                {
+                    Name            = cam.Name,
+                    CameraKey       = cameraKey,
+                    CameraId        = cameraKey,
+                    ClientId        = id,
+                    UserId          = client.UserId ?? 1,
+                    Status          = "pending",
+                    IsRecordingOnly = false,
+                    Ptz             = false,
+                    Streams         = JsonSerializer.Serialize(new { rtsp = "pending_onvif_discovery" }),
+                    Metadata        = JsonSerializer.Serialize(camMeta),
+                    CreatedAt       = DateTime.UtcNow,
+                    UpdatedAt       = DateTime.UtcNow
+                });
+                created++;
+            }
+
+            await _db.SaveChangesAsync();
+            return Ok(new { created, failed });
         }
 
         private static string Slugify(string input)
