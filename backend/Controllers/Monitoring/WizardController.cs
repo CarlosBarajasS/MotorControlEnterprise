@@ -130,7 +130,7 @@ namespace MotorControlEnterprise.Api.Controllers
                 mqttUser,
                 centralRtspHost = centralRtsp,
                 centralRtspPort = centralPort,
-                env             = BuildEnv(client, resolvedGatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location, edgeToken, centralRtsp, centralPort, mediamtxPass),
+                env             = BuildEnv(client, resolvedGatewayId, mqttHost, mqttPort, mqttUser, mqttPass, centralApi, location, edgeToken, centralRtsp, centralPort, mediamtxPass, pushUser, pushPass),
                 dockerCompose   = BuildDockerCompose(centralRtsp, centralPort, pushUser, pushPass, mediamtxPass),
                 mediamtxYml     = BuildMediamtxYml(cameras, resolvedGatewayId, mediamtxPass),
                 localStorageType = client.LocalStorageType ?? "nvr"
@@ -186,7 +186,8 @@ namespace MotorControlEnterprise.Api.Controllers
             string centralApi, string location,
             string edgeToken,
             string centralRtspHost, string centralRtspPort,
-            string mediamtxPass)
+            string mediamtxPass,
+            string pushUser, string pushPass)
         {
             var sb = new StringBuilder();
             sb.AppendLine("# ===================================================");
@@ -236,6 +237,8 @@ namespace MotorControlEnterprise.Api.Controllers
             sb.AppendLine();
             sb.AppendLine($"CENTRAL_RTSP_HOST={centralRtspHost}");
             sb.AppendLine($"CENTRAL_RTSP_PORT={centralRtspPort}");
+            sb.AppendLine($"MEDIAMTX_PUSH_USER={pushUser}");
+            sb.AppendLine($"MEDIAMTX_PUSH_PASS={pushPass}");
 
             // NVR/DVR local — solo si el cliente tiene configuración NVR
             var storageType = client.LocalStorageType ?? "nvr";
