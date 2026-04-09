@@ -86,6 +86,15 @@ export class CameraGridComponent implements OnChanges {
     }
 
     getWebrtcPath(cam: any): string {
+        // Derive path from stored stream URL — avoids race condition with gatewayId loading
+        const raw = cam.streams ?? cam.Streams;
+        const streams = typeof raw === 'string'
+            ? (() => { try { return JSON.parse(raw); } catch { return null; } })()
+            : raw;
+        const webrtcUrl: string | undefined = streams?.webrtc;
+        if (webrtcUrl) {
+            try { return new URL(webrtcUrl).pathname.replace(/^\//, ''); } catch {}
+        }
         const key = cam.cameraKey ?? cam.cameraId ?? cam.name;
         return `${this.gatewayId.replace(/:/g, '-')}/${key}`;
     }
