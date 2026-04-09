@@ -139,9 +139,8 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
 
     private scheduleReconnect() {
         if (this.reconnectTimer) return;
-        if (this.reconnectAttempts >= 6) return;
         this.reconnectAttempts++;
-        const delay = Math.min(2000 * this.reconnectAttempts, 15000);
+        const delay = Math.min(2000 * Math.min(this.reconnectAttempts, 8), 15000);
         this.reconnectTimer = setTimeout(() => {
             this.reconnectTimer = null;
             this.connect();
@@ -151,7 +150,7 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
     private cleanup() {
         if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null; }
         if (this.sessionUrl) {
-            fetch(this.sessionUrl, { method: 'DELETE' }).catch(() => {});
+            fetch(this.sessionUrl, { method: 'DELETE', keepalive: true }).catch(() => {});
             this.sessionUrl = null;
         }
         if (this.pc) { this.pc.close(); this.pc = null; }

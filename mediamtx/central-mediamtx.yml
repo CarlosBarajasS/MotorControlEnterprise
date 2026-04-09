@@ -33,6 +33,7 @@ hlsSegmentDuration: 4s
 rtspAddress: :8554
 hlsAddress:  :8888
 webrtcAddress: :8889
+webrtcICEHostNAT1To1IPs: [177.247.175.4]
 
 pathDefaults:
   record: no
