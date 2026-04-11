@@ -139,6 +139,9 @@ namespace MotorControlEnterprise.Api.Controllers
             var camera = await GetAuthorizedCamera(cameraId);
             if (camera == null) return NotFound(new { message = "Cámara no encontrada." });
 
+            if (camera.Client?.CloudStorageActive == false)
+                return StatusCode(403, new { message = "El almacenamiento cloud no está activo para este cliente." });
+
             var nasPath   = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/recordings";
             var clientDir = camera.Client?.GatewayId ?? camera.ClientId?.ToString() ?? "unknown";
             var cameraDir = camera.CameraId ?? cameraId.ToString();
@@ -171,6 +174,9 @@ namespace MotorControlEnterprise.Api.Controllers
         {
             var camera = await GetAuthorizedCamera(cameraId);
             if (camera == null) return NotFound(new { message = "Cámara no encontrada." });
+
+            if (camera.Client?.CloudStorageActive == false)
+                return StatusCode(403, new { message = "El almacenamiento cloud no está activo para este cliente." });
 
             var nasPath   = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/recordings";
             var dateDir   = date ?? DateTime.UtcNow.ToString("yyyy-MM-dd");
