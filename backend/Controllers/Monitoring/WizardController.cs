@@ -689,32 +689,61 @@ networks:
                     continue;
                 }
 
-                // Idempotent: skip if already exists
-                if (await _db.Cameras.AnyAsync(c => c.CameraKey == cameraKey && c.ClientId == id))
-                    continue;
-
                 var camMeta = new Dictionary<string, object>
                 {
                     ["nvrChannel"] = cam.Channel,
                     ["discovery"]  = new { status = "pending" }
                 };
+                var metaJson    = JsonSerializer.Serialize(camMeta);
+                var streamsJson = JsonSerializer.Serialize(new { rtsp = "pending_onvif_discovery" });
 
-                _db.Cameras.Add(new Camera
+                // ── Streaming camera (upsert) ──────────────────────────────────────
+                var existing = await _db.Cameras
+                    .FirstOrDefaultAsync(c => c.CameraKey == cameraKey && c.ClientId == id);
+
+                if (existing == null)
                 {
-                    Name            = cam.Name,
-                    CameraKey       = cameraKey,
-                    CameraId        = cameraKey,
-                    ClientId        = id,
-                    UserId          = client.UserId ?? adminUserId,
-                    Status          = "pending",
-                    IsRecordingOnly = false,
-                    Ptz             = false,
-                    Streams         = JsonSerializer.Serialize(new { rtsp = "pending_onvif_discovery" }),
-                    Metadata        = JsonSerializer.Serialize(camMeta),
-                    CreatedAt       = DateTime.UtcNow,
-                    UpdatedAt       = DateTime.UtcNow
-                });
-                created++;
+                    _db.Cameras.Add(new Camera
+                    {
+                        Name            = cam.Name,
+                        CameraKey       = cameraKey,
+                        CameraId        = cameraKey,
+                        ClientId        = id,
+                        UserId          = client.UserId ?? adminUserId,
+                        Status          = "pending",
+                        IsRecordingOnly = false,
+                        Ptz             = false,
+                        Streams         = streamsJson,
+                        Metadata        = metaJson,
+                        CreatedAt       = DateTime.UtcNow,
+                        UpdatedAt       = DateTime.UtcNow
+                    });
+                    created++;
+                }
+
+                // ── Recording twin camera (upsert) ────────────────────────────────
+                var recKey      = $"{cameraKey}-low";
+                var recExisting = await _db.Cameras
+                    .FirstOrDefaultAsync(c => c.CameraKey == recKey && c.ClientId == id);
+
+                if (recExisting == null)
+                {
+                    _db.Cameras.Add(new Camera
+                    {
+                        Name            = cam.Name,
+                        CameraKey       = recKey,
+                        CameraId        = recKey,
+                        ClientId        = id,
+                        UserId          = client.UserId ?? adminUserId,
+                        Status          = "pending",
+                        IsRecordingOnly = true,
+                        Ptz             = false,
+                        Streams         = streamsJson,
+                        Metadata        = metaJson,
+                        CreatedAt       = DateTime.UtcNow,
+                        UpdatedAt       = DateTime.UtcNow
+                    });
+                }
             }
 
             await _db.SaveChangesAsync();
