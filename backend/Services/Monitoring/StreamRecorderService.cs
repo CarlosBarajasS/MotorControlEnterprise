@@ -137,7 +137,9 @@ namespace MotorControlEnterprise.Api.Services
             var rtspHost = _config["StreamRecorder:MediamtxHost"] ?? "central-mediamtx";
             var rtspPort = _config["StreamRecorder:MediamtxPort"] ?? "8554";
 
-            var inputUrl    = $"rtsp://{rtspUser}:{rtspPass}@{rtspHost}:{rtspPort}/{gatewayId}/{cameraId}";
+            // MediaMTX paths use hyphens (GATEWAY_CLIENT_ID_SAFE) while DB stores colons (MAC format)
+            var rtspGatewayId = gatewayId.Replace(":", "-");
+            var inputUrl    = $"rtsp://{rtspUser}:{rtspPass}@{rtspHost}:{rtspPort}/{rtspGatewayId}/{cameraId}";
             var outDir      = Path.Combine(nasPath, gatewayId, cameraId);
             var outPattern  = Path.Combine(outDir, "%Y-%m-%d", "%H-%M-%S.mp4");
 
