@@ -38,7 +38,8 @@ namespace MotorControlEnterprise.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            var email = request.Email.Trim().ToLowerInvariant();
+            var user  = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
             if (user == null || !user.IsActive || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 return Unauthorized(new { message = "Credenciales inválidas o usuario inactivo" });
