@@ -264,14 +264,14 @@ import { Router } from '@angular/router';
       width: 80px;
       height: 80px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      background: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'Space Grotesk', 'IBM Plex Sans', sans-serif;
       font-weight: 700;
       font-size: 28px;
-      color: white;
+      color: #fff;
       flex-shrink: 0;
       letter-spacing: 1px;
     }
@@ -303,18 +303,18 @@ import { Router } from '@angular/router';
       width: fit-content;
     }
     .status-badge.active {
-      background: rgba(16,185,129,0.15);
-      color: #34d399;
-      border: 1px solid rgba(16,185,129,0.3);
+      background: rgba(var(--green-rgb), 0.15);
+      color: var(--green);
+      border: 1px solid rgba(var(--green-rgb), 0.3);
     }
     .status-badge.inactive, .status-badge.suspended {
-      background: rgba(239,68,68,0.15);
-      color: #fca5a5;
-      border: 1px solid rgba(239,68,68,0.3);
+      background: rgba(var(--red-rgb), 0.15);
+      color: var(--red);
+      border: 1px solid rgba(var(--red-rgb), 0.3);
     }
     .status-badge.pending {
       background: rgba(245,158,11,0.15);
-      color: #fcd34d;
+      color: #f59e0b;
       border: 1px solid rgba(245,158,11,0.3);
     }
 
@@ -372,7 +372,7 @@ import { Router } from '@angular/router';
     .row-sub {
       font-size: 12px;
       font-weight: 400;
-      color: rgba(248,250,252,0.5);
+      color: var(--muted);
     }
 
     /* INLINE BADGES */
@@ -384,14 +384,14 @@ import { Router } from '@angular/router';
       font-weight: 600;
     }
     .badge-green {
-      background: rgba(16,185,129,0.15);
-      color: #34d399;
-      border: 1px solid rgba(16,185,129,0.3);
+      background: rgba(var(--green-rgb), 0.15);
+      color: var(--green);
+      border: 1px solid rgba(var(--green-rgb), 0.3);
     }
     .badge-red {
-      background: rgba(239,68,68,0.15);
-      color: #fca5a5;
-      border: 1px solid rgba(239,68,68,0.3);
+      background: rgba(var(--red-rgb), 0.15);
+      color: var(--red);
+      border: 1px solid rgba(var(--red-rgb), 0.3);
     }
 
     /* ALERT PREFERENCES */
@@ -412,7 +412,7 @@ import { Router } from '@angular/router';
       align-items: center;
       justify-content: space-between;
       padding: 14px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid var(--outline);
       &:last-child { border-bottom: none; }
     }
     .pref-row--select {
@@ -447,9 +447,9 @@ import { Router } from '@angular/router';
     .toggle-track {
       width: 40px;
       height: 22px;
-      background: rgba(255,255,255,0.12);
+      background: rgba(var(--ink-rgb), 0.1);
       border-radius: 11px;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid var(--outline);
       transition: background 0.2s, border-color 0.2s;
       display: flex;
       align-items: center;
@@ -459,7 +459,7 @@ import { Router } from '@angular/router';
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.5);
+      background: rgba(var(--ink-rgb), 0.4);
       transition: transform 0.2s, background 0.2s;
     }
     .toggle input:checked ~ .toggle-track {
@@ -485,7 +485,7 @@ import { Router } from '@angular/router';
       transition: border-color 0.15s;
       &:hover { border-color: rgba(59,130,246,0.4); }
       &:focus { border-color: rgba(59,130,246,0.6); }
-      option { background: #1e293b; color: inherit; }
+      option { background: var(--surface); color: inherit; }
     }
 
     /* ACTIONS */

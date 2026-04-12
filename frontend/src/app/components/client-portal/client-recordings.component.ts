@@ -15,19 +15,45 @@ import { HttpClient } from '@angular/common/http';
         <div class="rec-topbar">
           <h1>Grabaciones en Nube</h1>
           <p class="rec-subtitle">Selecciona una cámara para ver sus grabaciones almacenadas</p>
+          <div class="rec-pills" *ngIf="cloudCameras().length > 0">
+            <span class="rec-pill">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.36a1 1 0 0 1-1.447.89L15 14"/>
+                <rect x="1" y="6" width="14" height="12" rx="2"/>
+              </svg>
+              {{ cloudCameras().length }} canales
+            </span>
+            <span class="rec-pill rec-pill--active">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+              </svg>
+              Cloud activo
+            </span>
+          </div>
         </div>
-        <div class="cameras-list" *ngIf="cloudCameras().length > 0">
+
+        <div class="cameras-grid" *ngIf="cloudCameras().length > 0">
           <a class="cam-card" *ngFor="let c of cloudCameras()" [routerLink]="['/client/recordings', c.id]">
-            <div class="cam-card-icon">🎬</div>
+            <div class="cam-card-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.36a1 1 0 0 1-1.447.89L15 14"/>
+                <rect x="1" y="6" width="14" height="12" rx="2"/>
+              </svg>
+            </div>
             <div class="cam-card-info">
               <span class="cam-card-name">{{ c.name }}</span>
               <span class="cam-card-sub">Almacenamiento cloud activo</span>
             </div>
-            <span class="cam-card-arrow">→</span>
+            <span class="cam-card-cta">Ver grabaciones</span>
           </a>
         </div>
+
         <div class="empty-state" *ngIf="!loadingCameras() && cloudCameras().length === 0">
-          <div class="empty-icon">📂</div>
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
           <p class="empty-title">Sin grabaciones en nube</p>
           <p class="empty-msg">Ninguna de tus cámaras tiene almacenamiento cloud configurado actualmente.</p>
         </div>
@@ -36,40 +62,46 @@ import { HttpClient } from '@angular/common/http';
 
       <!-- === DETALLE === -->
       <ng-container *ngIf="cameraId()">
-        <div class="rec-topbar">
-          <div>
-            <a routerLink="/client/recordings" class="back-link">← Volver a Grabaciones</a>
-            <h1>Grabaciones — {{ cameraName() }}</h1>
-          </div>
-        </div>
-
-        <div class="date-selector">
-          <h3>Fechas Disponibles</h3>
-          <div class="date-chips" *ngIf="availableDates().length > 0">
-            <button class="date-chip" *ngFor="let d of availableDates()"
-                    [class.active]="selectedDate() === d" (click)="selectDate(d)">{{ d }}</button>
-          </div>
-          <p class="empty-msg" *ngIf="availableDates().length === 0">
-            {{ loadingDates() ? 'Cargando fechas...' : 'No hay grabaciones disponibles para esta cámara' }}
-          </p>
-        </div>
-
-        <div class="rec-list" *ngIf="recordings().length > 0">
-          <h3>{{ recordings().length }} segmentos — {{ selectedDate() }}</h3>
-          <div class="rec-grid">
-            <div class="rec-item" *ngFor="let rec of recordings()"
-                 [class.playing]="currentRecordingName() === rec.filename"
-                 (click)="playRecording(rec)">
-              <div class="rec-icon">
-                <svg *ngIf="currentRecordingName() !== rec.filename" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                <svg *ngIf="currentRecordingName() === rec.filename" width="18" height="18" viewBox="0 0 24 24" fill="#3b82f6" stroke="none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-              </div>
-              <div class="rec-info">
-                <span class="rec-name">{{ formatSegmentTime(rec.filename) }}</span>
-                <span class="rec-size">{{ rec.sizeMb ? (rec.sizeMb | number:'1.1-1') + ' MB' : '15 min' }}</span>
-              </div>
-              <span class="rec-now-playing" *ngIf="currentRecordingName() === rec.filename">● reproduciendo</span>
+        <div class="rec-header">
+          <a routerLink="/client/recordings" class="back-link">← Grabaciones</a>
+          <div class="rec-header-main">
+            <h1>{{ cameraName() }}</h1>
+            <div class="rec-header-badges">
+              <span class="rec-badge" *ngIf="recordings().length > 0">{{ recordings().length }} segmentos</span>
+              <span class="rec-badge" *ngIf="selectedDate()">{{ selectedDate() }}</span>
             </div>
+          </div>
+        </div>
+
+        <!-- Date tabs -->
+        <div class="date-tabs" *ngIf="availableDates().length > 0">
+          <button class="date-tab" *ngFor="let d of availableDates()"
+                  [class.active]="selectedDate() === d" (click)="selectDate(d)">
+            <span class="date-tab-day">{{ d.split('-')[2] }}</span>
+            <span class="date-tab-month">{{ monthLabel(d) }}</span>
+          </button>
+        </div>
+        <p class="empty-msg" *ngIf="availableDates().length === 0">
+          {{ loadingDates() ? 'Cargando fechas...' : 'No hay grabaciones disponibles para esta cámara' }}
+        </p>
+
+        <!-- Segments list -->
+        <div class="seg-list" *ngIf="recordings().length > 0">
+          <div class="seg-item" *ngFor="let rec of recordings(); let i = index"
+               [class.playing]="currentRecordingName() === rec.filename"
+               (click)="playRecording(rec)">
+            <div class="seg-index">{{ i + 1 }}</div>
+            <div class="seg-time-block">
+              <span class="seg-time">{{ formatSegmentTime(rec.filename) }}</span>
+              <div class="seg-bar">
+                <div class="seg-bar-fill" [class.playing]="currentRecordingName() === rec.filename"></div>
+              </div>
+            </div>
+            <div class="seg-meta">{{ rec.sizeMb ? (rec.sizeMb | number:'1.1-1') + ' MB' : '—' }}</div>
+            <button class="seg-play-btn" (click)="$event.stopPropagation(); playRecording(rec)">
+              <svg *ngIf="currentRecordingName() !== rec.filename" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <svg *ngIf="currentRecordingName() === rec.filename" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
           </div>
         </div>
       </ng-container>
@@ -150,64 +182,148 @@ import { HttpClient } from '@angular/common/http';
   `,
   styles: [`
     .recordings-container { color: rgba(var(--ink-rgb), 1); }
-    .rec-subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
 
-    .cameras-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-    .cam-card {
-      display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 14px;
+    /* ── Landing header ── */
+    .rec-topbar { margin-bottom: 24px; }
+    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; }
+    .rec-subtitle { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+
+    .rec-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .rec-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 20px;
       background: var(--surface); border: 1px solid var(--outline);
-      text-decoration: none; color: rgba(var(--ink-rgb), 1); transition: all 0.15s;
-      &:hover { border-color: rgba(37,99,235,0.4); background: rgba(37,99,235,0.06); }
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      svg { opacity: 0.7; }
     }
-    .cam-card-icon { font-size: 24px; flex-shrink: 0; }
-    .cam-card-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-    .cam-card-name { font-size: 14px; font-weight: 600; }
-    .cam-card-sub { font-size: 12px; color: var(--muted); }
-    .cam-card-arrow { color: var(--muted); font-size: 18px; }
+    .rec-pill--active {
+      background: rgba(var(--green-rgb), 0.08);
+      border-color: rgba(var(--green-rgb), 0.3);
+      color: var(--green);
+      svg { opacity: 1; }
+    }
+
+    /* ── Camera grid (landing) ── */
+    .cameras-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .cam-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--outline);
+      border-top: 3px solid var(--accent);
+      text-decoration: none;
+      color: rgba(var(--ink-rgb), 1);
+      transition: all 0.18s;
+    }
+    .cam-card:hover {
+      border-color: var(--accent);
+      background: rgba(var(--accent-rgb), 0.04);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    .cam-card-icon {
+      width: 42px; height: 42px;
+      background: rgba(var(--accent-rgb), 0.1);
+      border-radius: 10px;
+      color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .cam-card-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .cam-card-name { font-size: 14px; font-weight: 700; color: rgba(var(--ink-rgb), 1); }
+    .cam-card-sub  { font-size: 12px; color: var(--muted); }
+    .cam-card-cta  {
+      padding: 5px 13px; border-radius: 20px; flex-shrink: 0;
+      background: rgba(var(--accent-rgb), 0.12);
+      border: 1px solid rgba(var(--accent-rgb), 0.25);
+      color: var(--accent); font-size: 11px; font-weight: 600;
+    }
+
+    /* ── Empty state ── */
     .empty-state {
       text-align: center; padding: 60px 20px;
       background: var(--surface); border-radius: 16px; border: 1px solid var(--outline);
     }
-    .empty-icon { font-size: 48px; opacity: 0.4; margin-bottom: 12px; }
-    .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .empty-icon { color: var(--muted); opacity: 0.35; margin-bottom: 16px; display: block; }
+    .empty-title { font-size: 16px; font-weight: 600; margin: 0 0 6px; }
+    .empty-msg { color: var(--muted); font-size: 13px; margin: 0; }
 
-    .rec-topbar { margin-bottom: 24px; }
+    /* ── Detail header ── */
+    .rec-header { margin-bottom: 24px; }
     .back-link {
       color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 600;
-      display: inline-block; margin-bottom: 8px;
+      display: inline-block; margin-bottom: 10px;
       &:hover { text-decoration: underline; }
     }
-    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; margin: 0; }
-    h3 { font-size: 14px; color: var(--muted); margin: 0 0 12px; }
-
-    .date-selector {
-      background: var(--surface); border-radius: 16px;
-      padding: 20px; border: 1px solid var(--outline); margin-bottom: 20px;
+    .rec-header-main { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .rec-header-main h1 { font-size: 1.6rem; font-weight: 700; margin: 0; }
+    .rec-header-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rec-badge {
+      padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      background: var(--surface); border: 1px solid var(--outline); color: var(--muted);
     }
-    .date-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .date-chip {
-      padding: 8px 16px; border-radius: 8px;
-      background: rgba(var(--ink-rgb), 0.05); border: 1px solid var(--outline);
-      color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s;
-      &:hover { background: rgba(var(--ink-rgb), 0.1); }
-      &.active { background: rgba(37,99,235,0.25); border-color: #3b82f6; color: #93c5fd; }
-    }
-    .empty-msg { color: var(--muted); font-size: 13px; }
 
-    .rec-list { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--outline); margin-bottom: 20px; }
-    .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 7px; }
-    .rec-item {
-      display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 9px;
-      background: rgba(var(--ink-rgb), 0.03); border: 1px solid var(--outline);
+    /* ── Date tabs ── */
+    .date-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .date-tab {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 10px 16px; border-radius: 10px; min-width: 58px;
+      background: var(--surface); border: 1px solid var(--outline);
+      cursor: pointer; transition: all 0.15s; gap: 2px;
+    }
+    .date-tab:hover { border-color: rgba(var(--accent-rgb), 0.4); background: rgba(var(--accent-rgb), 0.04); }
+    .date-tab.active { background: var(--accent); border-color: var(--accent); }
+    .date-tab-day {
+      font-size: 20px; font-weight: 700; color: rgba(var(--ink-rgb), 0.85); line-height: 1;
+    }
+    .date-tab-month {
+      font-size: 9px; font-weight: 600; letter-spacing: 0.07em; color: var(--muted); text-transform: uppercase;
+    }
+    .date-tab.active .date-tab-day,
+    .date-tab.active .date-tab-month { color: #fff; }
+
+    /* ── Segments list ── */
+    .seg-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 20px; }
+    .seg-item {
+      display: grid;
+      grid-template-columns: 28px 1fr auto 36px;
+      align-items: center; gap: 12px;
+      padding: 11px 16px; border-radius: 10px;
+      background: var(--surface); border: 1px solid var(--outline);
       cursor: pointer; transition: all 0.12s;
-      &:hover { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.3); }
-      &.playing { background: rgba(37,99,235,0.12); border-color: #3b82f6; }
     }
-    .rec-icon { flex-shrink: 0; color: var(--muted); display: flex; align-items: center; }
-    .rec-info { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-    .rec-name { font-size: 13px; font-weight: 600; color: rgba(var(--ink-rgb), 1); }
-    .rec-size { font-size: 11px; color: var(--muted); }
-    .rec-now-playing { font-size: 10px; color: #3b82f6; font-weight: 700; flex-shrink: 0; letter-spacing: 0.02em; }
+    .seg-item:hover { border-color: rgba(var(--accent-rgb), 0.4); background: rgba(var(--accent-rgb), 0.04); }
+    .seg-item.playing { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.07); }
+
+    .seg-index { font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; }
+
+    .seg-time-block { min-width: 0; }
+    .seg-time { font-size: 13px; font-weight: 600; color: rgba(var(--ink-rgb), 1); display: block; margin-bottom: 5px; }
+    .seg-bar { height: 3px; border-radius: 2px; background: rgba(var(--ink-rgb), 0.08); overflow: hidden; }
+    .seg-bar-fill { height: 100%; width: 0; border-radius: 2px; background: var(--accent); transition: width 0.3s; }
+    .seg-bar-fill.playing { width: 45%; }
+
+    .seg-meta { font-size: 11px; color: var(--muted); text-align: right; white-space: nowrap; }
+
+    .seg-play-btn {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(var(--accent-rgb), 0.1);
+      border: 1px solid rgba(var(--accent-rgb), 0.2);
+      color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .seg-play-btn:hover,
+    .seg-item.playing .seg-play-btn { background: var(--accent); color: #fff; border-color: var(--accent); }
 
     /* ═══ POPUP ═══ */
     .video-popup {
@@ -303,6 +419,12 @@ import { HttpClient } from '@angular/common/http';
       position: absolute; transform: translateX(-50%);
       font-size: 9px; color: rgba(255,255,255,0.3);
       white-space: nowrap; pointer-events: none;
+    }
+
+    @media (max-width: 600px) {
+      .cameras-grid { grid-template-columns: 1fr; }
+      .cam-card-cta { display: none; }
+      .seg-item { grid-template-columns: 24px 1fr auto 32px; gap: 8px; padding: 10px 12px; }
     }
 
     @media (max-width: 720px) {
@@ -545,6 +667,12 @@ export class ClientRecordingsComponent implements OnInit, OnDestroy {
   }
 
   // ── Helpers ───────────────────────────────────────────────────
+  monthLabel(dateStr: string): string {
+    const months = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+    const m = (dateStr || '').match(/^\d{4}-(\d{2})-/);
+    return m ? (months[+m[1] - 1] ?? '') : '';
+  }
+
   filenameToSeconds(filename: string): number {
     const m = (filename || '').match(/^(\d{2})-(\d{2})-(\d{2})/);
     return m ? +m[1] * 3600 + +m[2] * 60 + +m[3] : 0;
