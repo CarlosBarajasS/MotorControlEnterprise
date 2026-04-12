@@ -18,7 +18,7 @@ namespace MotorControlEnterprise.Api.Data
         public DbSet<Recording> Recordings { get; set; } = null!;
         public DbSet<Alert> Alerts { get; set; } = null!;
         public DbSet<AlertPreference> AlertPreferences { get; set; } = null!;
-        public DbSet<ClientLayout> ClientLayouts { get; set; } = null!
+        public DbSet<ClientLayout> ClientLayouts { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
