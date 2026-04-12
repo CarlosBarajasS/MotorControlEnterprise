@@ -54,6 +54,13 @@ namespace MotorControlEnterprise.Api.Models
         [Column("is_recording_only")]
         public bool IsRecordingOnly { get; set; } = false;
 
+        /// <summary>
+        /// Si es true, la cámara solo es visible en /client/private.
+        /// No aparece en monitor principal ni en layouts normales.
+        /// </summary>
+        [Column("is_client_restricted")]
+        public bool IsClientRestricted { get; set; } = false;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
