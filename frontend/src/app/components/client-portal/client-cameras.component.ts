@@ -239,7 +239,16 @@ export class ClientCamerasComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private layoutService = inject(ClientLayoutService);
   private pollSub?: Subscription;
+  private layoutsSub?: Subscription;
   private hideTimer?: ReturnType<typeof setTimeout>;
+
+  private readonly onFullscreenChange = () => {
+    this.isFullscreen.set(!!document.fullscreenElement);
+    if (!document.fullscreenElement) {
+      this.controlsVisible.set(true);
+      clearTimeout(this.hideTimer);
+    }
+  };
 
   cameras        = signal<any[]>([]);
   gatewayId      = signal('');
@@ -287,13 +296,7 @@ export class ClientCamerasComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.loadLayouts();
-    document.addEventListener('fullscreenchange', () => {
-      this.isFullscreen.set(!!document.fullscreenElement);
-      if (!document.fullscreenElement) {
-        this.controlsVisible.set(true);
-        clearTimeout(this.hideTimer);
-      }
-    });
+    document.addEventListener('fullscreenchange', this.onFullscreenChange);
     this.pollSub = timer(0, 20000).pipe(
       switchMap(() => forkJoin({
         me: this.http.get<any>(`${API_URL}/client/me`),
@@ -312,7 +315,9 @@ export class ClientCamerasComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.pollSub?.unsubscribe();
+    this.layoutsSub?.unsubscribe();
     clearTimeout(this.hideTimer);
+    document.removeEventListener('fullscreenchange', this.onFullscreenChange);
   }
 
   onMouseMove() {
@@ -324,7 +329,7 @@ export class ClientCamerasComponent implements OnInit, OnDestroy {
   }
 
   loadLayouts() {
-    this.layoutService.getLayouts().subscribe(layouts => {
+    this.layoutsSub = this.layoutService.getLayouts().subscribe(layouts => {
       this.layouts.set(layouts);
       const def = layouts.find(l => l.isDefault) ?? layouts[0];
       if (def) this.activeLayoutId.set(def.id);
