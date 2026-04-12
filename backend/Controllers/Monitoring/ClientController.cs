@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MotorControlEnterprise.Api.Data;
 using MotorControlEnterprise.Api.Models;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
 using MotorControlEnterprise.Api.Services;
 
 namespace MotorControlEnterprise.Api.Controllers
@@ -87,7 +88,48 @@ namespace MotorControlEnterprise.Api.Controllers
             _db.Clients.Add(client);
             await _db.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = client.Id }, client);
+            // Auto-crear usuario de acceso si se proporcionó un email de contacto
+            string? createdUserEmail = null;
+            bool emailSent = false;
+
+            var accessEmail = client.ContactEmail?.Trim().ToLowerInvariant();
+            if (!string.IsNullOrEmpty(accessEmail) &&
+                !await _db.Users.AnyAsync(u => u.Email == accessEmail))
+            {
+                var tempPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(9))
+                    .Replace("+", "x").Replace("/", "y").Replace("=", "z")
+                    .Substring(0, 12);
+
+                var user = new User
+                {
+                    Email              = accessEmail,
+                    PasswordHash       = BCrypt.Net.BCrypt.HashPassword(tempPassword),
+                    Name               = client.ContactName ?? client.Name,
+                    Role               = "client",
+                    IsActive           = true,
+                    MustChangePassword = true,
+                    CreatedAt          = DateTime.UtcNow,
+                    UpdatedAt          = DateTime.UtcNow
+                };
+
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+
+                client.UserId    = user.Id;
+                client.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+
+                createdUserEmail = user.Email;
+                emailSent = await _email.SendWelcomePasswordAsync(user.Email, client.Name, tempPassword);
+            }
+
+            return CreatedAtAction(nameof(GetById), new { id = client.Id }, new
+            {
+                client.Id, client.Name, client.Status,
+                accessCreated = createdUserEmail != null,
+                accessEmail   = createdUserEmail,
+                emailSent
+            });
         }
 
         // PUT api/clients/{id}
