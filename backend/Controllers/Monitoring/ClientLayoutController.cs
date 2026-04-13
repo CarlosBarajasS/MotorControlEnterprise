@@ -35,6 +35,7 @@ namespace MotorControlEnterprise.Api.Controllers
             if (client is null) return Unauthorized();
 
             var layouts = await _db.ClientLayouts
+                .AsNoTracking()
                 .Where(l => l.ClientId == client.Id)
                 .OrderBy(l => l.CreatedAt)
                 .Select(l => new {
@@ -146,6 +147,16 @@ namespace MotorControlEnterprise.Api.Controllers
         }
     }
 
-    public record CreateLayoutRequest(string Name, string? Config, bool IsDefault);
-    public record UpdateLayoutRequest(string? Name, string? Config, bool? IsDefault);
+    public record CreateLayoutRequest(
+        [property: System.ComponentModel.DataAnnotations.Required]
+        [property: System.ComponentModel.DataAnnotations.StringLength(80, MinimumLength = 1)]
+        string Name,
+        string? Config,
+        bool IsDefault);
+
+    public record UpdateLayoutRequest(
+        [property: System.ComponentModel.DataAnnotations.StringLength(80, MinimumLength = 1)]
+        string? Name,
+        string? Config,
+        bool? IsDefault);
 }

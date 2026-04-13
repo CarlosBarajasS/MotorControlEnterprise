@@ -326,12 +326,12 @@ export class ClientLayoutBuilderComponent implements OnInit {
   setTotalCols(val: string | number) {
     const n = Number(val);
     this.totalCols.set(n);
-    // Clamp colspan of existing cells to new col count
-    this.cells.update(cs => cs.map(c => ({
-      ...c,
-      colspan: Math.min(c.colspan, n),
-      col: Math.min(c.col, n)
-    })));
+    // Clamp position and span so col + colspan - 1 <= n
+    this.cells.update(cs => cs.map(c => {
+      const newCol = Math.min(c.col, n);
+      const newColspan = Math.min(c.colspan, n - newCol + 1);
+      return { ...c, col: newCol, colspan: newColspan };
+    }));
   }
 
   clearGrid() {
