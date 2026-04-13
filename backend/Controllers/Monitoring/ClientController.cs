@@ -76,35 +76,62 @@ namespace MotorControlEnterprise.Api.Controllers
 
         // POST api/clients
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Client client)
+        public async Task<IActionResult> Create([FromBody] CreateClientRequest req)
         {
-            if (await _db.Clients.AnyAsync(c => c.Name == client.Name))
+            if (string.IsNullOrWhiteSpace(req.Name))
+                return BadRequest(new { message = "El nombre del cliente es obligatorio" });
+
+            if (await _db.Clients.AnyAsync(c => c.Name == req.Name))
                 return Conflict(new { message = "Ya existe un cliente con ese nombre" });
 
-            client.CreatedAt = DateTime.UtcNow;
-            client.UpdatedAt = DateTime.UtcNow;
-            client.Status    = "active";
+            // Validar email de acceso si se proporcionó explícitamente
+            var accessEmail = !string.IsNullOrWhiteSpace(req.UserEmail)
+                ? req.UserEmail.Trim().ToLowerInvariant()
+                : req.ContactEmail?.Trim().ToLowerInvariant();
+
+            if (!string.IsNullOrEmpty(accessEmail) &&
+                await _db.Users.AnyAsync(u => u.Email == accessEmail))
+                return Conflict(new { message = "El email de acceso ya está registrado en el sistema" });
+
+            var client = new Client
+            {
+                Name              = req.Name,
+                BusinessType      = req.BusinessType,
+                Rfc               = req.Rfc,
+                City              = req.City,
+                State             = req.State,
+                Country           = req.Country ?? "México",
+                ContactName       = req.ContactName,
+                ContactPhone      = req.ContactPhone,
+                ContactEmail      = req.ContactEmail,
+                CloudStorageActive = req.CloudStorageActive,
+                Status            = "active",
+                CreatedAt         = DateTime.UtcNow,
+                UpdatedAt         = DateTime.UtcNow
+            };
 
             _db.Clients.Add(client);
             await _db.SaveChangesAsync();
 
-            // Auto-crear usuario de acceso si se proporcionó un email de contacto
+            // Crear cuenta de acceso si hay email disponible
             string? createdUserEmail = null;
             bool emailSent = false;
 
-            var accessEmail = client.ContactEmail?.Trim().ToLowerInvariant();
-            if (!string.IsNullOrEmpty(accessEmail) &&
-                !await _db.Users.AnyAsync(u => u.Email == accessEmail))
+            if (!string.IsNullOrEmpty(accessEmail))
             {
                 var tempPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(9))
                     .Replace("+", "x").Replace("/", "y").Replace("=", "z")
                     .Substring(0, 12);
 
+                var displayName = !string.IsNullOrWhiteSpace(req.UserName)
+                    ? req.UserName.Trim()
+                    : req.ContactName ?? req.Name;
+
                 var user = new User
                 {
                     Email              = accessEmail,
                     PasswordHash       = BCrypt.Net.BCrypt.HashPassword(tempPassword),
-                    Name               = client.ContactName ?? client.Name,
+                    Name               = displayName,
                     Role               = "client",
                     IsActive           = true,
                     MustChangePassword = true,
@@ -386,6 +413,23 @@ namespace MotorControlEnterprise.Api.Controllers
 
         public record StatusRequest(string Status);
         public record CloudStorageRequest(bool Active);
+
+        public record CreateClientRequest(
+            [Required][StringLength(200, MinimumLength = 1)] string Name,
+            string? BusinessType,
+            string? Rfc,
+            string? City,
+            string? State,
+            string? Country,
+            string? ContactName,
+            string? ContactPhone,
+            string? ContactEmail,
+            bool    CloudStorageActive = false,
+            // Campos opcionales de acceso — si se omiten se usa ContactEmail/ContactName como fallback
+            [EmailAddress] string? UserEmail = null,
+            string? UserName = null
+        );
+
         public record CreateUserRequest(
             [Required] string Email,
             [Required] string Password,
