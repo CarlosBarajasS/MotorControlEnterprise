@@ -6,6 +6,7 @@ import { timer, Subscription, switchMap, forkJoin, catchError, of } from 'rxjs';
 import { CameraGridComponent } from '../shared/camera-grid/camera-grid.component';
 import { ClientLayoutService } from '../../services/client-layout.service';
 import { ClientLayout, LayoutConfig, LayoutCell } from '../../models/client-layout.model';
+import { ClientLayoutBuilderComponent } from './client-layout-builder.component';
 
 const API_URL = '/api';
 
@@ -14,7 +15,7 @@ export type CameraAlertStatus = 'online' | 'offline' | 'alert' | 'unknown';
 @Component({
   selector: 'app-client-cameras',
   standalone: true,
-  imports: [CommonModule, FormsModule, CameraGridComponent],
+  imports: [CommonModule, FormsModule, CameraGridComponent, ClientLayoutBuilderComponent],
   template: `
     <div class="nvr-panel">
 
@@ -91,15 +92,25 @@ export type CameraAlertStatus = 'online' | 'offline' | 'alert' | 'unknown';
         </div>
       }
 
-      <!-- Main content: grid -->
-      <app-camera-grid
-        [cameras]="cameras()"
-        [gatewayId]="gatewayId()"
-        [alertStatusMap]="alertStatusMap()"
-        [showLayoutPicker]="false"
-        [clientMode]="true"
-        emptyMessage="Sin cámaras asignadas — contacta al administrador">
-      </app-camera-grid>
+      <!-- Main content: builder (edit mode) o grid (view mode) -->
+      @if (editMode()) {
+        <app-client-layout-builder
+          [cameras]="cameras()"
+          [initialConfig]="activeConfig()"
+          (save)="onBuilderSave($event)"
+          (cancel)="editMode.set(false)"
+          (restrictedChange)="onRestrictedChange($event)">
+        </app-client-layout-builder>
+      } @else {
+        <app-camera-grid
+          [cameras]="cameras()"
+          [gatewayId]="gatewayId()"
+          [alertStatusMap]="alertStatusMap()"
+          [showLayoutPicker]="false"
+          [clientMode]="true"
+          emptyMessage="Sin cámaras asignadas — contacta al administrador">
+        </app-camera-grid>
+      }
 
     </div>
   `,
