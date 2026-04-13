@@ -18,6 +18,7 @@ namespace MotorControlEnterprise.Api.Data
         public DbSet<Recording> Recordings { get; set; } = null!;
         public DbSet<Alert> Alerts { get; set; } = null!;
         public DbSet<AlertPreference> AlertPreferences { get; set; } = null!;
+        public DbSet<ClientLayout> ClientLayouts { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -134,6 +135,21 @@ namespace MotorControlEnterprise.Api.Data
                 .WithMany()
                 .HasForeignKey(p => p.ClientId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // --- ClientLayout ---
+            modelBuilder.Entity<ClientLayout>()
+                .HasOne(l => l.Client)
+                .WithMany()
+                .HasForeignKey(l => l.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ClientLayout>()
+                .HasIndex(l => l.ClientId)
+                .HasDatabaseName("idx_client_layouts_client");
+
+            modelBuilder.Entity<ClientLayout>()
+                .Property(l => l.Config)
+                .HasColumnType("jsonb");
         }
     }
 }
