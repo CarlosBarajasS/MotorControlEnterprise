@@ -17,7 +17,7 @@ export type CameraAlertStatus = 'online' | 'offline' | 'alert' | 'unknown';
   standalone: true,
   imports: [CommonModule, FormsModule, CameraGridComponent, ClientLayoutBuilderComponent],
   template: `
-    <div class="nvr-panel">
+    <div class="nvr-panel" [class.fullscreen-mode]="isFullscreen()" (mousemove)="onMouseMove()">
 
       <!-- Status banner -->
       <div class="system-status" [ngClass]="systemStatusClass()" [class.hidden]="!controlsVisible()">
