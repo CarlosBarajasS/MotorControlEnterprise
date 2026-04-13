@@ -185,13 +185,40 @@
     <div class="modal-overlay" *ngIf="showModal()"
          role="dialog" aria-modal="true" aria-labelledby="client-modal-title">
         <div class="modal-content">
+
+            <!-- Header -->
             <div class="modal-header">
-                <h2 id="client-modal-title">{{ modalMode() === 'create' ? 'Crear Nuevo Cliente' : 'Editar Cliente' }}</h2>
+                <div class="modal-header-info">
+                    <h2 id="client-modal-title">{{ modalMode() === 'create' ? 'Nuevo Cliente' : 'Editar Cliente' }}</h2>
+                    <p class="modal-subtitle" *ngIf="modalMode() === 'create'">
+                        {{ modalStep() === 1 ? 'Datos de la organización' : 'Acceso a la plataforma' }}
+                    </p>
+                </div>
                 <button class="close-btn" (click)="showModal.set(false)">✕</button>
             </div>
-            <div class="modal-body">
+
+            <!-- Step indicator — solo en modo crear -->
+            <div class="step-indicator" *ngIf="modalMode() === 'create'">
+                <div class="step-item" [class.active]="modalStep() === 1" [class.done]="modalStep() === 2">
+                    <div class="step-dot">
+                        <span *ngIf="modalStep() === 1">1</span>
+                        <svg *ngIf="modalStep() === 2" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <span>Organización</span>
+                </div>
+                <div class="step-line" [class.done]="modalStep() === 2"></div>
+                <div class="step-item" [class.active]="modalStep() === 2">
+                    <div class="step-dot">2</div>
+                    <span>Acceso</span>
+                </div>
+            </div>
+
+            <!-- PASO 1: Datos de la organización -->
+            <div class="modal-body" *ngIf="modalMode() === 'edit' || modalStep() === 1">
                 <div class="form-group">
-                    <label>Razón Social / Nombre</label>
+                    <label>Razón Social / Nombre <span class="required">*</span></label>
                     <input type="text" [(ngModel)]="currentClient().name" class="form-control"
                         placeholder="Empresa S.A. de C.V.">
                 </div>
@@ -225,8 +252,7 @@
                     </div>
                     <div class="form-group">
                         <label>País</label>
-                        <input type="text" [(ngModel)]="currentClient().country" class="form-control"
-                            placeholder="México">
+                        <input type="text" [(ngModel)]="currentClient().country" class="form-control" placeholder="México">
                     </div>
                 </div>
                 <div class="form-row">
@@ -241,18 +267,93 @@
                 </div>
                 <div class="form-group">
                     <label>Email del Contacto</label>
-                    <input type="email" [(ngModel)]="currentClient().contactEmail" class="form-control">
+                    <input type="email" [(ngModel)]="currentClient().contactEmail" class="form-control"
+                        placeholder="facturacion@empresa.com">
                 </div>
             </div>
+
+            <!-- PASO 2: Acceso a la plataforma (solo en modo crear) -->
+            <div class="modal-body" *ngIf="modalMode() === 'create' && modalStep() === 2">
+                <div class="access-info-banner">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <div>
+                        <strong>Acceso al portal del cliente</strong>
+                        <p>Si proporcionas un email, se creará una cuenta y se enviará un correo de bienvenida con las credenciales de acceso.</p>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>
+                        Email de acceso
+                        <span class="optional-tag">opcional</span>
+                    </label>
+                    <input type="email" [(ngModel)]="currentClient().userEmail" class="form-control"
+                        placeholder="cliente@empresa.com">
+                    <span class="form-hint">Este será el usuario para iniciar sesión en el portal</span>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        Nombre en el portal
+                        <span class="optional-tag">opcional</span>
+                    </label>
+                    <input type="text" [(ngModel)]="currentClient().userName" class="form-control"
+                        placeholder="{{ currentClient().contactName || 'Nombre que verá el cliente' }}">
+                    <span class="form-hint">Por defecto se usa el nombre del contacto</span>
+                </div>
+
+                <div class="skip-access-note" *ngIf="!currentClient().userEmail">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Sin email, el cliente se creará sin acceso a la plataforma. Podrás configurarlo después desde Control de Acceso.
+                </div>
+            </div>
+
+            <!-- Footer -->
             <div class="modal-footer">
                 <button class="btn-secondary" (click)="showModal.set(false)">Cancelar</button>
-                <div style="display:flex;gap:8px;">
-                    <button *ngIf="modalMode() === 'edit'" class="btn-secondary"
-                        style="color:var(--red); border-color: rgba(var(--red-rgb), 0.3);"
-                        (click)="deleteClient(currentClient().id)">Eliminar</button>
-                    <button class="btn-primary" (click)="saveClient()">Guardar Datos</button>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <!-- Edit mode -->
+                    <ng-container *ngIf="modalMode() === 'edit'">
+                        <button class="btn-secondary" style="color:var(--red); border-color: rgba(var(--red-rgb), 0.3);"
+                            (click)="deleteClient(currentClient().id)">Eliminar</button>
+                        <button class="btn-primary" (click)="saveClient()">Guardar Cambios</button>
+                    </ng-container>
+                    <!-- Create mode step 1 -->
+                    <ng-container *ngIf="modalMode() === 'create' && modalStep() === 1">
+                        <button class="btn-primary" (click)="nextStep()">
+                            Siguiente
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                    </ng-container>
+                    <!-- Create mode step 2 -->
+                    <ng-container *ngIf="modalMode() === 'create' && modalStep() === 2">
+                        <button class="btn-secondary" (click)="prevStep()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                            Atrás
+                        </button>
+                        <button class="btn-primary" (click)="saveClient()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            Crear Cliente
+                        </button>
+                    </ng-container>
                 </div>
             </div>
+
         </div>
     </div>
 </div>

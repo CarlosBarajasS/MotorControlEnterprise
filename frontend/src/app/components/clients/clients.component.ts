@@ -35,6 +35,7 @@ export class ClientsComponent implements OnInit {
 
     showModal = signal(false);
     modalMode = signal<'create' | 'edit'>('create');
+    modalStep = signal<1 | 2>(1);
     currentClient = signal<any>({});
 
     showTrash = signal(false);
@@ -62,27 +63,63 @@ export class ClientsComponent implements OnInit {
     }
 
     openCreate() {
-        this.currentClient.set({ name: '', businessType: '', rfc: '', city: '', state: '', country: 'México', contactName: '', contactPhone: '', contactEmail: '' });
+        this.currentClient.set({ name: '', businessType: '', rfc: '', city: '', state: '', country: 'México', contactName: '', contactPhone: '', contactEmail: '', userEmail: '', userName: '' });
         this.modalMode.set('create');
+        this.modalStep.set(1);
         this.showModal.set(true);
     }
 
     openEdit(client: any) {
         this.currentClient.set({ ...client });
         this.modalMode.set('edit');
+        this.modalStep.set(1);
         this.showModal.set(true);
+    }
+
+    nextStep() {
+        const c = this.currentClient();
+        if (!c.name?.trim()) {
+            this.toast.warning('El nombre del cliente es obligatorio');
+            return;
+        }
+        this.modalStep.set(2);
+    }
+
+    prevStep() {
+        this.modalStep.set(1);
     }
 
     saveClient() {
         const data = this.currentClient();
+        if (!data.name?.trim()) {
+            this.toast.warning('El nombre del cliente es obligatorio');
+            return;
+        }
+
         const req = this.modalMode() === 'create'
-            ? this.http.post(`${API_URL}/clients`, data)
+            ? this.http.post(`${API_URL}/clients`, {
+                name:              data.name,
+                businessType:      data.businessType,
+                rfc:               data.rfc,
+                city:              data.city,
+                state:             data.state,
+                country:           data.country || 'México',
+                contactName:       data.contactName,
+                contactPhone:      data.contactPhone,
+                contactEmail:      data.contactEmail,
+                cloudStorageActive: data.cloudStorageActive ?? false,
+                userEmail:         data.userEmail?.trim() || null,
+                userName:          data.userName?.trim() || null,
+              })
             : this.http.put(`${API_URL}/clients/${data.id}`, data);
 
         req.subscribe({
             next: () => {
                 this.showModal.set(false);
                 this.loadData();
+                if (this.modalMode() === 'create') {
+                    this.toast.success('Cliente creado correctamente');
+                }
             },
             error: (err) => this.toast.error(err.error?.message || 'Error al guardar los datos')
         });
