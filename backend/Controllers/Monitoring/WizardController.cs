@@ -689,11 +689,11 @@ networks:
             var failed  = new List<string>();
 
             // Load all existing camera keys for this client in one query (prevents N+1)
-            var existingKeys = await _db.Cameras
+            var existingKeys = (await _db.Cameras
                 .AsNoTracking()
                 .Where(c => c.ClientId == id)
                 .Select(c => c.CameraKey)
-                .ToHashSetAsync();
+                .ToListAsync()).ToHashSet();
 
             foreach (var cam in dto.Cameras)
             {
