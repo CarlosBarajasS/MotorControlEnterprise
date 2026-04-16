@@ -29,6 +29,10 @@ namespace MotorControlEnterprise.Api.Services
             _logger       = logger;
         }
 
+        /// <summary>Returns the set of "{gatewayId}/{cameraId}" keys whose ffmpeg process is alive.</summary>
+        public IReadOnlyCollection<string> GetActiveRecordingKeys() =>
+            _processes.Where(kv => !kv.Value.HasExited).Select(kv => kv.Key).ToList();
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             // Esperar que la app arranque completamente antes del primer escaneo
@@ -66,17 +70,23 @@ namespace MotorControlEnterprise.Api.Services
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            // Solo cámaras marcadas como IsRecordingOnly (baja calidad para NAS/cloud)
-            // Las cámaras de alta calidad (IsRecordingOnly=false) son exclusivamente para streaming en vivo
+            // Las cámaras IsRecordingOnly son entidades virtuales de configuración — no tienen
+            // heartbeat MQTT propio. Su elegibilidad para grabación depende de:
+            //   1. Que el gateway esté vivo (heartbeat reciente)
+            //   2. Que el cliente tenga CloudStorageActive
+            // El campo Status de la cámara NO se usa: nunca recibe actualizaciones propias.
+            var gatewayThreshold = DateTime.UtcNow - TimeSpan.FromMinutes(5);
+
             var cameras = await db.Cameras
                 .Include(c => c.Client)
                     .ThenInclude(cl => cl!.Gateways)
-                .Where(c => c.Status == "active"
-                         && c.IsRecordingOnly
+                .Where(c => c.IsRecordingOnly
                          && c.Client != null
                          && c.Client.CloudStorageActive
                          && c.CameraId != null
-                         && c.Client.Gateways.Any())
+                         && c.Client.Gateways.Any(g =>
+                                g.LastHeartbeatAt != null &&
+                                g.LastHeartbeatAt > gatewayThreshold))
                 .ToListAsync(ct);
 
             var activeKeys = cameras

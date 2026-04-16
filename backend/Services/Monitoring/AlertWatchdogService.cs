@@ -9,23 +9,27 @@ namespace MotorControlEnterprise.Api.Services
         private readonly IServiceProvider _services;
         private readonly IConfiguration _config;
         private readonly ILogger<AlertWatchdogService> _logger;
+        private readonly StreamRecorderService _recorder;
 
-        private static readonly TimeSpan Interval        = TimeSpan.FromMinutes(2);
-        private static readonly TimeSpan CameraTimeout   = TimeSpan.FromMinutes(5);
-        private static readonly TimeSpan GatewayTimeout  = TimeSpan.FromMinutes(3);
-        private static readonly TimeSpan PurgeInterval   = TimeSpan.FromHours(24);
-        private static readonly int      PurgeAgeDays    = 15;
+        private static readonly TimeSpan Interval          = TimeSpan.FromMinutes(2);
+        private static readonly TimeSpan CameraTimeout     = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan GatewayTimeout    = TimeSpan.FromMinutes(3);
+        private static readonly TimeSpan RecordingTimeout  = TimeSpan.FromMinutes(10);
+        private static readonly TimeSpan PurgeInterval     = TimeSpan.FromHours(24);
+        private static readonly int      PurgeAgeDays      = 15;
 
         private DateTime _lastPurgeAt = DateTime.MinValue;
 
         public AlertWatchdogService(
             IServiceProvider services,
             IConfiguration config,
-            ILogger<AlertWatchdogService> logger)
+            ILogger<AlertWatchdogService> logger,
+            StreamRecorderService recorder)
         {
             _services = services;
             _config   = config;
             _logger   = logger;
+            _recorder = recorder;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -132,7 +136,57 @@ namespace MotorControlEnterprise.Api.Services
                     cam.ClientId);
             }
 
-            // ── 3. NAS storage check ─────────────────────────────────────────
+            // ── 3. Recording health check (IsRecordingOnly cameras) ──────────
+            // Las cámaras IsRecordingOnly son entidades virtuales sin heartbeat MQTT propio.
+            // Su elegibilidad se evalúa por salud del gateway, no por Status de la cámara.
+            var activeRecordingKeys = _recorder.GetActiveRecordingKeys();
+
+            var recordingCameras = await db.Cameras
+                .Include(c => c.Client)
+                    .ThenInclude(cl => cl!.Gateways)
+                .Where(c => c.IsRecordingOnly == true
+                         && c.Client != null
+                         && c.Client.CloudStorageActive
+                         && c.Client.Gateways.Any(g =>
+                                g.LastHeartbeatAt != null &&
+                                g.LastHeartbeatAt > gatewayThreshold))
+                .ToListAsync(ct);
+
+            foreach (var cam in recordingCameras)
+            {
+                var gw  = cam.Client!.Gateways.FirstOrDefault();
+                if (gw == null) continue;
+
+                var recKey     = $"{gw.GatewayId}/{cam.CameraId}";
+                var fp         = $"Camera-{cam.Id}-RecordingDown";
+                var isRecording = activeRecordingKeys.Contains(recKey);
+
+                if (!isRecording)
+                {
+                    await alertService.TryCreateAsync(
+                        fp,
+                        AlertEntityType.Camera,
+                        cam.Id.ToString(),
+                        AlertType.RecordingDown,
+                        AlertPriority.P2,
+                        $"Grabación detenida: '{cam.Name}'",
+                        $"La cámara '{cam.Name}' (gateway: {gw.GatewayId}) no está grabando. " +
+                        $"El proceso ffmpeg no está activo. La grabación se reanudará automáticamente cuando el stream esté disponible.",
+                        cam.ClientId);
+                }
+                else
+                {
+                    await alertService.ResolveAsync(
+                        fp,
+                        $"Grabación reanudada: '{cam.Name}'",
+                        $"La cámara '{cam.Name}' retomó la grabación correctamente.",
+                        cam.Id.ToString(),
+                        AlertEntityType.Camera,
+                        cam.ClientId);
+                }
+            }
+
+            // ── 4. NAS storage check ─────────────────────────────────────────
             var nasPath = _config["Storage:NasRecordingsPath"] ?? "/mnt/nas/recordings";
             if (Directory.Exists(nasPath))
             {
