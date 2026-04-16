@@ -365,7 +365,7 @@ networks:
             sb.AppendLine("webrtcAddress: :8889");
             sb.AppendLine();
             sb.AppendLine("pathDefaults:");
-            sb.AppendLine("  record: yes");
+            sb.AppendLine("  record: no");
             sb.AppendLine("  recordPath: /recordings/%path/%Y-%m-%d/%H-%M-%S");
             sb.AppendLine("  recordFormat: fmp4");
             sb.AppendLine("  recordSegmentDuration: 15m");
@@ -455,7 +455,26 @@ networks:
             });
 
             var topic = $"gateway/{resolvedGatewayId}/cmd/discover-onvif";
-            await _mqtt.PublishAsync(topic, payload);
+            try
+            {
+                await _mqtt.PublishAsync(topic, payload);
+            }
+            catch (Exception ex)
+            {
+                // Rollback discovering status — cameras must not be stuck
+                foreach (var cam in cameras)
+                {
+                    var meta = ParseMetaDict(cam.Metadata);
+                    if (meta.TryGetValue("discovery", out var d) && d?.ToString()?.Contains("discovering") == true)
+                    {
+                        meta["discovery"] = new { status = "pending" };
+                        cam.Metadata  = JsonSerializer.Serialize(meta);
+                        cam.UpdatedAt = DateTime.UtcNow;
+                    }
+                }
+                await _db.SaveChangesAsync();
+                return StatusCode(502, new { message = "No se pudo enviar el comando al gateway. Verifica que esté conectado.", detail = ex.Message });
+            }
 
             return Ok(new { requestId, cameraCount = cameras.Count, gatewayId = resolvedGatewayId });
         }

@@ -277,21 +277,20 @@ export class WizardComponent implements OnInit, OnDestroy {
 
     for (const cam of this.cameras()) {
       if (!cam.name.trim() || !cam.ip.trim()) continue; // skip incomplete
+      const slug = cam.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       const base = {
-        name: cam.name, cameraId: cam.name, onvifPort: cam.onvifPort || 8000,
+        name: cam.name, cameraId: slug, onvifPort: cam.onvifPort || 8000,
         onvifUser: cam.onvifUser, onvifPass: cam.onvifPass, onvifIp: cam.ip,
         nvrChannel: cam.nvrChannel || null,
         ptz: false, isRecordingOnly: false, clientId
       };
       try {
         await firstValueFrom(this.http.post(`${API_URL}/cameras`, base));
-        if (cloudActive) {
-          await firstValueFrom(this.http.post(`${API_URL}/cameras`, {
-            ...base,
-            name: `${cam.name}-low`, cameraId: `${cam.name}-low`,
-            isRecordingOnly: true
-          }));
-        }
+        await firstValueFrom(this.http.post(`${API_URL}/cameras`, {
+          ...base,
+          name: `${cam.name}-low`, cameraId: `${slug}-low`,
+          isRecordingOnly: true
+        }));
       } catch { failedCount++; }
     }
 
