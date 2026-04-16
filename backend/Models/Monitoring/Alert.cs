@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace MotorControlEnterprise.Api.Models
 {
     public enum AlertEntityType { Camera, Gateway, Storage }
-    public enum AlertType { Offline, Online, GatewayDown, GatewayUp, StorageHigh, StorageCritical }
+    public enum AlertType { Offline, Online, GatewayDown, GatewayUp, StorageHigh, StorageCritical, RecordingDown, RecordingUp, CameraRegistered }
     public enum AlertPriority { P1 = 1, P2 = 2, P3 = 3, P4 = 4 }
     public enum AlertStatus { Active, Acknowledged, Resolved }
 

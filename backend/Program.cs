@@ -39,6 +39,9 @@ builder.Services.AddHttpClient();  // default factory para ResendEmailService
 builder.Services.AddScoped<MotorControlEnterprise.Api.Services.IEmailService,
                             MotorControlEnterprise.Api.Services.ResendEmailService>();
 builder.Services.AddScoped<MotorControlEnterprise.Api.Services.AlertService>();
+builder.Services.AddSingleton<MotorControlEnterprise.Api.Services.StreamRecorderService>();
+builder.Services.AddHostedService(sp =>
+    sp.GetRequiredService<MotorControlEnterprise.Api.Services.StreamRecorderService>());
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.AlertWatchdogService>();
 
 // Seeder: crea el primer admin desde env vars (corre antes que MQTT)
@@ -54,8 +57,7 @@ builder.Services.AddHostedService(sp =>
     sp.GetRequiredService<MotorControlEnterprise.Api.Services.IMqttPublisherService>());
 // MQTT Integration: suscripción a topics de edge gateways
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.MqttIntegrationService>();
-// Stream Recorder: grabación continua de cámaras con cloud storage activo
-builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.StreamRecorderService>();
+// Stream Recorder: registrado como singleton arriba para permitir inyección en AlertWatchdogService
 // Storage Cleaner: limpieza diaria de grabaciones antiguas en NAS
 builder.Services.AddHostedService<MotorControlEnterprise.Api.Services.StorageCleanerService>();
 // Video Export: generacion de clips MP4 con marca de agua NIRMGROUP via FFmpeg

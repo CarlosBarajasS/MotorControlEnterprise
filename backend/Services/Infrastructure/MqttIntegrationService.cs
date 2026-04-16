@@ -360,9 +360,15 @@ namespace MotorControlEnterprise.Api.Services
                                 _logger.LogDebug("MQTT register: cámara {CameraKey} ya insertada por otro hilo, ignorado.", cameraKey);
                             }
 
-                            _ = emailService.SendCameraAlertAsync(
-                                newCamera.Name, gatewayId, "registrada",
-                                $"Nueva cámara detectada desde el gateway {gatewayId}");
+                            _ = alertService.TryCreateAsync(
+                                $"Camera-{gatewayId}-{cameraKey}-CameraRegistered",
+                                AlertEntityType.Camera,
+                                cameraKey,
+                                AlertType.CameraRegistered,
+                                AlertPriority.P3,
+                                $"Nueva cámara detectada: '{newCamera.Name}'",
+                                $"Cámara '{cameraKey}' auto-registrada desde el gateway '{gatewayId}'.",
+                                client?.Id);
                         }
                     }
                 }
