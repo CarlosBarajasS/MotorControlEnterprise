@@ -519,7 +519,6 @@ export class WizardComponent implements OnInit, OnDestroy {
       await firstValueFrom(
         this.http.put(`${API_URL}/cameras/${cameraId}`, {
           name: cam.name,
-          location: null,
           rtspUrl,
           clientId: this.selectedClient()?.id ?? null,
           ptz: false,

@@ -33,12 +33,14 @@ namespace MotorControlEnterprise.Api.Controllers
         private readonly ApplicationDbContext _db;
         private readonly IConfiguration _config;
         private readonly IMqttPublisherService _mqtt;
+        private readonly ILogger<WizardController> _logger;
 
-        public WizardController(ApplicationDbContext db, IConfiguration config, IMqttPublisherService mqtt)
+        public WizardController(ApplicationDbContext db, IConfiguration config, IMqttPublisherService mqtt, ILogger<WizardController> logger)
         {
-            _db    = db;
+            _db     = db;
             _config = config;
-            _mqtt  = mqtt;
+            _mqtt   = mqtt;
+            _logger = logger;
         }
 
         /// <summary>
@@ -98,7 +100,6 @@ namespace MotorControlEnterprise.Api.Controllers
                 meta["edgeToken"] = edgeToken;
                 gateway.Metadata  = JsonSerializer.Serialize(meta);
                 gateway.UpdatedAt = DateTime.UtcNow;
-                await _db.SaveChangesAsync();
             }
 
             // Generate mediamtx local password if not yet present
@@ -113,8 +114,10 @@ namespace MotorControlEnterprise.Api.Controllers
                 metaMx["mediamtxLocalPass"] = mediamtxPass;
                 client.Metadata  = JsonSerializer.Serialize(metaMx);
                 client.UpdatedAt = DateTime.UtcNow;
-                await _db.SaveChangesAsync();
             }
+
+            // Single SaveChangesAsync for all lazy-init writes above
+            await _db.SaveChangesAsync();
 
             // Cámaras registradas para este cliente
             var cameras = await _db.Cameras
@@ -688,8 +691,9 @@ networks:
 
                 return Ok(new { status, errorMessage, channels });
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogWarning(ex, "DvrScanStatus: error parsing client {ClientId} metadata", id);
                 return Ok(new { status = "idle", channels = Array.Empty<object>() });
             }
         }
