@@ -14,7 +14,33 @@
 ## Infra fija (no cambia entre sesiones)
 - DB user: `motor_ent` · DB name: `MotorControlEnterprise`
 - Docker services: `mce-postgres` `mce-mosquitto` `mce-central-mediamtx` `mce-backend` `mce-frontend` `mce-nginx`
-- Servidor en mantenimiento hasta ~2026-04-01 — confirmar estado antes de deploy
+
+## Topología de red — CRÍTICO leer antes de tocar cualquier IP
+
+### Servidor de producción (Casa del Profesor)
+- SSH: `victormanuel@177.247.175.4:2222` — ES una Raspberry Pi, NO un VPS cloud
+- IP local: `192.168.1.24` · Red local: `192.168.1.0/24` · Router: `192.168.1.1`
+- Tailscale: `mce-vps` → `100.121.193.106`
+- **Las grabaciones van al disco LOCAL** (`/mnt/nas/raspberry_data/videos`) — el NAS físico (192.168.1.50) NO es accesible desde aquí. Disco: 29GB, se llena con ~1GB/hora de grabación.
+- **Riesgo crítico**: disco lleno → PostgreSQL crash → gap de grabaciones. Monitorear con `df -h`.
+
+### Gateway Six Zamora (Tienda)
+- SSH: `carlos@100.127.9.5` (Tailscale) · Nombre TS: `six-zamora-pi` (antes `pruebacasacarlos`)
+- IP local: `192.168.1.165` · Red local: `192.168.1.0/24` (distinta física a la del Profesor)
+- DVR: `192.168.1.154` (antes `.155`, cambió 2026-04-16) · creds `admin:Emma080215` — **NO responde ping** (ICMP bloqueado), pero RTSP sí funciona. Confirmar con `nmap -p 554` antes de asumir caído.
+- Grabaciones edge locales en: `/home/carlos/edge-gateway/data/recordings/` — pueden llenar el disco (29GB). Limpiar con `sudo find ... -name '*.mp4' -delete`
+- Docker compose en: `~/edge-gateway/` · servicios: `mediamtx` (container: `edge-mediamtx`), `edge-agent`
+
+### Tailscale — subnet routers
+- **NUNCA activar ambas subnets al mismo tiempo** — Profesor y Six Zamora usan el mismo rango `192.168.1.0/24` y generan conflicto.
+- Para acceder a red del Profesor: aprobar ruta en `mce-vps`
+- Para acceder a red Six Zamora: aprobar ruta en `six-zamora-pi` (y quitar la del Profesor)
+- Admin: https://login.tailscale.com/admin/machines
+
+### NAS (pendiente resolver)
+- NAS físico reportado en `192.168.1.50` — actualmente desconectado/apagado
+- Confirmar con Profesor si está en otra IP o apagado
+- Hasta resolver: grabaciones en disco local del servidor (riesgo de llenado)
 
 ## Commits — Scopes de este proyecto
 `auth api mqtt db infra edge stream motor camera`

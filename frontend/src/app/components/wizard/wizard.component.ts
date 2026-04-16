@@ -317,7 +317,7 @@ export class WizardComponent implements OnInit, OnDestroy {
     this.savingGateway.set(true);
     try {
       const result = await firstValueFrom(
-        this.http.post<GatewayOption>(API_URL + '/admin/wizard/register-gateway', {
+        this.http.post<GatewayOption>(`${API_URL}/gateways`, {
           clientId, name: this.newGateway.name, gatewayId: this.newGateway.gatewayId,
           edgeToken: this.newGateway.edgeToken, location: this.newGateway.location || null
         })
@@ -342,7 +342,14 @@ export class WizardComponent implements OnInit, OnDestroy {
       const clientId = this.selectedClient()!.id;
       const gatewayId = this.activeGatewayId();
       try {
-        await firstValueFrom(this.http.post(API_URL + '/admin/wizard/scan-dvr', { clientId, gatewayId, dvrConfig: this.dvrConfig }));
+        await firstValueFrom(this.http.post(`${API_URL}/admin/clients/${clientId}/scan-dvr`, {
+          gatewayId,
+          nvrIp:       this.dvrConfig.ip,
+          nvrPort:     this.dvrConfig.port,
+          nvrUser:     this.dvrConfig.user,
+          nvrPassword: this.dvrConfig.pass,
+          nvrBrand:    this.dvrConfig.brand,
+        }));
         this.dvrScanStatus.set('scanning');
         await this.generateFiles();
         return true;
@@ -373,7 +380,7 @@ export class WizardComponent implements OnInit, OnDestroy {
     try {
       const data = await firstValueFrom(
         this.http.get<{ status: string; channels: DvrChannel[] }>(
-          API_URL + '/admin/wizard/dvr-scan-status?clientId=' + clientId + '&gatewayId=' + encodeURIComponent(gatewayId)
+          `${API_URL}/admin/clients/${clientId}/dvr-scan-status`
         )
       );
       this.dvrScanStatus.set(data.status as any);
@@ -398,7 +405,10 @@ export class WizardComponent implements OnInit, OnDestroy {
     const channels = this.dvrChannels().filter(ch => this.channelIncluded[ch.channel])
       .map(ch => ({ channel: ch.channel, name: this.channelNames[ch.channel] || ch.name }));
     try {
-      await firstValueFrom(this.http.post(API_URL + '/admin/wizard/create-dvr-cameras', { clientId, gatewayId, dvrConfig: this.dvrConfig, channels }));
+      await firstValueFrom(this.http.post(`${API_URL}/admin/clients/${clientId}/create-dvr-cameras`, {
+        gatewayId,
+        cameras: channels.map(ch => ({ channel: ch.channel, name: ch.name })),
+      }));
       this.camerasCreated.set(true);
     } catch (err: any) {
       this.dvrScanError.set(err?.error?.message ?? 'Error al crear las cámaras.');

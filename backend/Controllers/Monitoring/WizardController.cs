@@ -303,7 +303,7 @@ $@"services:
       - GATEWAY_CLIENT_ID=${{CLIENT_ID}}
       - TZ=America/Mexico_City
     volumes:
-      - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
+      - ./mediamtx/mediamtx.yml:/mediamtx.yml:rw
       - ./data/recordings:/recordings
       - /usr/share/zoneinfo/America/Mexico_City:/usr/share/zoneinfo/America/Mexico_City:ro
     networks:
@@ -315,10 +315,15 @@ $@"services:
     restart: unless-stopped
     volumes:
       - ./data/recordings:/recordings:ro
+      - ./mediamtx/mediamtx.yml:/config/mediamtx.yml:rw
     env_file:
       - .env
     environment:
       - TZ=${{TZ:-America/Mexico_City}}
+      - NVR_IP=${{NVR_IP:-}}
+      - NVR_PORT=${{NVR_PORT:-80}}
+      - NVR_USER=${{NVR_USER:-admin}}
+      - NVR_PASSWORD=${{NVR_PASSWORD:-}}
     depends_on:
       - mediamtx
     networks:
@@ -462,8 +467,13 @@ networks:
             var client = await _db.Clients.FindAsync(id);
             if (client == null) return NotFound();
 
-            // Check gateway online: lastHeartbeatAt within 60 seconds
-            var lastHb = ExtractLastHeartbeat(client.Metadata);
+            // Check gateway online via Gateway.LastHeartbeatAt (authoritative source)
+            var gateway = await _db.Gateways
+                .AsNoTracking()
+                .Where(g => g.ClientId == id)
+                .OrderByDescending(g => g.LastHeartbeatAt)
+                .FirstOrDefaultAsync();
+            var lastHb = gateway?.LastHeartbeatAt;
             var gatewayOnline = lastHb.HasValue &&
                                 (DateTime.UtcNow - lastHb.Value).TotalSeconds < 60;
 
@@ -678,6 +688,13 @@ networks:
             int created = 0;
             var failed  = new List<string>();
 
+            // Load all existing camera keys for this client in one query (prevents N+1)
+            var existingKeys = await _db.Cameras
+                .AsNoTracking()
+                .Where(c => c.ClientId == id)
+                .Select(c => c.CameraKey)
+                .ToHashSetAsync();
+
             foreach (var cam in dto.Cameras)
             {
                 if (string.IsNullOrWhiteSpace(cam.Name)) continue;
@@ -698,10 +715,7 @@ networks:
                 var streamsJson = JsonSerializer.Serialize(new { rtsp = "pending_onvif_discovery" });
 
                 // ── Streaming camera (upsert) ──────────────────────────────────────
-                var existing = await _db.Cameras
-                    .FirstOrDefaultAsync(c => c.CameraKey == cameraKey && c.ClientId == id);
-
-                if (existing == null)
+                if (!existingKeys.Contains(cameraKey))
                 {
                     _db.Cameras.Add(new Camera
                     {
@@ -722,11 +736,8 @@ networks:
                 }
 
                 // ── Recording twin camera (upsert) ────────────────────────────────
-                var recKey      = $"{cameraKey}-low";
-                var recExisting = await _db.Cameras
-                    .FirstOrDefaultAsync(c => c.CameraKey == recKey && c.ClientId == id);
-
-                if (recExisting == null)
+                var recKey = $"{cameraKey}-low";
+                if (!existingKeys.Contains(recKey))
                 {
                     _db.Cameras.Add(new Camera
                     {
