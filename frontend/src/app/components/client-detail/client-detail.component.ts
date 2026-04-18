@@ -1,14 +1,24 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+
+interface SubUser {
+  id: number;
+  email: string;
+  name?: string;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  createdAt: string;
+}
 
 const API_URL = '/api';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './client-detail.component.html',
   styleUrls: ['./client-detail.component.scss']
 })
@@ -23,6 +33,13 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
   loading = signal<boolean>(true);
 
   reScanPollInterval: ReturnType<typeof setInterval> | null = null;
+
+  // Sub-usuarios
+  subUsers = signal<SubUser[]>([]);
+  showAddSubUser = signal(false);
+  savingSubUser = signal(false);
+  subUserError = signal('');
+  subUserForm = { email: '', name: '', password: '', mustChangePassword: true };
 
   // Edge Config Modal
   showEdgeConfig = signal<boolean>(false);
@@ -45,11 +62,70 @@ export class ClientDetailComponent implements OnInit, OnDestroy {
         this.clientData.set(res.client || res);
         this.cameras.set(res.cameras || []);
         this.loading.set(false);
+        this.loadSubUsers();
       },
       error: (err) => {
         console.error('Error cargando detalles del cliente/gateway:', err);
         this.loading.set(false);
       }
+    });
+  }
+
+  loadSubUsers() {
+    this.http.get<SubUser[]>(`${API_URL}/clients/${this.clientId()}/sub-users`).subscribe({
+      next: (users) => this.subUsers.set(users),
+      error: (err) => console.error('Error cargando sub-usuarios:', err)
+    });
+  }
+
+  openAddSubUser() {
+    this.subUserForm = { email: '', name: '', password: '', mustChangePassword: true };
+    this.subUserError.set('');
+    this.showAddSubUser.set(true);
+  }
+
+  closeAddSubUser() {
+    this.showAddSubUser.set(false);
+  }
+
+  createSubUser() {
+    if (!this.subUserForm.email || !this.subUserForm.password) return;
+    this.savingSubUser.set(true);
+    this.subUserError.set('');
+    this.http.post<SubUser>(`${API_URL}/clients/${this.clientId()}/sub-users`, {
+      email: this.subUserForm.email,
+      password: this.subUserForm.password,
+      name: this.subUserForm.name || undefined,
+      mustChangePassword: this.subUserForm.mustChangePassword
+    }).subscribe({
+      next: (user) => {
+        this.subUsers.update(list => [...list, user]);
+        this.savingSubUser.set(false);
+        this.closeAddSubUser();
+      },
+      error: (err) => {
+        this.subUserError.set(err?.error?.message || 'Error al crear el usuario.');
+        this.savingSubUser.set(false);
+      }
+    });
+  }
+
+  toggleSubUserStatus(user: SubUser) {
+    this.http.patch(`${API_URL}/clients/${this.clientId()}/sub-users/${user.id}/status`, {
+      isActive: !user.isActive
+    }).subscribe({
+      next: () => this.subUsers.update(list =>
+        list.map(u => u.id === user.id ? { ...u, isActive: !u.isActive } : u)
+      ),
+      error: (err) => console.error('Error actualizando estado:', err)
+    });
+  }
+
+  deleteSubUser(user: SubUser) {
+    if (!confirm(`¿Eliminar acceso de ${user.email}? Esta acción no se puede deshacer.`)) return;
+    this.http.delete(`${API_URL}/clients/${this.clientId()}/sub-users/${user.id}`).subscribe({
+      next: () => this.subUsers.update(list => list.filter(u => u.id !== user.id)),
+      error: (err) => console.error('Error eliminando sub-usuario:', err)
     });
   }
 

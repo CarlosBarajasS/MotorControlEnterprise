@@ -121,6 +121,101 @@
     </table>
 </div>
 
+<!-- ═══════════════════════════════════ SUB-USUARIOS ═══════════════════════════════════ -->
+<div class="card" style="padding: 24px; margin-top: 24px;" *ngIf="!loading()">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div>
+            <h3 style="margin:0 0 4px; font-size:1.1rem; color:var(--ink);">👥 Usuarios con Acceso</h3>
+            <p style="margin:0; font-size:13px; color:var(--muted);">Gestiona quién puede ver las cámaras de este cliente</p>
+        </div>
+        <button class="btn-primary" (click)="openAddSubUser()" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Agregar Usuario
+        </button>
+    </div>
+
+    <table class="data-table" style="width:100%; text-align:left; border-collapse:collapse;">
+        <thead>
+            <tr style="border-bottom:1px solid var(--outline); color:var(--muted); font-size:0.85rem; text-transform:uppercase;">
+                <th style="padding:12px 0; font-weight:600;">Email / Nombre</th>
+                <th style="padding:12px 0; font-weight:600;">Estado</th>
+                <th style="padding:12px 0; font-weight:600; text-align:right;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngIf="subUsers().length === 0">
+                <td colspan="3" style="text-align:center; padding:32px; color:var(--muted);">
+                    No hay usuarios adicionales. Haz clic en "Agregar Usuario" para invitar a alguien.
+                </td>
+            </tr>
+            <tr *ngFor="let user of subUsers()" class="subuser-row">
+                <td style="padding:12px 0;">
+                    <span style="display:block; font-weight:500; color:var(--ink);">{{ user.name || '—' }}</span>
+                    <span style="font-size:12px; color:var(--muted);">{{ user.email }}</span>
+                </td>
+                <td style="padding:12px 0;">
+                    <span class="badge" [class.online]="user.isActive" [class.offline]="!user.isActive">
+                        {{ user.isActive ? 'ACTIVO' : 'INACTIVO' }}
+                    </span>
+                </td>
+                <td style="padding:12px 0; text-align:right; display:flex; gap:6px; justify-content:flex-end; align-items:center;">
+                    <button class="btn-ghost btn-sm" (click)="toggleSubUserStatus(user)">
+                        {{ user.isActive ? 'Desactivar' : 'Activar' }}
+                    </button>
+                    <button class="btn-delete-sub" (click)="deleteSubUser(user)" title="Eliminar acceso">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ═══════════════════════════════════ MODAL AGREGAR SUB-USUARIO ═══════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showAddSubUser()" (click)="closeAddSubUser()">
+    <div class="modal-content subuser-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <div>
+                <h2 style="margin:0; font-size:18px;">👤 Agregar Usuario</h2>
+                <p style="color:var(--muted); font-size:13px; margin:4px 0 0;">Acceso para <strong>{{ clientData()?.name }}</strong></p>
+            </div>
+            <button class="modal-close" (click)="closeAddSubUser()">✕</button>
+        </div>
+
+        <div class="subuser-form">
+            <div class="form-field">
+                <label>Email *</label>
+                <input type="email" [(ngModel)]="subUserForm.email" placeholder="usuario@ejemplo.com" class="form-input" [class.input-error]="subUserError() && subUserError().toLowerCase().includes('email')">
+                <span class="field-error" *ngIf="subUserError() && subUserError().toLowerCase().includes('email')">{{ subUserError() }}</span>
+            </div>
+            <div class="form-field">
+                <label>Nombre (opcional)</label>
+                <input type="text" [(ngModel)]="subUserForm.name" placeholder="Nombre del usuario" class="form-input">
+            </div>
+            <div class="form-field">
+                <label>Contraseña temporal *</label>
+                <input type="password" [(ngModel)]="subUserForm.password" placeholder="Mínimo 6 caracteres" class="form-input">
+            </div>
+            <label class="checkbox-row">
+                <input type="checkbox" [(ngModel)]="subUserForm.mustChangePassword" style="accent-color:var(--accent); width:16px; height:16px;">
+                <span>Debe cambiar contraseña al primer inicio de sesión</span>
+            </label>
+            <div class="field-error general-error" *ngIf="subUserError() && !subUserError().toLowerCase().includes('email')">
+                {{ subUserError() }}
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:24px;">
+            <button class="btn-secondary" (click)="closeAddSubUser()">Cancelar</button>
+            <button class="btn-primary" (click)="createSubUser()" [disabled]="savingSubUser() || !subUserForm.email || !subUserForm.password">
+                {{ savingSubUser() ? 'Creando...' : 'Crear Usuario' }}
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- ═══════════════════════════════════ EDGE CONFIG MODAL ═══════════════════════════════════ -->
 <div class="modal-overlay" *ngIf="showEdgeConfig()" (click)="closeEdgeConfig()">
     <div class="modal-content edge-config-modal" (click)="$event.stopPropagation()">
