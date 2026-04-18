@@ -411,6 +411,93 @@ namespace MotorControlEnterprise.Api.Controllers
             return Ok(new { message = "Acceso revocado correctamente." });
         }
 
+        // ── Sub-usuarios ──────────────────────────────────────────────────────────
+
+        // GET api/clients/{clientId}/sub-users
+        [HttpGet("{clientId:int}/sub-users")]
+        public async Task<IActionResult> ListSubUsers(int clientId)
+        {
+            if (!await _db.Clients.AnyAsync(c => c.Id == clientId))
+                return NotFound();
+
+            var users = await _db.Users
+                .AsNoTracking()
+                .Where(u => u.ClientId == clientId)
+                .Select(u => new { u.Id, u.Email, u.Name, u.IsActive, u.MustChangePassword, u.CreatedAt })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
+        // POST api/clients/{clientId}/sub-users
+        [HttpPost("{clientId:int}/sub-users")]
+        public async Task<IActionResult> CreateSubUser(int clientId, [FromBody] CreateSubUserRequest req)
+        {
+            if (!await _db.Clients.AnyAsync(c => c.Id == clientId))
+                return NotFound();
+
+            var email = req.Email.Trim().ToLowerInvariant();
+
+            if (await _db.Users.AnyAsync(u => u.ClientId == clientId && u.Email == email))
+                return Conflict(new { message = "Ya existe un usuario con ese email en este cliente." });
+
+            if (await _db.Users.AnyAsync(u => u.ClientId == null && u.Email == email))
+                return Conflict(new { message = "El email ya está registrado como usuario principal del sistema." });
+
+            var user = new User
+            {
+                Email              = email,
+                PasswordHash       = BCrypt.Net.BCrypt.HashPassword(req.Password),
+                Name               = req.Name,
+                Role               = "client",
+                ClientId           = clientId,
+                IsActive           = true,
+                MustChangePassword = req.MustChangePassword ?? true,
+                CreatedAt          = DateTime.UtcNow,
+                UpdatedAt          = DateTime.UtcNow
+            };
+
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(ListSubUsers), new { clientId },
+                new { user.Id, user.Email, user.Name, user.IsActive, user.MustChangePassword });
+        }
+
+        // DELETE api/clients/{clientId}/sub-users/{userId}
+        [HttpDelete("{clientId:int}/sub-users/{userId:int}")]
+        public async Task<IActionResult> DeleteSubUser(int clientId, int userId)
+        {
+            var client = await _db.Clients.FindAsync(clientId);
+            if (client == null) return NotFound();
+
+            if (client.UserId == userId)
+                return BadRequest(new { message = "No se puede eliminar el usuario principal del cliente." });
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.ClientId == clientId);
+            if (user == null) return NotFound();
+
+            _db.Users.Remove(user);
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // PATCH api/clients/{clientId}/sub-users/{userId}/status
+        [HttpPatch("{clientId:int}/sub-users/{userId:int}/status")]
+        public async Task<IActionResult> UpdateSubUserStatus(int clientId, int userId, [FromBody] SubUserStatusRequest req)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.ClientId == clientId);
+            if (user == null) return NotFound();
+
+            user.IsActive  = req.IsActive;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { user.Id, user.IsActive });
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────
+
         public record StatusRequest(string Status);
         public record CloudStorageRequest(bool Active);
 
@@ -435,5 +522,14 @@ namespace MotorControlEnterprise.Api.Controllers
             [Required] string Password,
             string? Name
         );
+
+        public record CreateSubUserRequest(
+            [Required][EmailAddress] string Email,
+            [Required] string Password,
+            string? Name,
+            bool? MustChangePassword
+        );
+
+        public record SubUserStatusRequest(bool IsActive);
     }
 }

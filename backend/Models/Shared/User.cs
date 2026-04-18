@@ -39,6 +39,11 @@ namespace MotorControlEnterprise.Api.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        // Sub-usuario: vinculado a un Client específico (null = usuario principal/admin/installer)
+        [Column("client_id")]
+        public int? ClientId { get; set; }
+        public Client? Client { get; set; }
+
         // Navigation properties
         public ICollection<Client> Clients { get; set; } = new List<Client>();
         public ICollection<Camera> Cameras { get; set; } = new List<Camera>();

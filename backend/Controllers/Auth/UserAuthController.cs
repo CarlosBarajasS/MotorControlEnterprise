@@ -138,7 +138,7 @@ namespace MotorControlEnterprise.Api.Controllers
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var hours       = int.TryParse(_config["Jwt:ExpiresHours"], out var h) ? h : 24;
 
-            var claims = new[]
+            var claimsList = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub,   user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
@@ -147,6 +147,9 @@ namespace MotorControlEnterprise.Api.Controllers
                 new Claim("name",                        user.Name ?? ""),
                 new Claim(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString())
             };
+            if (user.ClientId.HasValue)
+                claimsList.Add(new Claim("clientId", user.ClientId.Value.ToString()));
+            var claims = claimsList.ToArray();
 
             var token = new JwtSecurityToken(
                 issuer:             _config["Jwt:Issuer"],

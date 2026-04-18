@@ -28,6 +28,19 @@ namespace MotorControlEnterprise.Api.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email).IsUnique();
 
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Client)
+                .WithMany()
+                .HasForeignKey(u => u.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Email único dentro del mismo tenant
+            modelBuilder.Entity<User>()
+                .HasIndex(u => new { u.ClientId, u.Email })
+                .HasFilter("client_id IS NOT NULL")
+                .IsUnique()
+                .HasDatabaseName("idx_users_client_email_unique");
+
             // --- Client ---
             modelBuilder.Entity<Client>()
                 .HasIndex(c => c.Name).IsUnique();

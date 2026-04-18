@@ -305,6 +305,18 @@ namespace MotorControlEnterprise.Api.Controllers
             camera.ClientId        = dto.ClientId;
             camera.UpdatedAt       = DateTime.UtcNow;
 
+            if (!camera.IsRecordingOnly && camera.ClientId.HasValue)
+            {
+                var twin = await _db.Cameras
+                    .Where(c => c.IsRecordingOnly && c.ClientId == camera.ClientId)
+                    .FirstOrDefaultAsync();
+                if (twin != null)
+                {
+                    twin.Name      = dto.Name;
+                    twin.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
             if (dto.RtspUrl != null)
             {
                 // If installer manually provides RTSP URL for a camera that was pending ONVIF discovery,
