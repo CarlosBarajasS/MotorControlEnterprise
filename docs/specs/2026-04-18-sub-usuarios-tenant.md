@@ -1,5 +1,5 @@
 # Spec: Sub-usuarios por Tenant
-> Estado: DRAFT  
+> Estado: DONE  
 > Fecha: 2026-04-18
 
 ## Objetivo
@@ -75,11 +75,11 @@ User (sub-usuario) → ClientId = N     (nuevo)
 - `clients/client-detail/` (o equivalente) — nueva sección "Usuarios" con tabla + botones crear/eliminar/toggle activo
 
 ## Criterios de aceptación
-- [ ] CA1: Admin puede crear un sub-usuario vinculado a un Client específico
-- [ ] CA2: El sub-usuario puede hacer login y ve solo las cámaras de su Client
-- [ ] CA3: Admin puede listar todos los sub-usuarios de un Client
-- [ ] CA4: Admin puede eliminar un sub-usuario (no el usuario principal)
-- [ ] CA5: Admin puede activar/desactivar un sub-usuario
-- [ ] CA6: No se puede crear dos sub-usuarios con el mismo email en el mismo tenant
-- [ ] CA7: Al eliminar un Client, sus sub-usuarios se eliminan en cascada
-- [ ] CA8: El JWT de un sub-usuario incluye el claim `clientId`
+- [x] CA1: Admin puede crear un sub-usuario vinculado a un Client específico
+- [x] CA2: El sub-usuario puede hacer login y ve solo las cámaras de su Client
+- [x] CA3: Admin puede listar todos los sub-usuarios de un Client
+- [x] CA4: Admin puede eliminar un sub-usuario (no el usuario principal)
+- [x] CA5: Admin puede activar/desactivar un sub-usuario
+- [x] CA6: No se puede crear dos sub-usuarios con el mismo email en el mismo tenant
+- [x] CA7: Al eliminar un Client, sus sub-usuarios se eliminan en cascada
+- [x] CA8: El JWT de un sub-usuario incluye el claim `clientId`
