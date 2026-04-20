@@ -108,7 +108,7 @@ services:
       StreamRecorder__RefreshIntervalSeconds: "300"
       # Storage path compartido con el volumen NAS
       Storage__NasRecordingsPath: "/mnt/nas/recordings"
-      StorageCleaner__RetentionDays: "1"
+      StorageCleaner__RetentionDays: "30"
       TZ: "America/Mexico_City"
       # Email (Resend.dev) — credenciales de clientes y alertas de cámaras
       Email__ResendApiKey:    ${Email__ResendApiKey:-}
