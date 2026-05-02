@@ -269,7 +269,6 @@ export class RecordingsComponent implements OnInit, OnDestroy {
 
   onVideoLoaded() {
     this.loadingVideo.set(false);
-    this.isPlaying.set(true);
     const v = this.videoEl?.nativeElement;
     if (!v) return;
     v.playbackRate = this.speed();
@@ -277,6 +276,7 @@ export class RecordingsComponent implements OnInit, OnDestroy {
       v.currentTime  = Math.min(this.pendingSeek, v.duration - 1);
       this.pendingSeek = null;
     }
+    v.play().then(() => this.isPlaying.set(true)).catch(() => {});
   }
 
   onTimeUpdate(e: Event) {

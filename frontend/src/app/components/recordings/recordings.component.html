@@ -130,6 +130,7 @@
                  [class.rec-video-hidden]="loadingVideo() || !currentVideo()"
                  class="rec-video"
                  autoplay
+                 muted
                  playsinline
                  (loadeddata)="onVideoLoaded()"
                  (timeupdate)="onTimeUpdate($event)"
