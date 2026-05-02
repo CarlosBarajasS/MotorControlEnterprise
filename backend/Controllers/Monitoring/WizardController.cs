@@ -361,6 +361,8 @@ networks:
             sb.AppendLine("    permissions:");
             sb.AppendLine("      - action: api");
             sb.AppendLine("      - action: read");
+            sb.AppendLine("      - action: publish");
+            sb.AppendLine("      - action: playback");
             sb.AppendLine();
             sb.AppendLine("rtspAuthMethods: [basic]");
             sb.AppendLine("rtspAddress: :8554");
@@ -372,7 +374,9 @@ networks:
             sb.AppendLine("  recordPath: /recordings/%path/%Y-%m-%d/%H-%M-%S");
             sb.AppendLine("  recordFormat: fmp4");
             sb.AppendLine("  recordSegmentDuration: 15m");
-            // The ${} here will be substituted by docker-compose at runtime
+            sb.AppendLine("  sourceOnDemand: false");
+            sb.AppendLine("  sourceProtocol: tcp");
+            // ${} variables are substituted by docker-compose at runtime (not by MediaMTX)
             sb.AppendLine("  runOnReady: >-");
             sb.AppendLine("    ffmpeg");
             sb.AppendLine("    -rtsp_transport tcp");

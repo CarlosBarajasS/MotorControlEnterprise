@@ -212,10 +212,20 @@
         <div class="deploy-step-content">
           <strong>Copiar los archivos de configuración</strong>
           <p>Transfiere los 3 archivos vía SFTP o USB. Coloca <code>mediamtx.yml</code> en el subdirectorio <code>mediamtx/</code>.</p>
+          <code class="cmd">scp .env mediamtx.yml docker-compose.yml pi&#64;IP:~/edge-gateway/</code>
+          <code class="cmd">ssh pi&#64;IP "mv ~/edge-gateway/mediamtx.yml ~/edge-gateway/mediamtx/mediamtx.yml"</code>
         </div>
       </div>
       <div class="deploy-step">
         <div class="deploy-step-num">3</div>
+        <div class="deploy-step-content">
+          <strong>Proteger mediamtx.yml de futuros git pull</strong>
+          <p>Evita que <code>git pull</code> sobreescriba el archivo con credenciales correctas.</p>
+          <code class="cmd">cd ~/edge-gateway &amp;&amp; git update-index --assume-unchanged mediamtx/mediamtx.yml</code>
+        </div>
+      </div>
+      <div class="deploy-step">
+        <div class="deploy-step-num">4</div>
         <div class="deploy-step-content">
           <strong>Iniciar Docker</strong>
           <code class="cmd">mv edge-gateway.env .env</code>
@@ -223,7 +233,7 @@
         </div>
       </div>
       <div class="deploy-step">
-        <div class="deploy-step-num">4</div>
+        <div class="deploy-step-num">5</div>
         <div class="deploy-step-content">
           <strong>Verificar</strong>
           <p>El heartbeat aparecerá en el listado de Gateways en menos de 2 minutos.</p>
