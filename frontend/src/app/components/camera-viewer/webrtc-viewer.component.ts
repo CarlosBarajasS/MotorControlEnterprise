@@ -97,10 +97,11 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
                     // requestVideoFrameCallback fires on first rendered frame (Chrome 83+).
                     // onplaying is the reliable fallback — fires when MediaStream starts flowing.
                     const markPlaying = () => this.zone.run(() => { this.state = 'playing'; });
-                    if ('requestVideoFrameCallback' in video) {
-                        (video as any).requestVideoFrameCallback(markPlaying);
+                    const vid: any = video;
+                    if (typeof vid.requestVideoFrameCallback === 'function') {
+                        vid.requestVideoFrameCallback(markPlaying);
                     } else {
-                        video.onplaying = () => { markPlaying(); video.onplaying = null; };
+                        vid.onplaying = () => { markPlaying(); vid.onplaying = null; };
                     }
                 }
             };
