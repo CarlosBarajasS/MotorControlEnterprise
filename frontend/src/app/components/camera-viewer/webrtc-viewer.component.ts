@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, Input, OnDestroy, AfterViewInit, ElementRef, ViewChild, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 
@@ -50,7 +50,9 @@ import { CommonModule } from '@angular/common';
     `]
 })
 export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
-    @Input() streamPath!: string;   // ej: "edge-gateway-casa-carlos/cuarto"
+    @Input() streamPath!: string;
+    /** Retraso antes de iniciar la conexión — escalonar múltiples viewers evita tormenta de ICE */
+    @Input() connectDelay = 0;
     @ViewChild('videoEl') videoEl!: ElementRef<HTMLVideoElement>;
 
     state: 'connecting' | 'playing' | 'error' = 'connecting';
@@ -59,9 +61,16 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
     private sessionUrl: string | null = null;
     private reconnectTimer: any = null;
     private reconnectAttempts = 0;
+    private startTimer: any = null;
+
+    constructor(private zone: NgZone) {}
 
     ngAfterViewInit() {
-        this.connect();
+        if (this.connectDelay > 0) {
+            this.startTimer = setTimeout(() => this.connect(), this.connectDelay);
+        } else {
+            this.connect();
+        }
     }
 
     async connect() {
@@ -84,8 +93,15 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
                     }
                     (video.srcObject as MediaStream).addTrack(ev.track);
                     video.play().catch(() => {});
-                    this.state = 'playing';
                     this.reconnectAttempts = 0;
+                    // requestVideoFrameCallback fires on first rendered frame (Chrome 83+).
+                    // onplaying is the reliable fallback — fires when MediaStream starts flowing.
+                    const markPlaying = () => this.zone.run(() => { this.state = 'playing'; });
+                    if ('requestVideoFrameCallback' in video) {
+                        (video as any).requestVideoFrameCallback(markPlaying);
+                    } else {
+                        video.onplaying = () => { markPlaying(); video.onplaying = null; };
+                    }
                 }
             };
 
@@ -99,20 +115,20 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
             const offer = await this.pc.createOffer();
             await this.pc.setLocalDescription(offer);
 
-            // Esperar a que ICE gathering termine — sin esto el SDP no tiene candidatos
-            // y MediaMTX devuelve 400
+            // Esperar ICE gathering con timeout de 3s — evita bloqueo indefinido
+            // si el servidor STUN no responde. Con NAT 1:1 en el servidor el
+            // host candidate es suficiente para establecer la conexión.
             await new Promise<void>((resolve) => {
-                if (this.pc!.iceGatheringState === 'complete') {
-                    resolve();
-                } else {
-                    const handler = () => {
-                        if (this.pc?.iceGatheringState === 'complete') {
-                            this.pc.removeEventListener('icegatheringstatechange', handler);
-                            resolve();
-                        }
-                    };
-                    this.pc!.addEventListener('icegatheringstatechange', handler);
-                }
+                if (this.pc!.iceGatheringState === 'complete') { resolve(); return; }
+                const timeout = setTimeout(resolve, 3000);
+                const handler = () => {
+                    if (this.pc?.iceGatheringState === 'complete') {
+                        clearTimeout(timeout);
+                        this.pc.removeEventListener('icegatheringstatechange', handler);
+                        resolve();
+                    }
+                };
+                this.pc!.addEventListener('icegatheringstatechange', handler);
             });
 
             // WHEP va por nginx (mismo origen, puerto 8080)
@@ -148,6 +164,7 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
     }
 
     private cleanup() {
+        if (this.startTimer) { clearTimeout(this.startTimer); this.startTimer = null; }
         if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null; }
         if (this.sessionUrl) {
             fetch(this.sessionUrl, { method: 'DELETE', keepalive: true }).catch(() => {});
