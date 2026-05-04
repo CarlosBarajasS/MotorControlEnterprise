@@ -42,11 +42,11 @@
        [class.panel-open]="selectedCam() !== null">
 
     <div class="cgrid-cell" #cell
-         *ngFor="let cam of camsValue; trackBy: trackByCamId"
+         *ngFor="let cam of camsValue; let i = index; trackBy: trackByCamId"
          [class.selected]="selectedCam()?.id === cam.id"
          (click)="selectCam(cam)">
 
-      <app-webrtc-viewer [streamPath]="getWebrtcPath(cam)"></app-webrtc-viewer>
+      <app-webrtc-viewer [streamPath]="getWebrtcPath(cam)" [connectDelay]="i * 800"></app-webrtc-viewer>
 
       <!-- Sin señal -->
       <div class="cgrid-offline-overlay" *ngIf="!isOnline(cam)">

@@ -78,8 +78,14 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
         this.state = 'connecting';
 
         try {
+            // Dos STUN servers Google para balancear carga cuando hay múltiples viewers simultáneos.
+            // iceCandidatePoolSize=2 pre-fetches candidatos antes de createOffer.
             this.pc = new RTCPeerConnection({
-                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                ],
+                iceCandidatePoolSize: 2,
             });
 
             this.pc.addTransceiver('video', { direction: 'recvonly' });
@@ -106,9 +112,12 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
                 }
             };
 
+            // Solo reconectar en 'failed' — 'disconnected' es transitorio y se recupera solo.
+            // Reconectar en 'disconnected' destruye sesiones que podrían haberse recuperado,
+            // y la nueva sesión puede fallar ICE bajo carga (issue mediamtx#3820).
             this.pc.onconnectionstatechange = () => {
                 const s = this.pc?.connectionState;
-                if (s === 'failed' || s === 'disconnected') {
+                if (s === 'failed') {
                     this.scheduleReconnect();
                 }
             };
@@ -116,12 +125,11 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
             const offer = await this.pc.createOffer();
             await this.pc.setLocalDescription(offer);
 
-            // Esperar ICE gathering con timeout de 3s — evita bloqueo indefinido
-            // si el servidor STUN no responde. Con NAT 1:1 en el servidor el
-            // host candidate es suficiente para establecer la conexión.
+            // Esperar ICE gathering con timeout de 6s — aumentado de 3s para dar margen
+            // cuando múltiples viewers compiten por STUN simultáneamente (issue mediamtx#4197).
             await new Promise<void>((resolve) => {
                 if (this.pc!.iceGatheringState === 'complete') { resolve(); return; }
-                const timeout = setTimeout(resolve, 3000);
+                const timeout = setTimeout(resolve, 6000);
                 const handler = () => {
                     if (this.pc?.iceGatheringState === 'complete') {
                         clearTimeout(timeout);
