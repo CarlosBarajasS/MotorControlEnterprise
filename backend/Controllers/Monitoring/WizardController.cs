@@ -376,7 +376,13 @@ networks:
             sb.AppendLine("  recordSegmentDuration: 15m");
             sb.AppendLine("  sourceOnDemand: false");
             sb.AppendLine("  sourceProtocol: tcp");
-            // ${} variables are substituted by docker-compose at runtime (not by MediaMTX)
+            // ${} variables are substituted by docker-compose at runtime (not by MediaMTX).
+            // WARNING: -c copy only works for H264 IP cameras (ONVIF).
+            // For H265 DVR cameras (Dahua, Hikvision): define per-channel paths with direct DVR source
+            // and transcode using: -r 15 -c:v libx264 -preset ultrafast -crf 28
+            // The RTSP timebase of H265 is 90kHz; without -r 15 FFmpeg treats it as 90000fps
+            // and produces a malformed H264 stream (grey output, 0 frames decoded).
+            sb.AppendLine("  # H264 IP cameras only. For H265 DVR: see per-channel config instructions.");
             sb.AppendLine("  runOnReady: >-");
             sb.AppendLine("    ffmpeg");
             sb.AppendLine("    -rtsp_transport tcp");
@@ -386,8 +392,8 @@ networks:
             sb.AppendLine("  runOnReadyRestart: yes");
             sb.AppendLine();
             sb.AppendLine("paths:");
-            sb.AppendLine("  # Paths managed dynamically by edge-agent via MediaMTX REST API");
-            sb.AppendLine("  # edge-agent calls POST /v3/config/paths/add/{name} after ONVIF discovery");
+            sb.AppendLine("  # H264 IP camera paths registered dynamically by edge-agent (POST /v3/config/paths/add/{name}).");
+            sb.AppendLine("  # For H265 DVR cameras: replace all_others with per-channel paths reading directly from DVR.");
             sb.AppendLine("  all_others: ~");
             return sb.ToString();
         }
