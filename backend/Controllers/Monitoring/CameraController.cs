@@ -129,6 +129,7 @@ namespace MotorControlEnterprise.Api.Controllers
                 c.CameraId, c.CameraKey, c.Ptz, c.IsRecordingOnly,
                 c.LastSeen, c.ClientId, c.Streams, c.CreatedAt,
                 GatewayId = c.Client != null ? c.Client.GatewayId : null,
+                GatewayLastHeartbeat = c.Client != null ? c.Client.LastHeartbeatAt : null,
                 RtspUrl = ExtractRtspUrl(c.Streams),
                 Client = c.Client == null ? null : new { c.Client.Id, c.Client.Name, c.Client.GatewayId },
                 RecordingCameraId = c.ClientId.HasValue && recordingMap.ContainsKey(c.ClientId.Value)

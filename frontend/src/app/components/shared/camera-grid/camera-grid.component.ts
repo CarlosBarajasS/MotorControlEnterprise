@@ -77,12 +77,23 @@ export class CameraGridComponent implements OnChanges {
         }
     }
 
-    isOnline(cam: any): boolean { return cam.status === 'active'; }
+    private readonly gwTimeoutMs = 5 * 60 * 1000;
+
+    isOnline(cam: any): boolean {
+        if (cam.status !== 'active') return false;
+        const hb = cam.gatewayLastHeartbeat;
+        if (!hb) return true;
+        return (Date.now() - new Date(hb).getTime()) < this.gwTimeoutMs;
+    }
 
     /** Returns 'online' | 'offline' | 'alert' | 'unknown' — prefers alertStatusMap when available */
     getCamAlertStatus(cam: any): string {
         const key = String(cam.id ?? cam.cameraId ?? '');
-        return this.alertStatusMap[key] ?? (cam.status === 'active' ? 'online' : 'unknown');
+        if (this.alertStatusMap[key]) return this.alertStatusMap[key];
+        if (cam.status !== 'active') return 'unknown';
+        const hb = cam.gatewayLastHeartbeat;
+        if (!hb) return 'online';
+        return (Date.now() - new Date(hb).getTime()) < this.gwTimeoutMs ? 'online' : 'offline';
     }
 
     getWebrtcPath(cam: any): string {

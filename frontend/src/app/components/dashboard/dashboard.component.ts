@@ -29,11 +29,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
     p2Count = computed(() => this.activeAlerts().filter((a: any) => a.Priority === 'P2').length);
     p3Count = computed(() => this.activeAlerts().filter((a: any) => a.Priority === 'P3').length);
 
-    camerasOnline = computed(() => this.cameras().filter(c => c.status === 'active').length);
+    private readonly gwTimeoutMs = 5 * 60 * 1000;
 
-    camerasOffline = computed(() => this.cameras().length - this.camerasOnline());
+    private isGwAlive(heartbeat: string | null | undefined): boolean {
+        if (!heartbeat) return false;
+        return (Date.now() - new Date(heartbeat).getTime()) < this.gwTimeoutMs;
+    }
 
-    clientsActive = computed(() => this.gateways().filter(c => c.status === 'active').length);
+    camerasOnline = computed(() => this.cameras().filter(c =>
+        c.status === 'active' && this.isGwAlive(c.gatewayLastHeartbeat)
+    ).length);
+
+    camerasOffline = computed(() => this.cameras().filter(c =>
+        c.status !== 'active' || !this.isGwAlive(c.gatewayLastHeartbeat)
+    ).length);
+
+    clientsActive = computed(() => this.gateways().filter(gw => this.isActive(gw)).length);
 
     topClients = computed(() =>
         [...this.gateways()]
@@ -44,7 +55,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     recentActivity = computed(() => {
         const events: any[] = [];
         this.cameras().slice(0, 10).forEach(c => {
-            const online = c.status === 'active';
+            const online = c.status === 'active' && this.isGwAlive(c.gatewayLastHeartbeat);
             events.push({
                 event: `Cámara ${c.name}`,
                 gateway: c.gatewayId || 'N/A',
@@ -54,12 +65,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
             });
         });
         this.gateways().forEach(gw => {
+            const active = this.isActive(gw);
             events.push({
                 event: `Gateway ${gw.name}`,
                 gateway: gw.gatewayId || 'N/A',
-                type: this.isActive(gw) ? 'online' : 'offline',
-                label: this.isActive(gw) ? 'Activo' : 'Offline',
-                time: gw.createdAt ? new Date(gw.createdAt) : new Date(),
+                type: active ? 'online' : 'offline',
+                label: active ? 'Activo' : 'Offline',
+                time: gw.lastHeartbeatAt ? new Date(gw.lastHeartbeatAt) : (gw.createdAt ? new Date(gw.createdAt) : new Date()),
             });
         });
         return events.sort((a, b) => b.time - a.time).slice(0, 12);
@@ -122,7 +134,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     isActive(gw: any): boolean {
-        return gw.status === 'active' || gw.status === 'online' || gw.isActive === true;
+        return this.isGwAlive(gw.lastHeartbeatAt);
     }
 
     getCamerasForGw(gw: any): any[] {

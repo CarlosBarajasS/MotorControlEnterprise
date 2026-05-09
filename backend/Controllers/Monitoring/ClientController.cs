@@ -45,7 +45,7 @@ namespace MotorControlEnterprise.Api.Controllers
                 c.Id, c.Name, c.BusinessType, c.Rfc,
                 c.City, c.State, c.Country,
                 c.ContactName, c.ContactPhone, c.ContactEmail,
-                c.GatewayId, c.Status, c.CloudStorageActive,
+                c.GatewayId, c.LastHeartbeatAt, c.Status, c.CloudStorageActive,
                 c.LocalStorageType, c.NvrIp, c.NvrPort, c.NvrBrand,
                 c.CreatedAt,
                 CameraCount = cameraCountMap.GetValueOrDefault(c.Id, 0),
