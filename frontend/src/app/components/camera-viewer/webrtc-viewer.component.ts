@@ -78,18 +78,28 @@ export class WebrtcViewerComponent implements AfterViewInit, OnDestroy {
         this.state = 'connecting';
 
         try {
-            // Dos STUN servers Google para balancear carga cuando hay múltiples viewers simultáneos.
-            // iceCandidatePoolSize=2 pre-fetches candidatos antes de createOffer.
             this.pc = new RTCPeerConnection({
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
                     { urls: 'stun:stun1.l.google.com:19302' },
                 ],
-                iceCandidatePoolSize: 2,
             });
 
-            this.pc.addTransceiver('video', { direction: 'recvonly' });
+            const videoTx = this.pc.addTransceiver('video', { direction: 'recvonly' });
             this.pc.addTransceiver('audio', { direction: 'recvonly' });
+
+            // Cameras use H.264 — put it first so MediaMTX forwards it directly without transcoding.
+            // Without this Chrome offers VP8/VP9 first and some MediaMTX builds pick them,
+            // producing grey video because no codec-matching transcode is configured.
+            try {
+                const caps = RTCRtpReceiver.getCapabilities('video');
+                if (caps?.codecs) {
+                    videoTx.setCodecPreferences([
+                        ...caps.codecs.filter(c => c.mimeType.toLowerCase() === 'video/h264'),
+                        ...caps.codecs.filter(c => c.mimeType.toLowerCase() !== 'video/h264'),
+                    ]);
+                }
+            } catch { /* setCodecPreferences unsupported, browser picks */ }
 
             this.pc.ontrack = (ev) => {
                 if (ev.track.kind === 'video') {
