@@ -58,6 +58,10 @@ namespace MotorControlEnterprise.Api.Models
         public int? UserId { get; set; }
         public User? User { get; set; }
 
+        [Column("installer_created_by_id")]
+        public int? InstallerCreatedById { get; set; }
+        public User? InstallerCreatedBy { get; set; }
+
         [Required]
         public string Status { get; set; } = "active";
 
