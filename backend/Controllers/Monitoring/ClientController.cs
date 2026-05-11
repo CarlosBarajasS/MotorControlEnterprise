@@ -30,7 +30,7 @@ namespace MotorControlEnterprise.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] string? scope = null)
         {
-            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId))
+            if (!int.TryParse(User.FindFirstValue("sub"), out var callerId))
                 return Unauthorized();
             var isInstaller = User.IsInRole("installer");
 
@@ -96,7 +96,7 @@ namespace MotorControlEnterprise.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateClientRequest req)
         {
-            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId))
+            if (!int.TryParse(User.FindFirstValue("sub"), out var callerId))
                 return Unauthorized();
             var isInstaller = User.IsInRole("installer");
 
@@ -230,7 +230,7 @@ namespace MotorControlEnterprise.Api.Controllers
             var client = await _db.Clients.FindAsync(id);
             if (client == null) return NotFound();
 
-            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId))
+            if (!int.TryParse(User.FindFirstValue("sub"), out var callerId))
                 return Unauthorized();
             if (User.IsInRole("installer") && client.InstallerCreatedById != callerId)
                 return Forbid();
@@ -249,7 +249,7 @@ namespace MotorControlEnterprise.Api.Controllers
             var client = await _db.Clients.FindAsync(id);
             if (client == null) return NotFound();
 
-            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId))
+            if (!int.TryParse(User.FindFirstValue("sub"), out var callerId))
                 return Unauthorized();
             if (User.IsInRole("installer") && client.InstallerCreatedById != callerId)
                 return Forbid();
@@ -391,7 +391,7 @@ namespace MotorControlEnterprise.Api.Controllers
             var client = await _db.Clients.FindAsync(id);
             if (client == null) return NotFound();
 
-            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId))
+            if (!int.TryParse(User.FindFirstValue("sub"), out var callerId))
                 return Unauthorized();
             if (User.IsInRole("installer") && client.InstallerCreatedById != callerId)
                 await _audit.LogAsync(callerId, "modify_foreign_client", "Client", id,
