@@ -42,7 +42,35 @@ export class ClientsComponent implements OnInit {
     trashClients = signal<any[]>([]);
     trashLoading = signal(false);
 
+    activeTab     = signal<'mine' | 'all'>('mine');
+    currentRole   = signal<string>('admin');
+    currentUserId = signal<number>(0);
+
+    private decodeCurrentUser(): void {
+        try {
+            const token = localStorage.getItem('motor_control_token');
+            if (!token) return;
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            this.currentRole.set(payload.role ?? 'admin');
+            this.currentUserId.set(parseInt(payload.sub ?? '0', 10));
+        } catch { }
+    }
+
+    isInstaller = computed(() => this.currentRole() === 'installer');
+
+    isOwner = (client: any): boolean => {
+        if (this.currentRole() === 'admin') return true;
+        return client.installerCreatedById === this.currentUserId();
+    };
+
     ngOnInit() {
+        this.decodeCurrentUser();
+        this.loadData();
+    }
+
+    switchTab(tab: 'mine' | 'all'): void {
+        if (this.activeTab() === tab) return;
+        this.activeTab.set(tab);
         this.loadData();
     }
 
@@ -52,7 +80,8 @@ export class ClientsComponent implements OnInit {
             error: (err) => console.error(err)
         });
 
-        this.http.get<any[]>(`${API_URL}/clients`).subscribe({
+        const scope = this.activeTab() === 'all' ? '?scope=all' : '';
+        this.http.get<any[]>(`${API_URL}/clients${scope}`).subscribe({
             next: (res) => {
                 const data = res || [];
                 this.clients.set(data);

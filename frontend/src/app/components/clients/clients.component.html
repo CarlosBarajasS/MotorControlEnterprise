@@ -14,6 +14,18 @@
         </button>
     </div>
 
+    <!-- SCOPE TABS (installer only) -->
+    @if (isInstaller()) {
+      <div class="scope-tabs">
+        <button class="scope-tab" [class.active]="activeTab() === 'mine'" (click)="switchTab('mine')">
+          Mis clientes
+        </button>
+        <button class="scope-tab" [class.active]="activeTab() === 'all'" (click)="switchTab('all')">
+          Todos los clientes
+        </button>
+      </div>
+    }
+
     <!-- SEARCH & FILTERS -->
     <div style="margin: 24px 0; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
         <div class="search-box">
@@ -45,7 +57,15 @@
         <div class="client-card" *ngFor="let client of filtered()">
             <div class="card-header">
                 <div>
-                    <h3>{{ client.name }}</h3>
+                    <h3>
+                        {{ client.name }}
+                        @if (isInstaller() && !isOwner(client)) {
+                          <span class="foreign-badge">Instalado por {{ client.installerCreatedBy?.name ?? 'otro instalador' }}</span>
+                        }
+                        @if (!isInstaller() && client.installerCreatedBy) {
+                          <span class="installer-badge">{{ client.installerCreatedBy.name }}</span>
+                        }
+                    </h3>
                     <p class="role">{{ client.businessType || 'Sin clasificar' }}</p>
                 </div>
                 <!-- Menú de acciones 3 dots o editar -->
@@ -117,9 +137,11 @@
             </div>
 
             <div class="card-footer">
-                <button class="status-badge" [class.active]="client.status === 'active'" (click)="toggleStatus(client)" type="button" [attr.aria-label]="'Estado: ' + client.status">
-                    {{ client.status | uppercase }}
-                </button>
+                @if (isOwner(client)) {
+                  <button class="status-badge" [class.active]="client.status === 'active'" (click)="toggleStatus(client)" type="button" [attr.aria-label]="'Estado: ' + client.status">
+                      {{ client.status | uppercase }}
+                  </button>
+                }
 
                 <div class="cloud-toggle" title="Almacenamiento Cloud">
                     <span style="font-size:10px; color:var(--muted); font-weight:600;">CLOUD</span>
@@ -322,8 +344,10 @@
                 <div style="display:flex; gap:8px; align-items:center;">
                     <!-- Edit mode -->
                     <ng-container *ngIf="modalMode() === 'edit'">
-                        <button class="btn-secondary" style="color:var(--red); border-color: rgba(var(--red-rgb), 0.3);"
-                            (click)="deleteClient(currentClient().id)">Eliminar</button>
+                        @if (isOwner(currentClient())) {
+                          <button class="btn-secondary" style="color:var(--red); border-color: rgba(var(--red-rgb), 0.3);"
+                              (click)="deleteClient(currentClient().id)">Eliminar</button>
+                        }
                         <button class="btn-primary" (click)="saveClient()">Guardar Cambios</button>
                     </ng-container>
                     <!-- Create mode step 1 -->
