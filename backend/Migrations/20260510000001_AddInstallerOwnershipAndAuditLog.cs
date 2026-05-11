@@ -38,7 +38,8 @@ namespace MotorControlEnterprise.Api.Migrations
                         name: "FK_AuditLogs_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateIndex(
