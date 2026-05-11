@@ -15,6 +15,7 @@ import { ClientNvrComponent } from './components/cameras/client-nvr.component';
 import { RecordingsComponent } from './components/recordings/recordings.component';
 import { UsersComponent } from './components/users/users.component';
 import { TelemetryHistoryComponent } from './components/telemetry-history/telemetry-history.component';
+import { AuditLogComponent } from './components/audit-log/audit-log.component';
 
 // Client Portal
 import { ClientShellComponent } from './components/client-portal/client-shell.component';
@@ -67,6 +68,7 @@ export const routes: Routes = [
     { path: 'users', component: UsersComponent, canActivate: [adminAuthGuard] },
     { path: 'telemetry-history', component: TelemetryHistoryComponent, canActivate: [adminAuthGuard] },
     { path: 'wizard', component: WizardComponent, canActivate: [adminAuthGuard] },
+    { path: 'audit-log', component: AuditLogComponent, canActivate: [adminAuthGuard] },
 
     // Client Portal routes
     {
