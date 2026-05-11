@@ -50,18 +50,22 @@ export class ClientsComponent implements OnInit {
         try {
             const token = localStorage.getItem('motor_control_token');
             if (!token) return;
-            const payload = JSON.parse(atob(token.split('.')[1]));
+            const parts = token.split('.');
+            if (parts.length !== 3) return;
+            const payload = JSON.parse(atob(parts[1]));
             this.currentRole.set(payload.role ?? 'admin');
             this.currentUserId.set(parseInt(payload.sub ?? '0', 10));
-        } catch { }
+        } catch {
+            // Token inválido — quedan los valores por defecto (admin)
+        }
     }
 
     isInstaller = computed(() => this.currentRole() === 'installer');
 
-    isOwner = (client: any): boolean => {
+    isOwner(client: any): boolean {
         if (this.currentRole() === 'admin') return true;
         return client.installerCreatedById === this.currentUserId();
-    };
+    }
 
     ngOnInit() {
         this.decodeCurrentUser();
