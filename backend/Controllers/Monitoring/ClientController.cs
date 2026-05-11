@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MotorControlEnterprise.Api.Data;
 using MotorControlEnterprise.Api.Models;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using MotorControlEnterprise.Api.Services;
 
@@ -11,28 +12,39 @@ namespace MotorControlEnterprise.Api.Controllers
 {
     [ApiController]
     [Route("api/clients")]
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "admin,installer")]
     public class ClientController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
         private readonly IEmailService _email;
+        private readonly AuditService _audit;
 
-        public ClientController(ApplicationDbContext db, IEmailService email)
+        public ClientController(ApplicationDbContext db, IEmailService email, AuditService audit)
         {
             _db    = db;
             _email = email;
+            _audit = audit;
         }
 
         // GET api/clients
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] string? scope = null)
         {
-            var clients = await _db.Clients
+            var callerId    = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var isInstaller = User.IsInRole("installer");
+
+            var query = _db.Clients
                 .Include(c => c.User)
+                .Include(c => c.InstallerCreatedBy)
                 .Include(c => c.Gateways)
-                .Where(c => c.DeletedAt == null)
-                .OrderBy(c => c.Name)
-                .ToListAsync();
+                .Where(c => c.DeletedAt == null);
+
+            if (isInstaller && scope != "all")
+                query = query.Where(c => c.InstallerCreatedById == callerId);
+            else if (isInstaller && scope == "all")
+                await _audit.LogAsync(callerId, "access_foreign_client", "Client", null, new { scope = "all" });
+
+            var clients = await query.OrderBy(c => c.Name).ToListAsync();
 
             // Conteo real de cámaras por cliente
             var cameraCountMap = await _db.Cameras
@@ -49,10 +61,15 @@ namespace MotorControlEnterprise.Api.Controllers
                 c.LocalStorageType, c.NvrIp, c.NvrPort, c.NvrBrand,
                 c.CreatedAt,
                 CameraCount = cameraCountMap.GetValueOrDefault(c.Id, 0),
-                UserId    = c.UserId,
-                UserEmail = c.User != null ? c.User.Email : null,
-                UserName  = c.User != null ? c.User.Name  : null,
-                UserActive = c.User != null ? c.User.IsActive : (bool?)null
+                UserId      = c.UserId,
+                UserEmail   = c.User?.Email,
+                UserName    = c.User?.Name,
+                UserActive  = c.User?.IsActive,
+                InstallerCreatedById = c.InstallerCreatedById,
+                InstallerCreatedBy   = c.InstallerCreatedBy == null ? null : new {
+                    c.InstallerCreatedBy.Id,
+                    c.InstallerCreatedBy.Name
+                }
             }));
         }
 
@@ -78,6 +95,9 @@ namespace MotorControlEnterprise.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateClientRequest req)
         {
+            var callerId    = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var isInstaller = User.IsInRole("installer");
+
             if (string.IsNullOrWhiteSpace(req.Name))
                 return BadRequest(new { message = "El nombre del cliente es obligatorio" });
 
@@ -110,8 +130,14 @@ namespace MotorControlEnterprise.Api.Controllers
                 UpdatedAt         = DateTime.UtcNow
             };
 
+            if (isInstaller)
+                client.InstallerCreatedById = callerId;
+
             _db.Clients.Add(client);
             await _db.SaveChangesAsync();
+
+            await _audit.LogAsync(callerId, "create_client", "Client", client.Id,
+                new { clientName = client.Name });
 
             // Crear cuenta de acceso si hay email disponible
             string? createdUserEmail = null;
@@ -148,6 +174,9 @@ namespace MotorControlEnterprise.Api.Controllers
 
                 createdUserEmail = user.Email;
                 emailSent = await _email.SendWelcomePasswordAsync(user.Email, client.Name, tempPassword);
+
+                await _audit.LogAsync(callerId, "create_client_user", "User", user.Id,
+                    new { clientId = client.Id, email = accessEmail });
             }
 
             return CreatedAtAction(nameof(GetById), new { id = client.Id }, new
@@ -199,6 +228,10 @@ namespace MotorControlEnterprise.Api.Controllers
             var client = await _db.Clients.FindAsync(id);
             if (client == null) return NotFound();
 
+            var callerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (User.IsInRole("installer") && client.InstallerCreatedById != callerId)
+                return Forbid();
+
             client.Status    = req.Status;
             client.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
@@ -212,6 +245,10 @@ namespace MotorControlEnterprise.Api.Controllers
         {
             var client = await _db.Clients.FindAsync(id);
             if (client == null) return NotFound();
+
+            var callerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (User.IsInRole("installer") && client.InstallerCreatedById != callerId)
+                return Forbid();
 
             client.DeletedAt = DateTime.UtcNow;
             client.Status    = "inactive";
@@ -276,6 +313,7 @@ namespace MotorControlEnterprise.Api.Controllers
         }
 
         // DELETE api/clients/{id}/permanent
+        [Authorize(Roles = "admin")]
         [HttpDelete("{id:int}/permanent")]
         public async Task<IActionResult> PermanentDelete(int id)
         {
@@ -349,6 +387,11 @@ namespace MotorControlEnterprise.Api.Controllers
             var client = await _db.Clients.FindAsync(id);
             if (client == null) return NotFound();
 
+            var callerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (User.IsInRole("installer") && client.InstallerCreatedById != callerId)
+                await _audit.LogAsync(callerId, "modify_foreign_client", "Client", id,
+                    new { action = "create_user" });
+
             if (client.UserId != null)
                 return Conflict(new { message = "Este cliente ya tiene una cuenta de acceso vinculada." });
 
@@ -374,6 +417,9 @@ namespace MotorControlEnterprise.Api.Controllers
             client.UserId    = user.Id;
             client.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
+
+            await _audit.LogAsync(callerId, "create_client_user", "User", user.Id,
+                new { clientId = id, email = req.Email });
 
             // Enviar credenciales por email
             bool emailSent = false;
