@@ -17,16 +17,30 @@ namespace MotorControlEnterprise.Api.Services
             int? entityId = null,
             object? details = null)
         {
-            _db.AuditLogs.Add(new AuditLog
+            try
             {
-                UserId     = userId,
-                Action     = action,
-                EntityType = entityType,
-                EntityId   = entityId,
-                Details    = details is null ? null : JsonSerializer.Serialize(details),
-                CreatedAt  = DateTime.UtcNow
-            });
-            await _db.SaveChangesAsync();
+                string? detailsJson = null;
+                if (details is not null)
+                {
+                    try { detailsJson = JsonSerializer.Serialize(details); }
+                    catch { detailsJson = "[serialization error]"; }
+                }
+
+                _db.AuditLogs.Add(new AuditLog
+                {
+                    UserId     = userId,
+                    Action     = action,
+                    EntityType = entityType,
+                    EntityId   = entityId,
+                    Details    = detailsJson,
+                    CreatedAt  = DateTime.UtcNow
+                });
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                // La auditoría nunca debe romper el request principal
+            }
         }
     }
 }
