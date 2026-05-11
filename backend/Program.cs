@@ -39,6 +39,7 @@ builder.Services.AddHttpClient();  // default factory para ResendEmailService
 builder.Services.AddScoped<MotorControlEnterprise.Api.Services.IEmailService,
                             MotorControlEnterprise.Api.Services.ResendEmailService>();
 builder.Services.AddScoped<MotorControlEnterprise.Api.Services.AlertService>();
+builder.Services.AddScoped<MotorControlEnterprise.Api.Services.AuditService>();
 builder.Services.AddSingleton<MotorControlEnterprise.Api.Services.StreamRecorderService>();
 builder.Services.AddHostedService(sp =>
     sp.GetRequiredService<MotorControlEnterprise.Api.Services.StreamRecorderService>());

@@ -19,6 +19,7 @@ namespace MotorControlEnterprise.Api.Data
         public DbSet<Alert> Alerts { get; set; } = null!;
         public DbSet<AlertPreference> AlertPreferences { get; set; } = null!;
         public DbSet<ClientLayout> ClientLayouts { get; set; } = null!;
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -163,6 +164,25 @@ namespace MotorControlEnterprise.Api.Data
             modelBuilder.Entity<ClientLayout>()
                 .Property(l => l.Config)
                 .HasColumnType("jsonb");
+
+            // AuditLog
+            modelBuilder.Entity<AuditLog>(e =>
+            {
+                e.HasIndex(a => a.UserId);
+                e.HasIndex(a => a.Action);
+                e.HasIndex(a => a.CreatedAt);
+                e.HasOne(a => a.User)
+                 .WithMany()
+                 .HasForeignKey(a => a.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Client.InstallerCreatedBy
+            modelBuilder.Entity<Client>()
+                .HasOne(c => c.InstallerCreatedBy)
+                .WithMany()
+                .HasForeignKey(c => c.InstallerCreatedById)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
