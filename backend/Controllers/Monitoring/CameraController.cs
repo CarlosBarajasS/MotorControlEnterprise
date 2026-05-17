@@ -308,8 +308,9 @@ namespace MotorControlEnterprise.Api.Controllers
 
             if (!camera.IsRecordingOnly && camera.ClientId.HasValue)
             {
+                var twinKey = camera.CameraKey + "-low";
                 var twin = await _db.Cameras
-                    .Where(c => c.IsRecordingOnly && c.ClientId == camera.ClientId)
+                    .Where(c => c.IsRecordingOnly && c.CameraKey == twinKey)
                     .FirstOrDefaultAsync();
                 if (twin != null)
                 {
