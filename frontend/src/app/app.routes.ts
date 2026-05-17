@@ -16,6 +16,7 @@ import { RecordingsComponent } from './components/recordings/recordings.componen
 import { UsersComponent } from './components/users/users.component';
 import { TelemetryHistoryComponent } from './components/telemetry-history/telemetry-history.component';
 import { AuditLogComponent } from './components/audit-log/audit-log.component';
+import { LiveMonitorComponent } from './components/live-monitor/live-monitor.component';
 
 // Client Portal
 import { ClientShellComponent } from './components/client-portal/client-shell.component';
@@ -69,6 +70,7 @@ export const routes: Routes = [
     { path: 'telemetry-history', component: TelemetryHistoryComponent, canActivate: [adminAuthGuard] },
     { path: 'wizard', component: WizardComponent, canActivate: [adminAuthGuard] },
     { path: 'audit-log', component: AuditLogComponent, canActivate: [adminAuthGuard] },
+    { path: 'monitor', component: LiveMonitorComponent, canActivate: [adminAuthGuard] },
 
     // Client Portal routes
     {
@@ -87,6 +89,7 @@ export const routes: Routes = [
                     { path: 'recordings/:id', component: ClientRecordingsComponent },
                     { path: 'account', component: ClientAccountComponent },
                     { path: 'private', component: ClientPrivateComponent },
+                    { path: 'monitor', component: LiveMonitorComponent },
                     { path: '', redirectTo: 'cameras', pathMatch: 'full' }
                 ]
             }

@@ -1,7 +1,9 @@
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterModule, Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { AlertDrawerComponent } from '../shared/alert-drawer/alert-drawer.component';
 
 @Component({
@@ -68,6 +70,19 @@ import { AlertDrawerComponent } from '../shared/alert-drawer/alert-drawer.compon
         <aside class="client-sidebar" [class.open]="sidebarOpen()">
           <nav class="sidebar-nav">
             <a class="nav-item"
+               routerLink="/client/monitor"
+               routerLinkActive="active"
+               [routerLinkActiveOptions]="{exact: false}"
+               (click)="closeSidebarOnMobile()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2.5" y="7" width="13" height="10" rx="1.5"/>
+                <path d="M15.5 10.5l5-2.5v8l-5-2.5z"/>
+                <line x1="19" y1="3" x2="19" y2="6"/>
+                <line x1="16" y1="4.5" x2="22" y2="4.5"/>
+              </svg>
+              <span>Monitor en Vivo</span>
+            </a>
+            <a class="nav-item"
                routerLink="/client/cameras"
                routerLinkActive="active"
                [routerLinkActiveOptions]="{exact: false}"
@@ -114,7 +129,7 @@ import { AlertDrawerComponent } from '../shared/alert-drawer/alert-drawer.compon
         </aside>
 
         <!-- MAIN CONTENT -->
-        <main class="client-main">
+        <main class="client-main" [class.client-main-monitor]="isMonitorRoute()">
           <router-outlet></router-outlet>
         </main>
 
@@ -264,6 +279,10 @@ import { AlertDrawerComponent } from '../shared/alert-drawer/alert-drawer.compon
       overflow-y: auto;
       min-width: 0;
     }
+    .client-main-monitor {
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
 
     /* OVERLAY */
     .sidebar-overlay {
@@ -311,7 +330,9 @@ export class ClientShellComponent implements OnInit, OnDestroy {
   sidebarOpen = signal(false);
   unreadAlerts = signal(0);
   drawerOpen = signal(false);
+  isMonitorRoute = signal(false);
   private alertInterval: any;
+  private routeSub: Subscription | null = null;
 
   constructor() {
     try {
@@ -324,12 +345,19 @@ export class ClientShellComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.isMonitorRoute.set(this.router.url.includes('/client/monitor'));
+    this.routeSub = this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.isMonitorRoute.set(this.router.url.includes('/client/monitor'));
+    });
     this.fetchUnreadCount();
     this.alertInterval = setInterval(() => this.fetchUnreadCount(), 30_000);
   }
 
   ngOnDestroy() {
     clearInterval(this.alertInterval);
+    this.routeSub?.unsubscribe();
   }
 
   fetchUnreadCount() {
