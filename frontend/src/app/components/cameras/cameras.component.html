@@ -80,8 +80,8 @@
       <div class="card-footer">
         <button class="btn-nvr"
                 [disabled]="card.total === 0"
-                (click)="router.navigate(['/cameras/client', card.id])">
-          Ver NVR →
+                (click)="router.navigate(['/monitor'], { queryParams: { client: card.id } })">
+          Ver en Monitor →
         </button>
       </div>
     </div>

@@ -219,6 +219,28 @@ $mono: 'IBM Plex Sans', 'Courier New', monospace;
 
 .toolbar-spacer { margin-left: auto; }
 
+.client-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  svg { flex-shrink: 0; }
+}
+
+.client-select {
+  background: rgba(var(--surface-rgb), .9);
+  border: 1px solid var(--outline);
+  border-radius: 7px;
+  color: rgba(var(--ink-rgb), .9);
+  font-size: 12px;
+  font-family: 'Nunito Sans', sans-serif;
+  padding: 5px 10px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color .15s;
+  &:hover, &:focus { border-color: rgba(var(--accent-rgb), .5); }
+}
+
 // ─── Monitor body ────────────────────────────────────────────────────────────
 .monitor-body {
   flex: 1;

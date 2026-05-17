@@ -3,7 +3,7 @@ import {
   signal, computed, ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { WebrtcViewerComponent } from '../camera-viewer/webrtc-viewer.component';
@@ -51,6 +51,7 @@ const OFFLINE_GRADIENT =
 })
 export class LiveMonitorComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private route  = inject(ActivatedRoute);
   private http = inject(HttpClient);
 
   // ── Core state ─────────────────────────────────────────────────────────
@@ -64,6 +65,11 @@ export class LiveMonitorComponent implements OnInit, OnDestroy {
   toastMsg         = signal('');
   clock            = signal(new Date());
   camQuery         = signal('');
+
+  // ── Role / client selector ─────────────────────────────────────────────
+  userRole         = signal<string>('');
+  clients          = signal<any[]>([]);
+  selectedClientId = signal<number | null>(null);
 
   // PTZ state (preserved from camera-grid)
   selectedCam  = signal<any>(null);
@@ -85,19 +91,26 @@ export class LiveMonitorComponent implements OnInit, OnDestroy {
   private toastTimer:    ReturnType<typeof setTimeout>  | null = null;
 
   // ── Computed ───────────────────────────────────────────────────────────
-  onlineCount = computed(() => this.cameras().filter(c => this.isOnline(c)).length);
-  offlineCount = computed(() => this.cameras().filter(c => !this.isOnline(c)).length);
-  alertCount  = computed(() => this.cameras().filter(c => c.alertActive && this.isOnline(c)).length);
+  filteredCameras = computed(() => {
+    const cams     = this.cameras();
+    const clientId = this.selectedClientId();
+    if (!clientId || this.userRole() === 'client') return cams;
+    return cams.filter(c => c.clientId === clientId);
+  });
+
+  onlineCount = computed(() => this.filteredCameras().filter(c => this.isOnline(c)).length);
+  offlineCount = computed(() => this.filteredCameras().filter(c => !this.isOnline(c)).length);
+  alertCount  = computed(() => this.filteredCameras().filter(c => c.alertActive && this.isOnline(c)).length);
 
   usedCamIds = computed(() => new Set(this.cells().map(c => String(c.camId))));
 
   camerasByZone = computed(() => {
     const q    = this.camQuery().toLowerCase().trim();
     const cams = q
-      ? this.cameras().filter(c =>
+      ? this.filteredCameras().filter(c =>
           (c.name || '').toLowerCase().includes(q) ||
           this.getCamZone(c).toLowerCase().includes(q))
-      : this.cameras();
+      : this.filteredCameras();
     const map = new Map<string, any[]>();
     for (const cam of cams) {
       const zone = this.getCamZone(cam);
@@ -126,6 +139,20 @@ export class LiveMonitorComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
   ngOnInit() {
+    try {
+      const token = localStorage.getItem('motor_control_token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        this.userRole.set(payload.role || '');
+      }
+    } catch {}
+
+    if (this.userRole() !== 'client') {
+      this.loadClients();
+      const qp = this.route.snapshot.queryParamMap.get('client');
+      if (qp) this.selectedClientId.set(+qp);
+    }
+
     this.loadCameras();
     this.clockInterval = setInterval(() => this.clock.set(new Date()), 1000);
   }
@@ -143,12 +170,28 @@ export class LiveMonitorComponent implements OnInit, OnDestroy {
         const saved = this.templates().find(t => t.id !== 'default' && t.cells.length > 0);
         if (saved) {
           this.selectLayout(saved, false);
-        } else if (cams.length > 0) {
+        } else if (this.filteredCameras().length > 0) {
           this.applyQuickLayout(2);
         }
       },
       error: () => console.warn('[LiveMonitor] Could not load cameras'),
     });
+  }
+
+  loadClients() {
+    this.http.get<any[]>(`${API_URL}/clients`).subscribe({
+      next: c  => this.clients.set(c || []),
+      error: () => {}
+    });
+  }
+
+  onClientChange(clientId: number | null) {
+    this.selectedClientId.set(clientId ? +clientId : null);
+    this.cells.set([]);
+    this.selectedCam.set(null);
+    this.showPtzPanel.set(false);
+    const visible = this.filteredCameras();
+    if (visible.length > 0) this.applyQuickLayout(2);
   }
 
   // ── Camera helpers (preserved from camera-grid) ────────────────────────
@@ -209,7 +252,7 @@ export class LiveMonitorComponent implements OnInit, OnDestroy {
 
   // ── Grid actions ────────────────────────────────────────────────────────
   applyQuickLayout(cols: number) {
-    const camsToShow = this.cameras().slice(0, cols * cols);
+    const camsToShow = this.filteredCameras().slice(0, cols * cols);
     const cw = Math.floor(GRID_COLS / cols);
     const ch = Math.floor(GRID_ROWS / cols);
     const newCells: GridCell[] = camsToShow.map((cam, i) => ({
