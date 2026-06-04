@@ -60,3 +60,10 @@ docs/.worktrees
 .playwright-mcp
 .vscode
 
+# manual
+docs/manual/screenshots/
+docs/manual/generate-manual.js
+docs/manual/generate-pdf.js
+docs/manual/manual.html
+docs/manual/package-lock.json
+docs/manual/package.json
